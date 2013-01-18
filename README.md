@@ -1,5 +1,7 @@
 # NuoDB PHP PDO Native Driver #
 
+[![Build Status](https://api.travis-ci.org/nuodb/nuodb-php-pdo.png?branch=master)](http://travis-ci.org/nuodb/nuodb-php-pdo)
+
 ## Installing Necessary Dependencies ##
 
 In order to build the driver you must have PHP plus developer tools installed.

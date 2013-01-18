@@ -1,0 +1,35 @@
+language: cpp
+
+compiler:
+  - gcc
+
+env:
+  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/local/include/php
+
+notifications:
+  recipients:
+    - buck.robert.j@gmail.com
+    - rbuck@nuodb.com
+
+before_install:
+  - wget http://www.nuodb.com/latest/nuodb-1.0-GA.linux.x86_64.deb --output-document=/var/tmp/nuodb.deb
+  - sudo dpkg -i /var/tmp/nuodb.deb
+  - sleep 2
+  - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie --verbose debug --archive /var/tmp/nuodb --initialize --force &
+  - sleep 2
+  - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie &
+  - sleep 2
+  - sudo apt-get install cmake
+  - sudo apt-get install libxml2 libxml2-dev
+  - wget http://www.php.net/distributions/php-5.4.3.tar.gz --output-document=/var/tmp/php-5.4.3.tar.gz
+  - cd /var/tmp/ && tar xzvf /var/tmp/php-5.4.3.tar.gz
+  - cd /var/tmp/php-5.4.3 && ./configure --enable-shared --with-zlib --enable-cli --enable-pdo
+  - cd /var/tmp/php-5.4.3 && make
+  - cd /var/tmp/php-5.4.3 && sudo make install
+
+script:
+  - cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=RelWithDebInfo
+  - make
+
+after_script:
+  - sudo dpkg -r nuodb
