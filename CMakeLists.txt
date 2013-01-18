@@ -1,0 +1,179 @@
+# Copyright (c) 2012 - 2013, NuoDB, Inc.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of NuoDB, Inc. nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL NUODB, INC. BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#
+# PHP PDO Native Database Driver for NuoDB
+# 
+
+PROJECT (NuoPhpPdo)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8 FATAL_ERROR)
+
+INCLUDE (CheckIncludeFile)
+INCLUDE (CheckIncludeFiles)
+INCLUDE (CheckFunctionExists)
+INCLUDE (CheckTypeSize)
+INCLUDE (CTest)
+INCLUDE (InstallRequiredSystemLibraries)
+
+EXECUTE_PROCESS(COMMAND git rev-list HEAD -n1 --abbrev-commit
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE NUODB_PHPPDO_SCM_REVISION)
+
+SET (CPACK_PACKAGE_NAME "NuoPhpPdo")
+SET (CPACK_PACKAGE_VENDOR "NuoDB, Inc.")
+SET (CPACK_PACKAGE_VERSION_MAJOR "1")
+SET (CPACK_PACKAGE_VERSION_MINOR "0")
+SET (CPACK_PACKAGE_VERSION_PATCH "0")
+SET (CPACK_PACKAGE_VENDOR "NuoDB, Inc.")
+SET (CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY "A PHP PDO Native Database Driver for NuoDB")
+
+SET(CPACK_GENERATOR "TGZ;ZIP")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Robert Buck") #required
+
+INCLUDE (CPack)
+
+IF (NOT CMAKE_BUILD_TYPE)
+    SET (CMAKE_BUILD_TYPE Release CACHE STRING
+        "Choose the type of build, options are Debug Release"
+        FORCE)
+ENDIF (NOT CMAKE_BUILD_TYPE)
+
+FIND_PATH (PHP_INCLUDE_DIR main/php.h
+    PATHS $ENV{PHP_INCLUDE_DIR}
+    DOC "PHP includes directory")
+
+IF (PHP_INCLUDE_DIR)
+    MESSAGE (STATUS "PHP includes directory found: " ${PHP_INCLUDE_DIR})
+ELSE (PHP_INCLUDE_DIR)
+    MESSAGE (FATAL_ERROR "PHP includes directory not found; please set PHP_INCLUDE_DIR variable")
+ENDIF (PHP_INCLUDE_DIR)
+
+FIND_PATH (NUODB_INCLUDE_DIR Connection.h
+    PATHS $ENV{NUODB_INCLUDE_DIR}
+    DOC "NuoDB includes directory")
+
+IF (NUODB_INCLUDE_DIR)
+    MESSAGE (STATUS "NuoDB includes directory found: " ${NUODB_INCLUDE_DIR})
+ELSE (NUODB_INCLUDE_DIR)
+    MESSAGE (FATAL_ERROR "NuoDB includes directory not found; please set NUODB_INCLUDE_DIR variable")
+ENDIF (NUODB_INCLUDE_DIR)
+
+FIND_LIBRARY (NUODB_REMOTE_LIBRARY
+    NAMES NuoRemote libNuoRemote
+    PATHS $ENV{NUODB_LIB_DIR}
+    DOC "NuoDB remote library to link against")
+             
+IF (NUODB_REMOTE_LIBRARY)
+    MESSAGE (STATUS "NuoRemote library found: " ${NUODB_REMOTE_LIBRARY})
+ELSE (NUODB_REMOTE_LIBRARY)
+    MESSAGE (FATAL_ERROR "NuoRemote library not found; please set NUODB_LIB_DIR variable")
+ENDIF (NUODB_REMOTE_LIBRARY)
+
+
+IF (CMAKE_GENERATOR MATCHES "Visual Studio 9 2008*")
+  INCLUDE_DIRECTORIES (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/include_extras/vc9
+    ${NUODB_INCLUDE_DIR}
+    ${PHP_INCLUDE_DIR}
+    ${PHP_INCLUDE_DIR}/main
+    ${PHP_INCLUDE_DIR}/TSRM
+    ${PHP_INCLUDE_DIR}/Zend
+    ${PHP_INCLUDE_DIR}/ext
+    ${PHP_INCLUDE_DIR}/ext/date/lib
+    )
+ELSE (CMAKE_GENERATOR MATCHES "Visual Studio 9 2008*")
+  INCLUDE_DIRECTORIES (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${NUODB_INCLUDE_DIR}
+    ${PHP_INCLUDE_DIR}
+    ${PHP_INCLUDE_DIR}/main
+    ${PHP_INCLUDE_DIR}/TSRM
+    ${PHP_INCLUDE_DIR}/Zend
+    ${PHP_INCLUDE_DIR}/ext
+    ${PHP_INCLUDE_DIR}/ext/date/lib
+    )
+ENDIF (CMAKE_GENERATOR MATCHES "Visual Studio 9 2008*")
+
+SET (NUODB_PHPPDO_SOURCES
+    nuodb_driver.c
+    pdo_nuodb.c
+    nuodb_statement.c
+    php_pdo_nuodb_cpp_int.cpp
+    php_pdo_nuodb_cpp_int.h
+    php_pdo_nuodb_c_cpp_common.h
+    php_pdo_nuodb_int.h
+    php_pdo_nuodb.h
+    config.h
+    )
+
+IF (CMAKE_GENERATOR MATCHES "Unix Makefiles" OR 
+    CMAKE_GENERATOR MATCHES "Xcode" OR 
+    CMAKE_GENERATOR MATCHES "Eclipse CDT4 - Unix Makefiles")
+    ADD_DEFINITIONS (-DPHP_ATOM_INC)
+    ADD_DEFINITIONS (-DHAVE_CONFIG_H)
+    ADD_DEFINITIONS (-DHAVE_DLFCN_H=1)
+    ADD_DEFINITIONS (-Wno-write-strings)
+    ADD_LIBRARY (NuoPhpPdo SHARED ${NUODB_PHPPDO_SOURCES})
+    LINK_DIRECTORIES (${NUODB_LIB_DIR})
+    TARGET_LINK_LIBRARIES (NuoPhpPdo ${NUODB_REMOTE_LIBRARY})
+    SET_TARGET_PROPERTIES (NuoPhpPdo PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR})
+    SET_TARGET_PROPERTIES(NuoPhpPdo PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES (NuoPhpPdo PROPERTIES OUTPUT_NAME pdo_nuodb)
+ENDIF (CMAKE_GENERATOR MATCHES "Unix Makefiles" OR 
+       CMAKE_GENERATOR MATCHES "Xcode" OR 
+       CMAKE_GENERATOR MATCHES "Eclipse CDT4 - Unix Makefiles")
+
+IF(CMAKE_GENERATOR MATCHES "Visual Studio 7" OR
+    CMAKE_GENERATOR MATCHES "Visual Studio 8" OR
+    CMAKE_GENERATOR MATCHES "Visual Studio 9" OR
+    CMAKE_GENERATOR MATCHES "Visual Studio 10")
+    ADD_LIBRARY (php5ts SHARED IMPORTED)
+    ADD_LIBRARY (php5ts_debug SHARED IMPORTED)
+    SET_PROPERTY (TARGET php5ts PROPERTY IMPORTED_LOCATION ${PHP_ROOT}/php5ts.dll)
+    SET_PROPERTY (TARGET php5ts PROPERTY IMPORTED_IMPLIB ${PHP_ROOT}/SDK/lib/php5ts.lib)
+    SET_PROPERTY (TARGET php5ts_debug PROPERTY IMPORTED_LOCATION ${PHP_ROOT}/debug/php5ts_debug.dll)
+    SET_PROPERTY (TARGET php5ts_debug PROPERTY IMPORTED_IMPLIB ${PHP_ROOT}/debug/SDK/lib/php5ts_debug.lib)
+    ADD_LIBRARY (nuoremote SHARED IMPORTED)
+    SET_PROPERTY (TARGET nuoremote PROPERTY IMPORTED_LOCATION ${NUODB_REMOTE_DLL})
+    SET_PROPERTY (TARGET nuoremote PROPERTY IMPORTED_IMPLIB ${NUODB_REMOTE_LIBRARY})
+    ADD_LIBRARY (NuoPhpPdo SHARED ${NUODB_PHPPDO_SOURCES})
+SET_PROPERTY (TARGET NuoPhpPdo PROPERTY COMPILE_DEFINITIONS ZTS=1 HAVE_CONFIG_H ZEND_DEBUG=0 COMPILE_DL_NUODB PHP_WIN32 ZEND_WIN32)
+SET_PROPERTY (TARGET NuoPhpPdo PROPERTY COMPILE_DEFINITIONS_DEBUG ZTS=1 HAVE_CONFIG_H ZEND_DEBUG=1 COMPILE_DL_NUODB PHP_WIN32 ZEND_WIN32)
+    TARGET_LINK_LIBRARIES (NuoPhpPdo nuoremote optimized php5ts debug php5ts_debug)
+    SET_TARGET_PROPERTIES (NuoPhpPdo PROPERTIES OUTPUT_NAME php_pdo_nuodb)
+ENDIF(CMAKE_GENERATOR MATCHES "Visual Studio 7" OR
+      CMAKE_GENERATOR MATCHES "Visual Studio 8" OR
+      CMAKE_GENERATOR MATCHES "Visual Studio 9" OR
+      CMAKE_GENERATOR MATCHES "Visual Studio 10")
+
+INSTALL(TARGETS NuoPhpPdo
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    )
+
+ADD_TEST(001.phpt tests/001.phpt)
