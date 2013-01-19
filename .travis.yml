@@ -12,8 +12,7 @@ notifications:
     - rbuck@nuodb.com
 
 before_install:
-  - sudo apt-get install libxml2 libxml2-dev gcc g++ cmake
-  - wget http://www.nuodb.com/latest/nuodb-1.0-GA.linux.x86_64.deb --output-document=/var/tmp/nuodb.deb
+  - wget -q http://www.nuodb.com/latest/nuodb-1.0-GA.linux.x86_64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
   - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie --verbose debug --archive /var/tmp/nuodb --initialize --force &
@@ -26,8 +25,12 @@ before_install:
   - cd /var/tmp/php-5.4.3 && make
   - cd /var/tmp/php-5.4.3 && sudo make install
 
+install:
+  - true
+
 script:
-  - cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=RelWithDebInfo
+  - cd ~/nuodb/nuodb-php-pdo
+  - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
 
 after_script:
