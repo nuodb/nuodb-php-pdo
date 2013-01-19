@@ -139,7 +139,7 @@ java -jar nuoagent.jar --broker --domain test --password test &
 Run the following commands to run the tests:
 
 ```bash
-  !!!!!! TODO DOC HERE !!!!!!
+pear run-tests tests/*.phpt
 ```
 
 ## CREATING A DISTRIBUTION PACKAGE ##
