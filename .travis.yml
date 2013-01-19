@@ -19,8 +19,8 @@ before_install:
   - sleep 2
   - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie &
   - sleep 2
-  - wget http://www.php.net/distributions/php-5.4.3.tar.gz --output-document=/var/tmp/php-5.4.3.tar.gz
-  - cd /var/tmp/ && tar xzvf /var/tmp/php-5.4.3.tar.gz
+  - wget -q http://www.php.net/distributions/php-5.4.3.tar.gz --output-document=/var/tmp/php-5.4.3.tar.gz
+  - cd /var/tmp/ && tar xzf /var/tmp/php-5.4.3.tar.gz
   - cd /var/tmp/php-5.4.3 && ./configure --enable-shared --with-zlib --enable-cli --enable-pdo
   - cd /var/tmp/php-5.4.3 && make
   - cd /var/tmp/php-5.4.3 && sudo make install
