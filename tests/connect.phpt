@@ -5,10 +5,15 @@ PDO_Nuodb: connect/disconnect
 --FILE--
 <?php /* $Id: connect.phpt 161049 2012-03-26 01:37:06Z tgates $ */
 
-	require("testdb.inc");
-    
-	echo "done\n";
+  echo "Checking is pdo_nuodb extension is loaded: ";
+  var_dump(extension_loaded('pdo_nuodb'));
+
+  require("testdb.inc");
+   
+  echo "done\n";
 	
 ?>
 --EXPECT--
+Checking is pdo_nuodb extension is loaded: bool(true)
 done
+

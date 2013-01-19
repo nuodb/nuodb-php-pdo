@@ -139,6 +139,7 @@ int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_rollback(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_close_connection(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
+int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char *sql) ;
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
 int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray);

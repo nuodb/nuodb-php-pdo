@@ -144,29 +144,6 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
 
 #define RECORD_ERROR(dbh) _nuodb_error(dbh, NULL, __FILE__, __LINE__ TSRMLS_CC)
 
-
-static int _commit_if_auto(pdo_dbh_t * dbh)
-{
-    pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (H == NULL)
-    {
-        return 0;
-    }
-    if (dbh->in_txn)
-    {
-        if (dbh->auto_commit)
-        {
-            pdo_nuodb_db_handle_commit(H); //H->db->commit();
-            return 1;
-        }
-        else
-        {
-            pdo_nuodb_db_handle_rollback(H);  //H->db->rollback();
-        }
-    }
-    return 0;
-}
-
 /* called by PDO to close a db handle */
 static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
@@ -176,7 +153,6 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
         RECORD_ERROR(dbh);
         return 0;
     }
-    _commit_if_auto(dbh);
     pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
     pdo_nuodb_db_handle_delete(H); //delete H->db;
     pefree(H, dbh->is_persistent);
@@ -405,8 +381,8 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, const char * sql, long sql_
         PDO_DBG_RETURN(0);
     }
 
-    /* start a new transaction implicitly if auto_commit is enabled and no transaction is open */
-    if (dbh->auto_commit && !dbh->in_txn)
+    /* start a new transaction implicitly if auto_commit is disabled and no transaction is open */
+    if (!dbh->auto_commit && !dbh->in_txn)
     {
         if (!nuodb_handle_begin(dbh TSRMLS_CC))
         {
@@ -531,6 +507,8 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
                 }
             }
             dbh->auto_commit = Z_BVAL_P(val);
+	    pdo_nuodb_db_handle_set_auto_commit(H, dbh->auto_commit);
+
         }
         PDO_DBG_RETURN(1);
 
@@ -657,6 +635,9 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     dbh->methods = &nuodb_methods;
     dbh->native_case = PDO_CASE_UPPER;  // TODO: the value should reflect how the database returns the names of the columns in result sets. If the name matches the case that was used in the query, set it to PDO_CASE_NATURAL (this is actually the default). If the column names are always returned in upper case, set it to PDO_CASE_UPPER. If the column names are always returned in lower case, set it to PDO_CASE_LOWER. The value you set is used to determine if PDO should perform case folding when the user sets the PDO_ATTR_CASE attribute.  Maybe switch to PDO_CASE_NATURAL when DB-1239 is fixed.
     dbh->alloc_own_columns = 1;  // if true, the driver requires that memory be allocated explicitly for the columns that are returned
+
+    dbh->auto_commit = 1;  // NuoDB always starts in Auto Commit mode.
+
     ret = 1;
     for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
     {

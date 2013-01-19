@@ -218,6 +218,12 @@ int PdoNuoDbHandle::getLastId(const char *name)
   return last_id;
 }
 
+void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
+{
+    _con->setAutoCommit(autoCommit);
+    return;
+}
+
 PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NULL), _stmt(NULL), _stmt_type(0), _rs(NULL), _rs_gen_keys(NULL)
 {
     // empty
@@ -294,9 +300,7 @@ void PdoNuoDbStatement::execute()
         PDO_DBG_VOID_RETURN;
     }
     if (_stmt_type == 1) {
- //   _dbh->getConnection()->setAutoCommit(false);
         _rs = _stmt->executeQuery();
- //   _dbh->getConnection()->setAutoCommit(true);
     } else if (_stmt_type == 2 || _stmt_type == 3) {
         int update_count = _stmt->executeUpdate();
 	if (_stmt_type == 3) {
@@ -635,24 +639,28 @@ int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H) {
     return 1;
 }
 
-int pdo_nuodb_db_handle_commit_if_auto(pdo_nuodb_db_handle * H, int in_txn, int auto_commit)
+int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit) 
 {
-    if (H == NULL) {
+    try {
+	PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+	bool bAutoCommit = (auto_commit != 0);
+	db->setAutoCommit(bAutoCommit);
+    }
+    catch (NuoDB::SQLException & e)
+    {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
         return 0;
     }
-    if (in_txn)
+    catch (...)
     {
-        if (auto_commit)
-        {
-            pdo_nuodb_db_handle_commit(H); //H->db->commit();
-            return 1;
-        }
-        else
-        {
-            pdo_nuodb_db_handle_rollback(H);  //H->db->rollback();
-        }
+        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_doer()");
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char * sql)
@@ -678,7 +686,6 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
         PdoNuoDbStatement * stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, sql);
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, 1);
         stmt->execute();
-        pdo_nuodb_db_handle_commit_if_auto(H, in_txn, auto_commit);
     }
     catch (NuoDB::SQLException & e)
     {

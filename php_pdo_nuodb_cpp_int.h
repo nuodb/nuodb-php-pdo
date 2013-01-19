@@ -57,6 +57,7 @@ public:
     void commit();
     void rollback();
     int getLastId(const char *name);
+    void setAutoCommit(bool autoCommit);
 };
 
 class PdoNuoDbStatement

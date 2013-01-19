@@ -51,7 +51,6 @@ try {
   $sql = "insert into Hockey_test(ID, NUMBER, NAME, POSITION, TEAM) values (999, 101, 'Tom Gates', 'Fan', 'Bruins')";  // Insert ID to workaround DB-2386.
   $stmt = $db->prepare($sql);
   $stmt->execute();
-  $db->commit();
   $sql = "select count(*) from Hockey_test where POSITION = :position";
   $stmt = $db->prepare($sql);
   $stmt->bindParam(':position', $position, PDO::PARAM_STR);
