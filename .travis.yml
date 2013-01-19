@@ -32,6 +32,7 @@ script:
   - cd /home/travis/build/nuodb/nuodb-php-pdo
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
+  - pear run-tests tests/*.phpt
 
 after_script:
   - sudo dpkg -r nuodb
