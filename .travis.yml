@@ -12,8 +12,6 @@ notifications:
     - rbuck@nuodb.com
 
 before_install:
-  - pwd
-  - ls -al
   - wget -q http://www.nuodb.com/latest/nuodb-1.0-GA.linux.x86_64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
@@ -31,7 +29,7 @@ install:
   - true
 
 script:
-  - cd ~/nuodb/nuodb-php-pdo
+  - cd /home/travis/build/nuodb/nuodb-php-pdo
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
 
