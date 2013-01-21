@@ -142,6 +142,23 @@ Run the following commands to run the tests:
 pear run-tests tests/*.phpt
 ```
 
+## RELEASE PROCEDURE ##
+
+### TAGGING ###
+
+Tag the product using tags per the SemVer specification; our tags have a v-prefix:
+
+```bash
+git tag -a v1.0.0 -m "SemVer Version: v1.0.0"
+```
+
+If you make a mistake, take it back quickly:
+
+```bash
+git tag -d v1.0.0
+git push origin :refs/tags/v1.0.0
+```
+
 ## CREATING A DISTRIBUTION PACKAGE ##
 
 After running a build, run the following command to build a binary distribution:
