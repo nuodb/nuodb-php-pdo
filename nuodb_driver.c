@@ -627,9 +627,10 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     PDO_DBG_INF_FMT("\ndatabase=%s\nuser=%s\nschema=%s",
                     options[0].extra, options[1].extra, options[3].extra);
 
-    status = pdo_nuodb_db_handle_factory(H, &optionsArray);
+    char *errMessage;
+    status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
     if (status == 0) {
-		nuodb_throw_zend_exception("HY000", 38, "Error constructing a NuoDB handle");
+		nuodb_throw_zend_exception("HY000", 38, errMessage);
     }
 
     dbh->methods = &nuodb_methods;

@@ -705,13 +705,24 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
     return 1;
 }
 
-int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray) {
-	try {
-		PdoNuoDbHandle *db = new PdoNuoDbHandle(optionsArray);
+
+int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, const char **errMessage) 
+{
+    *errMessage = NULL;
+    try {
+	PdoNuoDbHandle *db = new PdoNuoDbHandle(optionsArray);
         H->db = (void *) db;
         db->createConnection();
-	} catch (...) {
-        return 0;  // TODO
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        *errMessage = e.getText();
+	//TODO: throw if PDO::ATTR_ERRMODE is set to PDO::ERRMODE_EXCEPTION
+        //TODO: see: DB-2558
+        //nuodb_throw_zend_exception("HY000", error_code, error_text);
+	return 0;
+    } catch (...) {
+        *errMessage = "Error constructing a NuoDB handle";
+        return 0;
     }
     return 1;
 }
