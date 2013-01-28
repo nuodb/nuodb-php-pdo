@@ -1,5 +1,5 @@
 --TEST--
-char test 
+Test autocommit mode
 --FILE--
 <?php 
 
