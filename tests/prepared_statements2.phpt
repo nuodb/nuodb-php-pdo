@@ -25,7 +25,7 @@ echo "done\n";
 --EXPECT--
 Array
 (
-    [COUNT] => 8
-    [0] => 8
+    [COUNT] => 7
+    [0] => 7
 )
 done

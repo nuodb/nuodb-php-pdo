@@ -243,15 +243,19 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
 static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ */
                               unsigned long * len, int * caller_frees TSRMLS_DC)
 {
+    static void * (*ereallocPtr)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int) = &_erealloc;
+
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
     int sqlTypeNumber = 0;
     
-	PDO_DBG_ENTER("nuodb_stmt_get_col");
+    PDO_DBG_ENTER("nuodb_stmt_get_col");
     PDO_DBG_INF_FMT("S=%ld", S);
     
-	sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
+    sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
 
-	*len = 0;
+    *len = 0;
+    *caller_frees = 1;
+    if (*ptr != NULL) efree(*ptr);
     *ptr = NULL;
     switch (sqlTypeNumber)
     {
@@ -261,14 +265,14 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
         {
-			int val = pdo_nuodb_stmt_get_integer(S, colno);
+	    int val = pdo_nuodb_stmt_get_integer(S, colno);
             *ptr = (char *)emalloc(CHAR_BUF_LEN);
             *len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
             break;
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
         {
-			int64_t val = pdo_nuodb_stmt_get_long(S, colno);
+	    int64_t val = pdo_nuodb_stmt_get_long(S, colno);
             *ptr = (char *)emalloc(CHAR_BUF_LEN);
             *len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
             break;
@@ -279,7 +283,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
         }
         case PDO_NUODB_SQLTYPE_STRING:
         {
-			int str_len;
+	    int str_len;
             const char * str = pdo_nuodb_stmt_get_string(S, colno);
             if (str == NULL)
             {
@@ -318,12 +322,12 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
         }
         case PDO_NUODB_SQLTYPE_BLOB:
         {
-            pdo_nuodb_stmt_get_blob(S, colno, ptr, len);
+	    pdo_nuodb_stmt_get_blob(S, colno, ptr, len, ereallocPtr);
             break;
         }
         case PDO_NUODB_SQLTYPE_CLOB:
         {
-            pdo_nuodb_stmt_get_clob(S, colno, ptr, len);
+	    pdo_nuodb_stmt_get_clob(S, colno, ptr, len, ereallocPtr);
             break;
         }
         default:
@@ -335,7 +339,6 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
     }
 
     PDO_DBG_RETURN(1);
-
 }
 /* }}} */
 

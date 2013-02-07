@@ -18,8 +18,8 @@ echo "done\n";
 --EXPECT--
 Array
 (
-    [ID] => 2
-    [0] => 2
+    [ID] => 3
+    [0] => 3
     [NUMBER] => 11
     [1] => 11
     [NAME] => GREGORY CAMPBELL
@@ -31,8 +31,8 @@ Array
 )
 Array
 (
-    [ID] => 25
-    [0] => 25
+    [ID] => 24
+    [0] => 24
     [NUMBER] => 1
     [1] => 1
     [NAME] => MAX SUMMIT
@@ -43,4 +43,3 @@ Array
     [4] => Bruins
 )
 done
-

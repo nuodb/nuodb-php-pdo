@@ -90,8 +90,84 @@ struct pdo_column_data {
 };
 
 
+PdoNuoDbGeneratedKeys::PdoNuoDbGeneratedKeys() 
+    : _qty(0), _keys(NULL)
+{
+    // empty
+}
+
+PdoNuoDbGeneratedKeys::~PdoNuoDbGeneratedKeys() 
+{
+    if (_keys == NULL) return;
+    for (int i=0; i < _qty; i++)
+	if (_keys[i].columnName != NULL)
+	    delete _keys[i].columnName;
+    delete [] _keys;
+}
+
+void PdoNuoDbGeneratedKeys::setKeys(NuoDB::ResultSet *rs)
+{
+  if (rs == NULL) return;
+  NuoDB::ResultSetMetaData *rsmd = rs->getMetaData();
+  if (rsmd == NULL) return;
+  int col_cnt = rsmd->getColumnCount();
+  if (col_cnt < 1) return;
+  _qty = col_cnt;
+  _keys = new PdoNuoDbGeneratedKeyElement [col_cnt];
+  rs->next();
+  const char *col_name;
+  for (int i=1; i <= col_cnt; i++) 
+  {
+      col_name = rsmd->getColumnName(i);
+      _keys[i-1].columnName = strdup(col_name);
+      _keys[i-1].columnIndex = i;
+      _keys[i-1].columnKeyValue = rs->getInt(i);
+  }
+}
+
+int PdoNuoDbGeneratedKeys::getIdValue() 
+{
+    if (_qty == 0) {
+    	nuodb_throw_zend_exception("HY000", 1, "No generated keys");
+	return 0;
+    }
+
+    if (_qty > 1) {
+    	nuodb_throw_zend_exception("HY000", 1, "Multiple IDs found when looking for a single ID");
+	return 0;
+    }
+
+    return _keys[0].columnKeyValue;
+}
+
+int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
+{
+    // We currently do not support tables with multiple generated keys
+    // so we will throw a "not supported" exception. However, below
+    // is a reasonable implementation for multiple keys.  Assuming 
+    // seqName is a column name.
+
+    nuodb_throw_zend_exception("IM001", 1, "getLastId sequence-name argument is not supported");
+    return 0;
+    
+    for (int i=0; i<_qty; i++)
+	if (!strcmp(_keys[i].columnName, seqName))
+	    return _keys[i].columnKeyValue;
+
+    char errMsg[1024];
+    char *errMsgBase = "No generated ID for specified column name: ";
+    int errMsgBaseLen = strlen(errMsgBase);
+    strcpy(errMsg, errMsgBase);
+    int seqNameLen = strlen(seqName);
+    if (seqNameLen > (1024 - errMsgBaseLen - 1))
+	seqNameLen = (1024 - errMsgBaseLen -1);
+    strncat(errMsg, seqName, seqNameLen);
+    nuodb_throw_zend_exception("HY000", 1, errMsg);
+    return 0;
+}
+
 PdoNuoDbHandle::PdoNuoDbHandle(SqlOptionArray * options)
-    : _con(NULL), _opts(NULL), _last_stmt(NULL)
+    : _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     for (int i=0; i<4; i++)
     {
@@ -103,6 +179,7 @@ PdoNuoDbHandle::PdoNuoDbHandle(SqlOptionArray * options)
 
 PdoNuoDbHandle::~PdoNuoDbHandle()
 {
+    if (_last_keys != NULL) delete _last_keys;
     closeConnection();
     deleteOptions();
 }
@@ -129,6 +206,19 @@ void PdoNuoDbHandle::deleteOptions()
     delete _opts;
     _opts = NULL;
 }
+
+void PdoNuoDbHandle::setLastStatement(PdoNuoDbStatement *lastStatement)
+{
+    _last_stmt = lastStatement;
+}
+
+void PdoNuoDbHandle::setLastKeys(PdoNuoDbGeneratedKeys *lastKeys) 
+{
+    if (_last_keys != NULL) 
+	delete _last_keys;
+    _last_keys = lastKeys;
+}
+
 
 void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
 {
@@ -174,7 +264,7 @@ PdoNuoDbStatement * PdoNuoDbHandle::createStatement(char const * sql)
     }
     rval = new PdoNuoDbStatement(this);
     rval->createStatement(sql);
-    _last_stmt = rval;
+    setLastStatement(rval);
     return rval;
 }
 
@@ -212,10 +302,13 @@ void PdoNuoDbHandle::rollback()
 
 int PdoNuoDbHandle::getLastId(const char *name)
 {
-  int last_id = 0;
-  if (_last_stmt == NULL) return 0;
-  last_id = _last_stmt->getGeneratedKeyLastId(name);
-  return last_id;
+    if (_last_keys == NULL) {
+		nuodb_throw_zend_exception("HY000", -40, "No generated keys");
+		return 0;
+    }
+
+    if (name == NULL) return _last_keys->getIdValue();
+    return _last_keys->getIdValue(name);
 }
 
 void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
@@ -224,23 +317,19 @@ void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
     return;
 }
 
-PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NULL), _stmt(NULL), _stmt_type(0), _rs(NULL), _rs_gen_keys(NULL)
+PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NULL), _stmt(NULL), _rs(NULL)
 {
     // empty
 }
 
 PdoNuoDbStatement::~PdoNuoDbStatement()
 {
+    _dbh->setLastStatement(NULL);
     if (_rs != NULL)
     {
         _rs->close();
     }
     _rs = NULL;
-    if (_rs_gen_keys != NULL)
-    {
-        _rs_gen_keys->close();
-    }
-    _rs_gen_keys = NULL;
     if (_stmt != NULL)
     {
         _stmt->close();
@@ -262,31 +351,15 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
         return NULL;
     }
 
-    char up_sql[7];
-    int i, j;
-    for (i=0,j=0; i<6; i++,j++) {
-        while(isspace(sql[j])) j++;
-        if (sql[i] == '\0') break;
-        up_sql[i] = toupper(sql[j]);
-    }
-    for (; i<7; i++) up_sql[i] = '\0';
-    if (strncmp(up_sql, "SELECT", 6) == 0) _stmt_type = 1;
-    if (strncmp(up_sql, "UPDATE", 6) == 0) _stmt_type = 2;
-    if (strncmp(up_sql, "INSERT", 6) == 0) _stmt_type = 3;
-
+    _stmt = NULL;
     try {
-      if (_stmt_type == 3) {
 	_stmt = _con->prepareStatement(sql, NuoDB::RETURN_GENERATED_KEYS);
-      } else {
-	_stmt = _con->prepareStatement(sql);
-      }
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-		nuodb_throw_zend_exception("HY000", error_code, error_text);
-
+	nuodb_throw_zend_exception("HY000", error_code, error_text);
     } catch (...) {
-		nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
+	nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
     }
 
     return _stmt;
@@ -299,16 +372,28 @@ void PdoNuoDbStatement::execute()
     {
         PDO_DBG_VOID_RETURN;
     }
-    if (_stmt_type == 1) {
-        _rs = _stmt->executeQuery();
-    } else if (_stmt_type == 2 || _stmt_type == 3) {
-        int update_count = _stmt->executeUpdate();
-	if (_stmt_type == 3) {
-	  _rs_gen_keys = _stmt->getGeneratedKeys();
-	}
+
+    int update_count = 0;
+    bool result = _stmt->execute();
+    if (result == TRUE) {  // true means there was no UPDATE or INSERT
+       _rs = _stmt->getResultSet();
     } else {
-        _stmt->execute();
+       update_count = _stmt->getUpdateCount(); 
+       if (update_count != 0) 
+       {
+         NuoDB::ResultSet *_rs_gen_keys = NULL;
+
+         _rs_gen_keys = _stmt->getGeneratedKeys();
+	 if (_rs_gen_keys != NULL) 
+	 {
+	   PdoNuoDbGeneratedKeys *keys = new PdoNuoDbGeneratedKeys();
+	   keys->setKeys(_rs_gen_keys);
+	   _dbh->setLastKeys(keys);
+	   _rs_gen_keys->close();
+	 }
+       }  
     }
+
     PDO_DBG_VOID_RETURN;
 }
 
@@ -324,11 +409,6 @@ void PdoNuoDbStatement::executeQuery()
 bool PdoNuoDbStatement::hasResultSet()
 {
     return (_rs != NULL);
-}
-
-bool PdoNuoDbStatement::hasGeneratedKeysResultSet()
-{
-    return (_rs_gen_keys != NULL);
 }
 
 bool PdoNuoDbStatement::next()
@@ -365,10 +445,10 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-		nuodb_throw_zend_exception("HY000", error_code, error_text);
+	nuodb_throw_zend_exception("HY000", error_code, error_text);
 
     } catch (...) {
-		nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
+	nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
     }
 
     return rval;
@@ -476,7 +556,7 @@ unsigned long PdoNuoDbStatement::getDate(size_t column)
     return date->getSeconds();
 }
 
-void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len)
+void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     if (_rs == NULL)
     {
@@ -487,13 +567,14 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len)
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
-        *ptr = (char *)realloc((void *)*ptr, *len+1); // todo: is realloc the correct allocation to use?
+        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0, __FILE__, __LINE__, NULL, 0); 
         blob->getBytes(0, *len, (unsigned char *)*ptr);
+	(*ptr)[*len] = '\0';
     }
     return;
 }
 
-void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len)
+void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     if (_rs == NULL)
     {
@@ -504,8 +585,9 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len)
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
-        *ptr = (char *)realloc((void *)*ptr, *len+1); // todo: is realloc the correct allocation to use?
+        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0, __FILE__, __LINE__, NULL, 0); 
         clob->getChars(0, *len, (char *)*ptr);
+	(*ptr)[*len] = '\0';
     }
     return;
 }
@@ -521,36 +603,6 @@ size_t PdoNuoDbStatement::getNumberOfParameters()
     }
     return pmd->getParameterCount();
 }
-
-int PdoNuoDbStatement::getGeneratedKeyLastId(const char *name)
-{
-  int id = 0;
-  int col_idx = 1;
-  if (_rs_gen_keys == NULL) return 0;
-  NuoDB::ResultSetMetaData * resultSetMetaData = _rs_gen_keys->getMetaData();
-  if (name != NULL) {
-    int col_cnt = resultSetMetaData->getColumnCount();
-    bool found = false;
-    const char *col_name;
-    for (int i=1; i <= col_cnt; i++) {
-      col_name = resultSetMetaData->getColumnName(i);
-      if (!strcmp(col_name, name)) {
-	found = true;
-	col_idx = i;
-	break;
-      }
-    }
-    if (!found) return 0;
-  }
-
-  while (_rs_gen_keys->next())
-    id = _rs_gen_keys->getInt(col_idx);
-
-  _rs_gen_keys->close();
-  _rs_gen_keys = NULL;
-  return id;
-}
-
 
 void PdoNuoDbStatement::setInteger(size_t index, int value)
 {
@@ -903,17 +955,17 @@ unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno)
 }
 
 
-void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len)
+void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-    pdo_stmt->getBlob(colno, ptr, len);
+    pdo_stmt->getBlob(colno, ptr, len, erealloc);
     return;
 }
 
-void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len)
+void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-    pdo_stmt->getClob(colno, ptr, len);
+    pdo_stmt->getClob(colno, ptr, len, erealloc);
     return;
 }
 

@@ -73,8 +73,8 @@ if ($row_count != 2) {
 print("select test2\n");
 $sql = "select * from Hockey_test";
 $row_count = query_with_row_count($sql);
-if ($row_count != 25) {
-   print("FAILED row count: $sql\nExpected 25, got $row_count\n");
+if ($row_count != 24) {
+   print("FAILED row count: $sql\nExpected 24, got $row_count\n");
 }
 
 
@@ -94,8 +94,8 @@ $db = NULL;
 print("select test3\n");
 $sql = "select * from Hockey_test";
 $row_count = query_with_row_count($sql);
-if ($row_count != 26) {
-   print("FAILED row count: $sql\nExpected 26, got $row_count\n");
+if ($row_count != 25) {
+   print("FAILED row count: $sql\nExpected 25, got $row_count\n");
 }
 
 // delete test1
@@ -114,8 +114,8 @@ $db = NULL;
 print("select test4\n");
 $sql = "select * from Hockey_test";
 $row_count = query_with_row_count($sql);
-if ($row_count != 25) {
-   print("FAILED row count: $sql\nExpected 25, got $row_count\n");
+if ($row_count != 24) {
+   print("FAILED row count: $sql\nExpected 24, got $row_count\n");
 }
 $db = NULL;
 

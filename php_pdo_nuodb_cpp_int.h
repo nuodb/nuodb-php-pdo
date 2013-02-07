@@ -38,17 +38,40 @@
 
 class PdoNuoDbStatement;
 
+struct PdoNuoDbGeneratedKeyElement 
+{
+    char *columnName;
+    int columnIndex;
+    int columnKeyValue;
+};
+
+class PdoNuoDbGeneratedKeys
+{
+  private:
+    int _qty;
+    PdoNuoDbGeneratedKeyElement *_keys;
+  public:
+    PdoNuoDbGeneratedKeys();
+    ~PdoNuoDbGeneratedKeys();
+    void setKeys(NuoDB::ResultSet *rs);
+    int getIdValue();
+    int getIdValue(const char *seqName);
+};
+
 class PdoNuoDbHandle
 {
 private:
     NuoDB::Connection * _con;
     SqlOptionArray * _opts;
     SqlOption _opt_arr[4];
-    PdoNuoDbStatement * _last_stmt;
+    PdoNuoDbStatement * _last_stmt; // will be NULL if the last statement was closed.
+    PdoNuoDbGeneratedKeys *_last_keys;  // pointer to array of generated keys.
     void deleteOptions();
 public:
     PdoNuoDbHandle(SqlOptionArray * options);
     ~PdoNuoDbHandle();
+    void setLastStatement(PdoNuoDbStatement *lastStatement);
+    void setLastKeys(PdoNuoDbGeneratedKeys *lastKeys);
     void setOptions(SqlOptionArray * options);
     NuoDB::Connection * createConnection();
     NuoDB::Connection * getConnection();
@@ -66,9 +89,7 @@ private:
     PdoNuoDbHandle * _dbh;
     const char *_sql;
     NuoDB::PreparedStatement * _stmt;
-    int _stmt_type; // 0=unknown, 1=select, 2=update, 3=insert
     NuoDB::ResultSet * _rs;
-    NuoDB::ResultSet *_rs_gen_keys;
 public:
     PdoNuoDbStatement(PdoNuoDbHandle * dbh);
     ~PdoNuoDbStatement();
@@ -76,7 +97,6 @@ public:
     void execute();
     void executeQuery();
     bool hasResultSet();
-    bool hasGeneratedKeysResultSet();
     bool next();
     size_t getColumnCount();
     char const * getColumnName(size_t column);
@@ -87,8 +107,8 @@ public:
     unsigned long getTimestamp(size_t column);
     unsigned long getDate(size_t column);
     unsigned long getTime(size_t column);
-    void getBlob(size_t column, char ** ptr, unsigned long * len);
-    void getClob(size_t column, char ** ptr, unsigned long * len);
+    void getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
+    void getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
     size_t getNumberOfParameters();
     int getGeneratedKeyLastId(const char *name);
 
@@ -97,5 +117,6 @@ public:
     void setBlob(size_t index, const char *value, int len);
     void setClob(size_t index, const char *value, int len);
 };
+
 
 #endif	/* PHP_PDO_NUODB_INT_CPP_H */

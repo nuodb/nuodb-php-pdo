@@ -200,8 +200,8 @@ const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
-void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len);
-void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len);
+void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
+void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
 
 #ifdef __cplusplus
 } // end of extern "C" {
