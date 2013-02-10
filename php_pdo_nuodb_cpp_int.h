@@ -94,7 +94,7 @@ public:
     PdoNuoDbStatement(PdoNuoDbHandle * dbh);
     ~PdoNuoDbStatement();
     NuoDB::PreparedStatement * createStatement(char const * sql);
-    void execute();
+    int execute();
     void executeQuery();
     bool hasResultSet();
     bool next();

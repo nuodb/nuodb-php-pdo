@@ -17,7 +17,10 @@ try {
   $stmt = $db->prepare($sql);
 
   $stmt->bindParam(':name', $name, PDO::PARAM_STR);
-  $stmt->execute();
+  $affected_rows = $stmt->execute();
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
 
   $sql = "SELECT NAME AS USERNAME, NUM FROM TEST WHERE NAME = :name";
   $stmt = $db->prepare($sql);

@@ -365,12 +365,12 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     return _stmt;
 }
 
-void PdoNuoDbStatement::execute()
+int PdoNuoDbStatement::execute()
 {
     PDO_DBG_ENTER("PdoNuoDbHandle::execute");
     if (_stmt == NULL)
     {
-        PDO_DBG_VOID_RETURN;
+        PDO_DBG_RETURN(0);
     }
 
     int update_count = 0;
@@ -394,7 +394,7 @@ void PdoNuoDbStatement::execute()
        }  
     }
 
-    PDO_DBG_VOID_RETURN;
+    PDO_DBG_RETURN(update_count);
 }
 
 void PdoNuoDbStatement::executeQuery()
@@ -834,7 +834,7 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
     try
     {
 	PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        pdo_stmt->execute();
+        affected_rows = pdo_stmt->execute();
         S->cursor_open = pdo_stmt->hasResultSet();
         *column_count = pdo_stmt->getColumnCount();
     }

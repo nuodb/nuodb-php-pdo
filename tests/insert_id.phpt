@@ -32,6 +32,10 @@ try {
   $sql3 = "INSERT INSERT_ID_TEST (A) VALUES('b')";
   echo $sql3 . "\n";
   $sth = $db->query($sql3);
+  $affected_rows = $sth->rowCount();
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
   $ins_id3 = $db->lastInsertId();
 //  echo "ins_id3 = " . $ins_id3 . "\n"; 
   $sth = NULL;
@@ -39,7 +43,10 @@ try {
   $sql4 = "INSERT INSERT_ID_TEST (A) VALUES('c')";
   echo $sql4 . "\n";
   $sth = $db->prepare($sql4);
-  $sth->execute();  
+  $affected_rows = $sth->execute();  
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
   $ins_id4 = $db->lastInsertId();
 //  echo "ins_id4 = " . $ins_id4 . "\n"; 
   $sth = NULL;
@@ -49,6 +56,10 @@ try {
   $sql5 = "INSERT INSERT_ID_TEST (A) VALUES('d')";
   echo $sql5 . "\n";
   $sth = $db->query($sql5);
+  $affected_rows = $sth->rowCount();
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
   $sth = NULL;
   $ins_id5 = $db->lastInsertId();
   if (($ins_id4 + 1) != $ins_id5) 
@@ -57,7 +68,10 @@ try {
   $sql6 = "INSERT INSERT_ID_TEST (A) VALUES('e')";
   echo $sql6 . "\n";
   $sth = $db->prepare($sql4);
-  $sth->execute();  
+  $affected_rows = $sth->execute();  
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
   $sth = NULL;
   $ins_id6 = $db->lastInsertId();
   if (($ins_id5 + 1) != $ins_id6) 
@@ -66,6 +80,10 @@ try {
   $sql7 = "INSERT INSERT_ID_TEST (A) VALUES('f')";
   echo $sql7 . "\n";
   $sth = $db->query($sql7);
+  $affected_rows = $sth->rowCount();
+  if ($affected_rows != 1) {
+     echo "ERROR: affected_rows != 1\n";
+  }
   $sth = NULL;
   $ins_id7 = $db->lastInsertId();
   if (($ins_id6 + 1) != $ins_id7) 

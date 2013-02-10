@@ -19,7 +19,12 @@ function create_table_hockey_test() {
     $sql = 'create unique index player_idx_test on Hockey_test (Number, Name, Team);';
     $count = $db->exec($sql);
     $sql = 'insert into Hockey_test select * from Hockey;';
-    $count = $db->exec($sql);
+    $sth = $db->query($sql);
+    $affected_rows = $sth->rowCount();
+    if ($affected_rows != 1) {
+       echo "Affected rows: " . $affected_rows . "\n";
+    }
+    $sth = NULL;
     $db = NULL;
   } catch(PDOException $e) {
     print ("Failed\n");  
@@ -308,6 +313,7 @@ echo "\ndone\n";
 --EXPECT--
 drop table Hockey_test
 create table Hockey_test
+Affected rows: 24
 select test1
 select test2
 insert test1
@@ -326,4 +332,3 @@ select test11
 drop table Hockey_test
 
 done
-
