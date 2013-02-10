@@ -108,6 +108,7 @@ void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg
   PDO_DBG_INF_FMT("Throwing exception: SQLSTATE[%s] [%d] %s", sql_state, code, msg);
   zend_throw_exception_ex(php_pdo_get_exception(), code TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
 			  sql_state, code, msg);
+  free(msg);
   PDO_DBG_VOID_RETURN;
 }
 
@@ -137,7 +138,7 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
         }
     }
 
-    nuodb_throw_zend_exception(*error_code_str, error_code, error_msg);
+    nuodb_throw_zend_exception(*error_code_str, error_code, strdup(error_msg));
     PDO_DBG_VOID_RETURN;
 }
 /* }}} */
@@ -630,7 +631,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     char *errMessage;
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
     if (status == 0) {
-		nuodb_throw_zend_exception("HY000", 38, errMessage);
+		nuodb_throw_zend_exception("HY000", 38, strdup(errMessage));
     }
 
     dbh->methods = &nuodb_methods;

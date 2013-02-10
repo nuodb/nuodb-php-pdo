@@ -128,12 +128,12 @@ void PdoNuoDbGeneratedKeys::setKeys(NuoDB::ResultSet *rs)
 int PdoNuoDbGeneratedKeys::getIdValue() 
 {
     if (_qty == 0) {
-    	nuodb_throw_zend_exception("HY000", 1, "No generated keys");
+    	nuodb_throw_zend_exception("HY000", 1, strdup("No generated keys"));
 	return 0;
     }
 
     if (_qty > 1) {
-    	nuodb_throw_zend_exception("HY000", 1, "Multiple IDs found when looking for a single ID");
+    	nuodb_throw_zend_exception("HY000", 1, strdup("Multiple IDs found when looking for a single ID"));
 	return 0;
     }
 
@@ -147,7 +147,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     // is a reasonable implementation for multiple keys.  Assuming 
     // seqName is a column name.
 
-    nuodb_throw_zend_exception("IM001", 1, "getLastId sequence-name argument is not supported");
+    nuodb_throw_zend_exception("IM001", 1, strdup("getLastId sequence-name argument is not supported"));
     return 0;
     
     for (int i=0; i<_qty; i++)
@@ -162,7 +162,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     if (seqNameLen > (1024 - errMsgBaseLen - 1))
 	seqNameLen = (1024 - errMsgBaseLen -1);
     strncat(errMsg, seqName, seqNameLen);
-    nuodb_throw_zend_exception("HY000", 1, errMsg);
+    nuodb_throw_zend_exception("HY000", 1, strdup(errMsg));
     return 0;
 }
 
@@ -194,12 +194,12 @@ void PdoNuoDbHandle::deleteOptions()
     {
         if (_opt_arr[i].option != NULL)
         {
-            delete _opt_arr[i].option;
+	    free((void *)_opt_arr[i].option);
             _opt_arr[i].option = NULL;
         }
         if (_opt_arr[i].extra != NULL)
         {
-            delete (char *)_opt_arr[i].extra;
+	    free((void *)_opt_arr[i].extra);
             _opt_arr[i].extra = NULL;
         }
     }
@@ -303,7 +303,7 @@ void PdoNuoDbHandle::rollback()
 int PdoNuoDbHandle::getLastId(const char *name)
 {
     if (_last_keys == NULL) {
-		nuodb_throw_zend_exception("HY000", -40, "No generated keys");
+		nuodb_throw_zend_exception("HY000", -40, strdup("No generated keys"));
 		return 0;
     }
 
@@ -357,9 +357,9 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-	nuodb_throw_zend_exception("HY000", error_code, error_text);
+	nuodb_throw_zend_exception("HY000", error_code, strdup(error_text));
     } catch (...) {
-	nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
+	nuodb_throw_zend_exception("HY000", 0, strdup("UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()"));
     }
 
     return _stmt;
@@ -445,10 +445,10 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-	nuodb_throw_zend_exception("HY000", error_code, error_text);
+	nuodb_throw_zend_exception("HY000", error_code, strdup(error_text));
 
     } catch (...) {
-	nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
+	nuodb_throw_zend_exception("HY000", 0, strdup("UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()"));
     }
 
     return rval;
@@ -767,13 +767,13 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
         db->createConnection();
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
-        *errMessage = e.getText();
+        *errMessage = strdup(e.getText());
 	//TODO: throw if PDO::ATTR_ERRMODE is set to PDO::ERRMODE_EXCEPTION
         //TODO: see: DB-2558
         //nuodb_throw_zend_exception("HY000", error_code, error_text);
 	return 0;
     } catch (...) {
-        *errMessage = "Error constructing a NuoDB handle";
+        *errMessage = strdup("Error constructing a NuoDB handle");
         return 0;
     }
     return 1;
