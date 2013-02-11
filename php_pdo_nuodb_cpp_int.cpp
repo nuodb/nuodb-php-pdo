@@ -317,6 +317,20 @@ void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
     return;
 }
 
+const char *PdoNuoDbHandle::getNuoDBProductName()
+{
+    NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
+    if (dbmd == NULL) return NULL;
+    return dbmd->getDatabaseProductName();
+}
+
+const char *PdoNuoDbHandle::getNuoDBProductVersion()
+{
+    NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
+    if (dbmd == NULL) return NULL;
+    return dbmd->getDatabaseProductVersion();
+}
+
 PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NULL), _stmt(NULL), _rs(NULL)
 {
     // empty
@@ -714,6 +728,57 @@ int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int aut
     }
     return 1;
 }
+
+const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H) 
+{
+    const char *rval = NULL;
+    try 
+    {
+	PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+	rval = db->getNuoDBProductName();
+    }
+    catch (NuoDB::SQLException & e)
+    {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
+        return rval;
+    }
+    catch (...)
+    {
+        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_name()");
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
+        return rval;
+    }
+    return rval;
+}
+
+const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H) 
+{
+    const char *rval = NULL;
+    try 
+    {
+	PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+	rval = db->getNuoDBProductVersion();
+    }
+    catch (NuoDB::SQLException & e)
+    {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
+        return rval;
+    }
+    catch (...)
+    {
+        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_version()");
+	// TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE 
+        return rval;
+    }
+    return rval;
+}
+
 
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char * sql)
 {

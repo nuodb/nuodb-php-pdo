@@ -108,7 +108,7 @@ void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg
   PDO_DBG_INF_FMT("Throwing exception: SQLSTATE[%s] [%d] %s", sql_state, code, msg);
   zend_throw_exception_ex(php_pdo_get_exception(), code TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
 			  sql_state, code, msg);
-  free(msg);
+  free((char *)msg);
   PDO_DBG_VOID_RETURN;
 }
 
@@ -541,14 +541,21 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         return 1;
 
     case PDO_ATTR_CLIENT_VERSION:
-        ZVAL_STRING(val,"NuoDB 1.0",1);
+        ZVAL_STRING(val,"NuoDB 1.0.1",1);
         return 1;
 
     case PDO_ATTR_SERVER_VERSION:
     case PDO_ATTR_SERVER_INFO:
-        // TODO: call the NuoDB API to get the verson number.
-        ZVAL_STRING(val,"NuoDB 1.0",1);
+    {
+	const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
+	const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
+	if ((server_name == NULL) || (server_version == NULL)) return 1;
+	char *info = malloc(strlen(server_name) + strlen(server_version) + 4);
+	sprintf(info, "%s %s", server_name, server_version);
+        ZVAL_STRING(val, info, 1);
+	free(info);
         return 1;
+    }
 
     case PDO_ATTR_FETCH_TABLE_NAMES:
         ZVAL_BOOL(val, H->fetch_table_names);

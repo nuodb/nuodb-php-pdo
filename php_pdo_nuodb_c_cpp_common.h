@@ -142,9 +142,11 @@ int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char *sql) ;
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
-    int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, const char **errMessage);
+int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, const char **errMessage);
 void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg);
 int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name);
+const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H); 
+const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H);
 
 typedef struct
 {

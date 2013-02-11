@@ -81,6 +81,8 @@ public:
     void rollback();
     int getLastId(const char *name);
     void setAutoCommit(bool autoCommit);
+    const char *getNuoDBProductName();
+    const char *getNuoDBProductVersion();
 };
 
 class PdoNuoDbStatement
