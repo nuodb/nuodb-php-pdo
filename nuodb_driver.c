@@ -66,42 +66,7 @@ char const * const NUODB_OPT_PASSWORD = "password";
 char const * const NUODB_OPT_SCHEMA = "schema";
 char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
-/* Logging */
 FILE *nuodb_log_fp = NULL;
-
-void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg)
-{
-  if (nuodb_log_fp == NULL) return;
-  
-  fprintf(nuodb_log_fp, "%s : %s(%d) : %s\n", log_level, file, lineno, log_msg);
-  fflush(nuodb_log_fp);
-}
-
-void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...)
-{
-  va_list args;
-  if (nuodb_log_fp == NULL) return;
-  va_start(args, format);
-  fprintf(nuodb_log_fp, "%s : %s(%d) : ", log_level, file, lineno);
-  vfprintf(nuodb_log_fp, format, args);
-  va_end(args);
-  fputs("\n", nuodb_log_fp);
-  fflush(nuodb_log_fp);
-}
-
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
-  if (nuodb_log_fp == NULL) return FALSE;
-  fprintf(nuodb_log_fp, "info : %s(%d) : ENTER FUNCTION : %s\n", file, lineno, func_name);
-  fflush(nuodb_log_fp);
-  return TRUE;
-}
-
-void pdo_nuodb_func_leave(int lineno, const char *file) {
-  if (nuodb_log_fp == NULL) return;
-  fprintf(nuodb_log_fp, "info : %s(%d) : LEAVE FUNCTION\n", file, lineno);
-  fflush(nuodb_log_fp);
-  return;
-}
 
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s, HashTable * TSRMLS_DC);
 

@@ -30,6 +30,10 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
+
 #ifdef _MSC_VER  // Visual Studio specific 
 #include <stdint.h>
 #include <stdio.h>
@@ -342,6 +346,11 @@ PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NUL
 PdoNuoDbStatement::~PdoNuoDbStatement()
 {
     _dbh->setLastStatement(NULL);
+    if (_sql != NULL)
+    {
+       free((void *)_sql);
+    }
+    _sql = NULL;
     if (_rs != NULL)
     {
         _rs->close();
@@ -360,7 +369,7 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     {
         return NULL;
     }
-    _sql = sql;
+    _sql = strdup(sql);
     NuoDB::Connection * _con = NULL;
     _con = _dbh->getConnection();
     if (_con == NULL)
@@ -396,7 +405,8 @@ int PdoNuoDbStatement::execute()
     pdo_nuodb_timer_start(&timer);
     bool result = _stmt->execute();
     pdo_nuodb_timer_end(&timer);
-    double elasped = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
+    int elapsed = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
+    PDO_DBG_INF_FMT("Elapsed time=%d (microsconds) : SQL=%s", elapsed, this->_sql);
     if (result == TRUE) {  // true means there was no UPDATE or INSERT
        _rs = _stmt->getResultSet();
     } else {
@@ -672,6 +682,8 @@ void PdoNuoDbStatement::setClob(size_t index, const char *value, int len)
 
 extern "C" {
 
+/* Timer fuctions */
+
 void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer)
 {
     if (timer == NULL) return;
@@ -712,26 +724,88 @@ void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer)
 #endif
 }
 
-double pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
+int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
 {
     if (timer == NULL) return 0.0;
 #ifdef WIN32
     if(!timer->stopped)
         QueryPerformanceCounter(&(timer->endCount));
 
-    timer->startTimeInMicroSec = timer->startCount.QuadPart * (1000000.0 / timer->frequency.QuadPart);
-    timer->endTimeInMicroSec = timer->endCount.QuadPart * (1000000.0 / timer->frequency.QuadPart);
+    timer->startTimeInMicroSec = timer->startCount.QuadPart * (1000000 / timer->frequency.QuadPart);
+    timer->endTimeInMicroSec = timer->endCount.QuadPart * (1000000 / timer->frequency.QuadPart);
 #else
     if(!timer->stopped)
         gettimeofday(&(timer->endCount), NULL);
 
-    timer->startTimeInMicroSec = (timer->startCount.tv_sec * 1000000.0) + timer->startCount.tv_usec;
-    timer->endTimeInMicroSec = (timer->endCount.tv_sec * 1000000.0) + timer->endCount.tv_usec;
+    timer->startTimeInMicroSec = (timer->startCount.tv_sec * 1000000) + timer->startCount.tv_usec;
+    timer->endTimeInMicroSec = (timer->endCount.tv_sec * 1000000) + timer->endCount.tv_usec;
 #endif
 
     return timer->endTimeInMicroSec - timer->startTimeInMicroSec;
 }
 
+/* Logging */
+
+extern FILE *nuodb_log_fp;
+
+void get_timestamp(char *time_buffer) 
+{
+  char fmt[64];
+
+  struct timeval  tv;
+  struct tm       *tm;
+
+  if (nuodb_log_fp == NULL) return;
+
+  gettimeofday(&tv, NULL);
+  if((tm = localtime(&tv.tv_sec)) != NULL)
+  {
+       strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
+       snprintf(time_buffer, 64, fmt, tv.tv_usec);
+  }
+}
+
+void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg)
+{
+  char buf[64] = "";
+  if (nuodb_log_fp == NULL) return;
+  get_timestamp(buf);
+  fprintf(nuodb_log_fp, "%s : %s : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
+  fflush(nuodb_log_fp);
+}
+
+void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...)
+{
+  char buf[64] = "";
+  va_list args;
+
+  if (nuodb_log_fp == NULL) return;
+  va_start(args, format);
+  get_timestamp(buf);
+  fprintf(nuodb_log_fp, "%s : %s : %s(%d) : ", buf, log_level, file, lineno);
+  vfprintf(nuodb_log_fp, format, args);
+  va_end(args);
+  fputs("\n", nuodb_log_fp);
+  fflush(nuodb_log_fp);
+}
+
+int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
+  char buf[64] = "";
+  if (nuodb_log_fp == NULL) return FALSE;
+  get_timestamp(buf);
+  fprintf(nuodb_log_fp, "%s : info : %s(%d) : ENTER FUNCTION : %s\n", buf, file, lineno, func_name);
+  fflush(nuodb_log_fp);
+  return TRUE;
+}
+
+void pdo_nuodb_func_leave(int lineno, const char *file) {
+  char buf[64] = "";
+  if (nuodb_log_fp == NULL) return;
+  get_timestamp(buf);
+  fprintf(nuodb_log_fp, "%s : info : %s(%d) : LEAVE FUNCTION\n", buf, file, lineno);
+  fflush(nuodb_log_fp);
+  return;
+}
 
 
 int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H) {
