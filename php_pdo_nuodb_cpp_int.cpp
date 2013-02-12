@@ -33,6 +33,9 @@
 #ifdef _MSC_VER  // Visual Studio specific 
 #include <stdint.h>
 #include <stdio.h>
+#include <windows.h>
+#else
+#include <sys/time.h>
 #endif
 
 #include <cstdio>
@@ -388,7 +391,12 @@ int PdoNuoDbStatement::execute()
     }
 
     int update_count = 0;
+    struct pdo_nuodb_timer_t timer;
+    pdo_nuodb_timer_init(&timer);
+    pdo_nuodb_timer_start(&timer);
     bool result = _stmt->execute();
+    pdo_nuodb_timer_end(&timer);
+    double elasped = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
     if (result == TRUE) {  // true means there was no UPDATE or INSERT
        _rs = _stmt->getResultSet();
     } else {
@@ -663,6 +671,69 @@ void PdoNuoDbStatement::setClob(size_t index, const char *value, int len)
 // C/C++ jump functions
 
 extern "C" {
+
+void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer)
+{
+    if (timer == NULL) return;
+#ifdef WIN32
+    QueryPerformanceFrequency(&(timer->frequency));
+    timer->startCount.QuadPart = 0;
+    timer->endCount.QuadPart = 0;
+#else
+    timer->startCount.tv_sec = timer->startCount.tv_usec = 0;
+    timer->endCount.tv_sec = timer->endCount.tv_usec = 0;
+#endif
+    timer->stopped = 0;
+    timer->startTimeInMicroSec = 0;
+    timer->endTimeInMicroSec = 0;
+}
+
+void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer)
+{
+    if (timer == NULL) return;
+    timer->stopped = 0; // reset stop flag
+#ifdef WIN32
+    QueryPerformanceCounter(&(timer->startCount));
+#else
+    gettimeofday(&(timer->startCount), NULL);
+#endif
+
+}
+
+void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer)
+{
+    if (timer == NULL) return;
+    timer->stopped = 1; // set timer stopped flag
+
+#ifdef WIN32
+    QueryPerformanceCounter(&(timer->endCount));
+#else
+    gettimeofday(&(timer->endCount), NULL);
+#endif
+}
+
+double pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
+{
+    if (timer == NULL) return 0.0;
+#ifdef WIN32
+    if(!timer->stopped)
+        QueryPerformanceCounter(&(timer->endCount));
+
+    timer->startTimeInMicroSec = timer->startCount.QuadPart * (1000000.0 / timer->frequency.QuadPart);
+    timer->endTimeInMicroSec = timer->endCount.QuadPart * (1000000.0 / timer->frequency.QuadPart);
+#else
+    if(!timer->stopped)
+        gettimeofday(&(timer->endCount), NULL);
+
+    timer->startTimeInMicroSec = (timer->startCount.tv_sec * 1000000.0) + timer->startCount.tv_usec;
+    timer->endTimeInMicroSec = (timer->endCount.tv_sec * 1000000.0) + timer->endCount.tv_usec;
+#endif
+
+    return timer->endTimeInMicroSec - timer->startTimeInMicroSec;
+}
+
+
+
 int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H) {
 	try {
 		PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);

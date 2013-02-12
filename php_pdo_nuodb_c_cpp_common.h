@@ -52,6 +52,31 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+struct pdo_nuodb_timer_t {
+    double startTimeInMicroSec;
+    double endTimeInMicroSec;
+    int    stopped;
+#ifdef WIN32
+    LARGE_INTEGER frequency; // ticks per second
+    LARGE_INTEGER startCount;
+    LARGE_INTEGER endCount;
+#else 
+    struct timeval startCount;
+    struct timeval endCount;
+#endif    
+};
+void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
+void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
+void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer);
+double pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
+#ifdef __cplusplus
+}
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg);
 void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...);
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len);

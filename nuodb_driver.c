@@ -38,6 +38,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utime.h>
+#include <windows.h>
+#else
+#include <sys/time.h>
 #endif
 
 #include "php.h"
@@ -69,6 +72,7 @@ FILE *nuodb_log_fp = NULL;
 void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg)
 {
   if (nuodb_log_fp == NULL) return;
+  
   fprintf(nuodb_log_fp, "%s : %s(%d) : %s\n", log_level, file, lineno, log_msg);
   fflush(nuodb_log_fp);
 }
