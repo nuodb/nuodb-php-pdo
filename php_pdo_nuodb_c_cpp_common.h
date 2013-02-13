@@ -52,6 +52,31 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+struct pdo_nuodb_timer_t {
+    int startTimeInMicroSec;
+    int endTimeInMicroSec;
+    int stopped;
+#ifdef WIN32
+    LARGE_INTEGER frequency; // ticks per second
+    LARGE_INTEGER startCount;
+    LARGE_INTEGER endCount;
+#else 
+    struct timeval startCount;
+    struct timeval endCount;
+#endif    
+};
+void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
+void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
+void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer);
+int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
+#ifdef __cplusplus
+}
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg);
 void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...);
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len);
@@ -142,7 +167,7 @@ int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char *sql) ;
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
-int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, const char **errMessage);
+int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage);
 void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg);
 int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name);
 const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H); 

@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utime.h>
+#else
+#include <sys/time.h>
 #endif
 
 #include "php.h"
@@ -63,41 +65,7 @@ char const * const NUODB_OPT_PASSWORD = "password";
 char const * const NUODB_OPT_SCHEMA = "schema";
 char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
-/* Logging */
 FILE *nuodb_log_fp = NULL;
-
-void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg)
-{
-  if (nuodb_log_fp == NULL) return;
-  fprintf(nuodb_log_fp, "%s : %s(%d) : %s\n", log_level, file, lineno, log_msg);
-  fflush(nuodb_log_fp);
-}
-
-void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...)
-{
-  va_list args;
-  if (nuodb_log_fp == NULL) return;
-  va_start(args, format);
-  fprintf(nuodb_log_fp, "%s : %s(%d) : ", log_level, file, lineno);
-  vfprintf(nuodb_log_fp, format, args);
-  va_end(args);
-  fputs("\n", nuodb_log_fp);
-  fflush(nuodb_log_fp);
-}
-
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
-  if (nuodb_log_fp == NULL) return FALSE;
-  fprintf(nuodb_log_fp, "info : %s(%d) : ENTER FUNCTION : %s\n", file, lineno, func_name);
-  fflush(nuodb_log_fp);
-  return TRUE;
-}
-
-void pdo_nuodb_func_leave(int lineno, const char *file) {
-  if (nuodb_log_fp == NULL) return;
-  fprintf(nuodb_log_fp, "info : %s(%d) : LEAVE FUNCTION\n", file, lineno);
-  fflush(nuodb_log_fp);
-  return;
-}
 
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s, HashTable * TSRMLS_DC);
 
@@ -547,10 +515,11 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
     case PDO_ATTR_SERVER_VERSION:
     case PDO_ATTR_SERVER_INFO:
     {
+	char *info = NULL;
 	const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
 	const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
-	char *info = NULL;
 	if ((server_name == NULL) || (server_version == NULL)) return 1;
+	info = malloc(strlen(server_name) + strlen(server_version) + 4);
 	sprintf(info, "%s %s", server_name, server_version);
         ZVAL_STRING(val, info, 1);
 	free(info);
@@ -610,7 +579,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     short dpb_len;
     SqlOption options[4];
     SqlOptionArray optionsArray;
-    char *errMessage;
+    char *errMessage = NULL;
 
     if (PDO_NUODB_G(enable_log) != 0) {
       nuodb_log_fp = fopen(PDO_NUODB_G(logfile_path),"a");

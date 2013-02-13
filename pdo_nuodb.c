@@ -35,7 +35,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utime.h>
+#else
+#include <sys/time.h>
 #endif
+
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
