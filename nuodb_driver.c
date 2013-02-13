@@ -549,8 +549,8 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
     {
 	const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
 	const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
+	char *info = NULL;
 	if ((server_name == NULL) || (server_version == NULL)) return 1;
-	char *info = malloc(strlen(server_name) + strlen(server_version) + 4);
 	sprintf(info, "%s %s", server_name, server_version);
         ZVAL_STRING(val, info, 1);
 	free(info);
@@ -610,6 +610,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     short dpb_len;
     SqlOption options[4];
     SqlOptionArray optionsArray;
+    char *errMessage;
 
     if (PDO_NUODB_G(enable_log) != 0) {
       nuodb_log_fp = fopen(PDO_NUODB_G(logfile_path),"a");
@@ -635,7 +636,6 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     PDO_DBG_INF_FMT("\ndatabase=%s\nuser=%s\nschema=%s",
                     options[0].extra, options[1].extra, options[3].extra);
 
-    char *errMessage;
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
     if (status == 0) {
 		nuodb_throw_zend_exception("HY000", 38, strdup(errMessage));
