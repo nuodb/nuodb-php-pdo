@@ -35,7 +35,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utime.h>
-#include <windows.h>
 #else
 #include <sys/time.h>
 #endif

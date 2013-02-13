@@ -755,13 +755,30 @@ void get_timestamp(char *time_buffer)
   struct timeval  tv;
   struct tm       *tm;
 
+#ifdef WIN32 
+  __time64_t long_time;
+#endif
+
   if (nuodb_log_fp == NULL) return;
 
+#ifdef WIN32
+        _time64( &long_time );           // Get time as 64-bit integer.
+                                     // Convert to local time.
+   tm = _localtime64( &long_time ); // C4996
+        // Note: _localtime64 deprecated; consider _localetime64_s
+
+#else
   gettimeofday(&tv, NULL);
-  if((tm = localtime(&tv.tv_sec)) != NULL)
+  tm = localtime(&tv.tv_sec);
+#endif
+  if(tm != NULL)
   {
        strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
+#ifdef WIN32
+       _snprintf(time_buffer, 64, fmt, tv.tv_usec);
+#else
        snprintf(time_buffer, 64, fmt, tv.tv_usec);
+#endif
   }
 }
 
@@ -972,7 +989,7 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
 }
 
 
-int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, const char **errMessage) 
+int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage) 
 {
     *errMessage = NULL;
     try {
