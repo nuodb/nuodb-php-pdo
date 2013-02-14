@@ -8,7 +8,7 @@ Test last insert id
 echo "Last insert id test.\n";
 $db = null;
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=USER", "dba", "goalie") or die;
+  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
   $sql1 = "DROP TABLE INSERT_ID_TEST CASCADE IF EXISTS";
   echo $sql1 . "\n";

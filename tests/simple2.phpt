@@ -1,9 +1,9 @@
 --TEST--
-Simple2 test using the Hockey database with a non-existing table named test1.
+Simple2 test using a non-existing table named test1.
 --FILE--
 <?php 
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
   $sql = "select * from test1 where t=1234567";
   foreach ($db->query($sql) as $row) {
      print_r ($row);

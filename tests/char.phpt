@@ -3,7 +3,7 @@ char test
 --FILE--
 <?php 
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
   $sql1 = "drop table char_test cascade if exists";
   $db->query($sql1);

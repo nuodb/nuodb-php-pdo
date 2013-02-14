@@ -3,8 +3,8 @@ Test connection with a specified port number.
 --FILE--
 <?php 
 try {  
-  $db = new PDO("nuodb:database=test@localhost:48004;schema=Hockey", "dba", "goalie") or die;
-  $sql = "select * from hockey where NUMBER<12";
+  $db = new PDO("nuodb:database=test@localhost:48004;schema=PDOTEST", "dba", "goalie") or die;
+  $sql = "select current_schema from dual";
   foreach ($db->query($sql) as $row) {
      print_r ($row);
   }
@@ -18,28 +18,7 @@ echo "done\n";
 --EXPECT--
 Array
 (
-    [ID] => 3
-    [0] => 3
-    [NUMBER] => 11
-    [1] => 11
-    [NAME] => GREGORY CAMPBELL
-    [2] => GREGORY CAMPBELL
-    [POSITION] => Forward
-    [3] => Forward
-    [TEAM] => Bruins
-    [4] => Bruins
-)
-Array
-(
-    [ID] => 24
-    [0] => 24
-    [NUMBER] => 1
-    [1] => 1
-    [NAME] => MAX SUMMIT
-    [2] => MAX SUMMIT
-    [POSITION] => Fan
-    [3] => Fan
-    [TEAM] => Bruins
-    [4] => Bruins
+    [] => PDOTEST
+    [0] => PDOTEST
 )
 done

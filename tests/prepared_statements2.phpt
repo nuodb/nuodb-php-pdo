@@ -3,11 +3,20 @@ Prepared statement with String parameter
 --FILE--
 <?php 
 // Test prepared statement with String parameter.
+
+require("testdb.inc");
+global $db;
+
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+  $db = open_db();
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+  // create table Hockey_test
+  drop_table_hockey_test();
+  create_table_hockey_test();
+
   $position = 'Defense';
-  $sql = "select count(*) from hockey where POSITION = :position";
+  $sql = "select count(*) from hockey_test where POSITION = :position";
   $stmt = $db->prepare($sql);
   $stmt->bindParam(':position', $position, PDO::PARAM_STR);
   $stmt->execute();
@@ -23,6 +32,8 @@ $db = NULL;
 echo "done\n";
 ?>
 --EXPECT--
+drop table Hockey_test
+create table Hockey_test
 Array
 (
     [COUNT] => 7

@@ -2,7 +2,7 @@
 Prepared Statements and BLOBs
 --FILE--
 <?php
-	$db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+	$db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
 	$blobs = array(
 //		'TINYBLOB'		=> 255,
@@ -61,7 +61,7 @@ Prepared Statements and BLOBs
 ?>
 --CLEAN--
 <?php
-$db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+$db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 $db->exec('DROP TABLE IF EXISTS CASCADE test');
 ?>
 --EXPECTF--

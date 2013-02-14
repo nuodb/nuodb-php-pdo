@@ -2,18 +2,29 @@
 Prepared statement with Integer parameter
 --FILE--
 <?php 
+
+require("testdb.inc");
+global $db;
+
+
 // Test prepared statement with Integer parameter.
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+  $db = open_db();
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+  // create table Hockey_test
+  drop_table_hockey_test();
+  create_table_hockey_test();
+
   $player_number = 33;
-  $sql = "select * from hockey where NUMBER = :number";
+  $sql = "select * from hockey_test where NUMBER = :number";
   $stmt = $db->prepare($sql);
   $stmt->bindParam(':number', $player_number, PDO::PARAM_INT);
   $stmt->execute();
   $result = $stmt->fetchAll();
   foreach ($result as $row) {
-     print_r ($row);
+     echo "NUMBER=" . $row["NUMBER"] . " NAME=" . $row["NAME"] . " POSITION=" . $row["POSITION"] . " TEAM=" . $row["TEAM"] . "\n";
+     //print_r ($row);
   }
   $db = NULL;
 } catch(PDOException $e) {  
@@ -23,17 +34,7 @@ $db = NULL;
 echo "done\n";
 ?>
 --EXPECT--
-Array
-(
-    [ID] => 16
-    [0] => 16
-    [NUMBER] => 33
-    [1] => 33
-    [NAME] => ZDENO CHARA
-    [2] => ZDENO CHARA
-    [POSITION] => Defense
-    [3] => Defense
-    [TEAM] => Bruins
-    [4] => Bruins
-)
+drop table Hockey_test
+create table Hockey_test
+NUMBER=33 NAME=ZDENO CHARA POSITION=Defense TEAM=Bruins
 done

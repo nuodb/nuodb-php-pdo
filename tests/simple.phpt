@@ -1,10 +1,32 @@
 --TEST--
-Simple test using the Hockey database.
+Simple test.
 --FILE--
 <?php 
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
-  $sql = "select * from hockey where NUMBER<12";
+  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+
+  $sql = "DROP TABLE SIMPLE CASCADE IF EXISTS";
+  $db->query($sql);
+  
+  $sql = "CREATE TABLE SIMPLE (NAME VARCHAR(255) NOT NULL DEFAULT '', NUM INTEGER NOT NULL DEFAULT -1)";
+  $db->query($sql);
+
+  $sql = "INSERT INTO SIMPLE (NAME, NUM) VALUES ('Rick', 1)";
+  $db->query($sql);
+
+  $sql = "INSERT INTO SIMPLE (NAME, NUM) VALUES ('Bill', 2)";
+  $db->query($sql);
+  
+  $sql = "INSERT INTO SIMPLE (NAME, NUM) VALUES ('Tom', 3)";
+  $db->query($sql);
+
+  $sql = "INSERT INTO SIMPLE (NAME, NUM) VALUES ('Bob', 4)";
+  $db->query($sql);
+
+  $sql = "INSERT INTO SIMPLE (NAME, NUM) VALUES ('Dave', 5)";
+  $db->query($sql);
+
+  $sql = "SELECT * FROM SIMPLE";
   foreach ($db->query($sql) as $row) {
      print_r ($row);
   }
@@ -18,28 +40,37 @@ echo "done\n";
 --EXPECT--
 Array
 (
-    [ID] => 3
-    [0] => 3
-    [NUMBER] => 11
-    [1] => 11
-    [NAME] => GREGORY CAMPBELL
-    [2] => GREGORY CAMPBELL
-    [POSITION] => Forward
-    [3] => Forward
-    [TEAM] => Bruins
-    [4] => Bruins
+    [NAME] => Rick
+    [0] => Rick
+    [NUM] => 1
+    [1] => 1
 )
 Array
 (
-    [ID] => 24
-    [0] => 24
-    [NUMBER] => 1
-    [1] => 1
-    [NAME] => MAX SUMMIT
-    [2] => MAX SUMMIT
-    [POSITION] => Fan
-    [3] => Fan
-    [TEAM] => Bruins
-    [4] => Bruins
+    [NAME] => Bill
+    [0] => Bill
+    [NUM] => 2
+    [1] => 2
+)
+Array
+(
+    [NAME] => Tom
+    [0] => Tom
+    [NUM] => 3
+    [1] => 3
+)
+Array
+(
+    [NAME] => Bob
+    [0] => Bob
+    [NUM] => 4
+    [1] => 4
+)
+Array
+(
+    [NAME] => Dave
+    [0] => Dave
+    [NUM] => 5
+    [1] => 5
 )
 done
