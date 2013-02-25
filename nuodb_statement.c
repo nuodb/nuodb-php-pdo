@@ -179,13 +179,13 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
     {
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
-            col->param_type = PDO_PARAM_BOOL;
+            col->param_type = PDO_PARAM_STR;
             break;
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
         {
             col->maxlen = 24;
-            col->param_type = PDO_PARAM_STR;  // TODO: Is this correct?  Shouldn't it be a long?
+            col->param_type = PDO_PARAM_STR;
             break;
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
@@ -232,8 +232,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
         default:
         {
 	    PDO_DBG_ERR_FMT("unknown/unsupported type: %d", sqlTypeNumber);
-	    return 0;
-            break;
+	    PDO_DBG_RETURN(0);
         }
     }
 
@@ -263,6 +262,9 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
     {
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
+	    int val = pdo_nuodb_stmt_get_boolean(S, colno);
+            *ptr = (char *)emalloc(CHAR_BUF_LEN);
+            *len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
             break;
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
@@ -356,6 +358,11 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
 
 	nuodb_params = param->is_param ? S->in_params : S->out_params;
 
+	if (nuodb_params == NULL)
+	{
+		PDO_DBG_RETURN(1);
+	}
+
     if (event_type == PDO_PARAM_EVT_FREE)   /* not used */
     {
         PDO_DBG_RETURN(1);
@@ -418,6 +425,11 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
                 return 0;
             }
             switch(param->param_type) {
+                case PDO_PARAM_BOOL:
+                {
+                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BOOLEAN;
+                    break;
+                }
                 case PDO_PARAM_INT:
                 {
                     nuodb_param->sqltype = PDO_NUODB_SQLTYPE_INTEGER;
@@ -433,6 +445,12 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
                     nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
                     break;
                 }
+	        default: 
+	        {
+ 		    strcpy(stmt->error_code, "HY000");
+		    pdo_nuodb_db_handle_set_last_app_error(S->H, "Unknown PDO param_type");
+		    PDO_DBG_RETURN(0);
+	        }
             }
             break;
 
@@ -448,13 +466,17 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
 
 			switch (nuodb_param->sqltype & ~1) {
 				case PDO_NUODB_SQLTYPE_ARRAY:
-					strcpy(stmt->error_code, "HY000");
+ 					strcpy(stmt->error_code, "HY000");
 					pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot bind to array field");
 					PDO_DBG_RETURN(0);
 
 			}
 
 			switch (nuodb_param->sqltype) {
+			    case PDO_NUODB_SQLTYPE_BOOLEAN: {
+                    pdo_nuodb_stmt_set_boolean(S, param->paramno,  Z_LVAL_P(param->parameter));
+                    break;
+			    }
 			    case PDO_NUODB_SQLTYPE_INTEGER: {
                     pdo_nuodb_stmt_set_integer(S, param->paramno,  Z_LVAL_P(param->parameter));
                     break;

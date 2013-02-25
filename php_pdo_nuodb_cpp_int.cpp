@@ -540,6 +540,15 @@ char const * PdoNuoDbStatement::getString(size_t column)
     return _rs->getString(column+1);
 }
 
+int PdoNuoDbStatement::getBoolean(size_t column)
+{
+    if (_rs == NULL)
+    {
+        return 0;
+    }
+    return (int) _rs->getBoolean(column+1);
+}
+
 int PdoNuoDbStatement::getInteger(size_t column)
 {
     if (_rs == NULL)
@@ -634,6 +643,15 @@ size_t PdoNuoDbStatement::getNumberOfParameters()
         return 0;
     }
     return pmd->getParameterCount();
+}
+
+void PdoNuoDbStatement::setBoolean(size_t index, int value)
+{
+    if (_stmt == NULL) {
+        return;
+    }
+    _stmt->setBoolean(index+1, (value != 0));
+    return;
 }
 
 void PdoNuoDbStatement::setInteger(size_t index, int value)
@@ -1121,6 +1139,13 @@ int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno) {
 	return sql_type;
 }
 
+int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, int flag_val)
+{
+	PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+	pdo_stmt->setBoolean(paramno,  flag_val);
+	return 1;
+}
+
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val)
 {
 	PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
@@ -1147,6 +1172,12 @@ int pdo_nuodb_stmt_set_clob(pdo_nuodb_stmt *S, int paramno, char *clob_val, int 
 	PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
 	pdo_stmt->setClob(paramno,  clob_val, len);
 	return 1;
+}
+
+int pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno)
+{
+	PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+	return pdo_stmt->getBoolean(colno);
 }
 
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno)

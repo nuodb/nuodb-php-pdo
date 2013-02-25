@@ -219,8 +219,10 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt *S, int *column_count, long *row_count
 int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt *S, long *row_count);
 char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
+int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, int flag_val);
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
 int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
+int pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno);
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno);
 int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
