@@ -113,6 +113,7 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
 
 #define RECORD_ERROR(dbh) _nuodb_error(dbh, NULL, __FILE__, __LINE__ TSRMLS_CC)
 
+
 /* called by PDO to close a db handle */
 static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
@@ -147,15 +148,30 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
     int num_input_params = 0;
     int index = 0;
 
+    char *nsql = NULL;
+    int nsql_len = 0;
+
     PDO_DBG_ENTER("nuodb_handle_preparer");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
     do
     {
-        nuo_params params;
-        char result[8];
         ALLOC_HASHTABLE(np);
         zend_hash_init(np, 8, NULL, NULL, 0);
+
+	stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
+	stmt->named_rewrite_template = ":pdo%d";
+	ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
+	if (ret == 1) /* the SQL query was re-written */
+	{
+	    sql = nsql;
+	    sql_len = nsql_len;
+	}
+	else if (ret == -1) /* could not understand it! */
+	{
+		strcpy(dbh->error_code, stmt->error_code);
+		return 0;
+	}
 
         /* allocate and prepare statement */
         if (!nuodb_alloc_prepare_stmt(dbh, sql, sql_len, &s, np TSRMLS_CC))
@@ -177,7 +193,31 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
         // TODO: S->statement_type =
 
         // allocate input params
-        num_input_params = zend_hash_num_elements(np);
+//        num_input_params = zend_hash_num_elements(np);
+
+	/* FOR NOW.. */
+        stmt->driver_data = S;
+        stmt->methods = &nuodb_stmt_methods;
+
+	num_input_params = 0;
+	if (stmt->bound_param_map) 
+	{
+	    num_input_params = zend_hash_num_elements(stmt->bound_param_map);
+ 	    if ((num_input_params > 0) && (S->in_params == NULL)) 
+	    {
+		index = 0;
+		S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
+		S->in_params->num_alloc = S->in_params->num_params = num_input_params;
+		for (index = 0; index<num_input_params; index++) 
+		{
+		    S->in_params->params[index].col_name[0] = '\0';
+		    S->in_params->params[index].col_name_length = 0;
+		    S->in_params->params[index].len = 0;
+		    S->in_params->params[index].data = NULL;
+		}
+	    }
+	}
+
         index = 0;
         if (num_input_params > 0)
         {

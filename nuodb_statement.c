@@ -344,252 +344,166 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
 }
 /* }}} */
 
-static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /* {{{ */
+static int 
+nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /* {{{ */
                                  enum pdo_param_event event_type TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
     nuo_params * nuodb_params = NULL;
     nuo_param * nuodb_param = NULL;
 
-	PDO_DBG_ENTER("nuodb_stmt_param_hook");
+    PDO_DBG_ENTER("nuodb_stmt_param_hook");
     PDO_DBG_INF_FMT("S=%ld", S);
 
-	nuodb_params = param->is_param ? S->in_params : S->out_params;
+    nuodb_params = param->is_param ? S->in_params : S->out_params;
 
-    if (event_type == PDO_PARAM_EVT_FREE)   /* not used */
+    if (param->is_param) 
     {
-        PDO_DBG_RETURN(1);
-    }
+	switch (event_type) 
+	{
+	    case PDO_PARAM_EVT_FREE:
+		break;
 
-    if (nuodb_params && param->paramno >= nuodb_params->num_params)
-    {
-        strcpy(stmt->error_code, "HY093");
-        pdo_nuodb_db_handle_set_last_app_error(S->H, "Invalid parameter index");
-        PDO_DBG_RETURN(0);
-    }
-
-    if (param->is_param && param->paramno == -1)
-    {
-        long * index;
-
-        /* try to determine the index by looking in the named_params hash */
-        if (SUCCESS == zend_hash_find(S->named_params, param->name, param->namelen+1, (void **)&index))
-        {
-            param->paramno = *index;
-        }
-        else
-        {
-            // TODO: or by looking in the input descriptor
-            // for now, just return an error
-            strcpy(stmt->error_code, "HY000");
-            pdo_nuodb_db_handle_set_last_app_error(S->H, "Unable to determine the parameter index");
-            PDO_DBG_RETURN(0);
-        }
-    }
-
-    nuodb_param = &nuodb_params->params[param->paramno];
-
-	switch (event_type) {
-		char *value;
-		unsigned long value_len;
-		int caller_frees;
-
-		case PDO_PARAM_EVT_ALLOC:
-			if (param->is_param) {
-				/* allocate the parameter */
-				if (nuodb_param->data) {
-					efree(nuodb_param->data);
-				}
-				nuodb_param->data = (char *) emalloc(nuodb_param->len);
-			}
+	    case PDO_PARAM_EVT_NORMALIZE:
+	        /* decode name from :pdo1, :pdo2 into 0, 1 etc. */
+	        if (param->name) 
+	        {
+		if (!strncmp(param->name, ":pdo", 4)) {
+		        param->paramno = atoi(param->name + 4);
+		    } 
+		    else 
+		    { 
+		       /* resolve parameter name to rewritten name */
+		        char *nameptr;
+		        if (stmt->bound_param_map && 
+	  		    SUCCESS == zend_hash_find(stmt->bound_param_map,
+					      param->name, 
+					      param->namelen + 1, 
+					      (void**)&nameptr)) 
+		        {
+		            param->paramno = atoi(nameptr + 4) - 1;
+		        } 
+		        else 
+		        {
+			    strcpy(stmt->error_code, "HY093");
+			    pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot resolve parameter name"); // TODO: put param->name in the message
+			    PDO_DBG_RETURN(0);
+		        }
+		    }
+	        }
+		nuodb_param = &nuodb_params->params[param->paramno];
+		switch(param->param_type) 
+		{
+                    case PDO_PARAM_INT:
+		    {
+                        nuodb_param->sqltype = PDO_NUODB_SQLTYPE_INTEGER;
 			break;
-
-		case PDO_PARAM_EVT_FREE:
-		case PDO_PARAM_EVT_EXEC_POST:
-		case PDO_PARAM_EVT_FETCH_PRE:
-			/* do nothing */
-			break;
-
-		case PDO_PARAM_EVT_NORMALIZE:
-			if (!param->is_param) {
-				break;
-			}
-            if (param->paramno == -1) {
-                return 0;
-            }
-            switch(param->param_type) {
-                case PDO_PARAM_INT:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_INTEGER;
-                    break;
-                }
-                case PDO_PARAM_STR:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_STRING;
-                    break;
-                }
-                case PDO_PARAM_LOB:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
-                    break;
-                }
-            }
-            break;
-
-		case PDO_PARAM_EVT_EXEC_PRE:
-			if (!param->is_param) {
-				break;
-			}
-            if (param->paramno == -1) {
-                return 0;
-            }
-
-			//*nuodb_param->sqlind = 0;
-
-			switch (nuodb_param->sqltype & ~1) {
-				case PDO_NUODB_SQLTYPE_ARRAY:
-					strcpy(stmt->error_code, "HY000");
-					pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot bind to array field");
-					PDO_DBG_RETURN(0);
-
-			}
-
-			switch (nuodb_param->sqltype) {
-			    case PDO_NUODB_SQLTYPE_INTEGER: {
-                    pdo_nuodb_stmt_set_integer(S, param->paramno,  Z_LVAL_P(param->parameter));
-                    break;
-			    }
-			    case PDO_NUODB_SQLTYPE_STRING: {
-                    pdo_nuodb_stmt_set_string(S, param->paramno,  Z_STRVAL_P(param->parameter));
-                    break;
-			    }
-			    case PDO_NUODB_SQLTYPE_BLOB: {
-			        pdo_nuodb_stmt_set_blob(S, param->paramno, Z_STRVAL_P(param->parameter), Z_STRLEN_P(param->parameter));
-			        break;
-			    }
-			    case PDO_NUODB_SQLTYPE_CLOB: {
-			        pdo_nuodb_stmt_set_clob(S, param->paramno, Z_STRVAL_P(param->parameter), Z_STRLEN_P(param->parameter));
-			        break;
-			    }
-			    default: {
-					strcpy(stmt->error_code, "HY000");
-					pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot bind unsupported type!");
-					PDO_DBG_RETURN(0);
-					break;
-			    }
-			}
-
-#if 0  //TODO - Shutoff NULL stuff for now
-			/* check if a NULL should be inserted */
-			switch (Z_TYPE_P(param->parameter)) {
-				int force_null;
-
-				case IS_LONG:
-					nuodb_param->sqltype = sizeof(long) == 8 ? SQL_INT64 : SQL_LONG;
-					nuodb_param->data = (void*)&Z_LVAL_P(param->parameter);
-					nuodb_param->len = sizeof(long);
-					break;
-				case IS_DOUBLE:
-					nuodb_param->sqltype = SQL_DOUBLE;
-					nuodb_param->data = (void*)&Z_DVAL_P(param->parameter);
-					nuodb_param->len = sizeof(double);
-					break;
-				case IS_STRING:
-					force_null = 0;
-
-					/* for these types, an empty string can be handled like a NULL value */
-					switch (nuodb_param->sqltype & ~1) {
-						case SQL_SHORT:
-						case SQL_LONG:
-						case SQL_INT64:
-						case SQL_FLOAT:
-						case SQL_DOUBLE:
-						case SQL_TIMESTAMP:
-						case SQL_TYPE_DATE:
-						case SQL_TYPE_TIME:
-							force_null = (Z_STRLEN_P(param->parameter) == 0);
-					}
-					if (!force_null) {
-						nuodb_param->sqltype = SQL_TEXT;
-						nuodb_param->data = Z_STRVAL_P(param->parameter);
-						nuodb_param->len	 = Z_STRLEN_P(param->parameter);
-						break;
-					}
-
-				case IS_NULL:
-					/* complain if this field doesn't allow NULL values */
-					if (~nuodb_param->sqltype & 1) {
-						strcpy(stmt->error_code, "HY105");
-						S->H->last_app_error = "Parameter requires non-null value";
-						PDO_DBG_RETURN(0);
-					}
-					//*nuodb_param->sqlind = -1;
-					break;
-				default:
-					strcpy(stmt->error_code, "HY105");
-					S->H->last_app_error = "Binding arrays/objects is not supported";
-					PDO_DBG_RETURN(0);
-			}
-#endif // end of #if 0  //TODO - Shutoff NULL stuff for now
-
-			break;
-
-		case PDO_PARAM_EVT_FETCH_POST:
-                        if (param->paramno == -1) {
-                            PDO_DBG_RETURN(0);
-                        }
-			if (param->is_param) {
-				break;
-			}
-			value = NULL;
-			value_len = 0;
-			caller_frees = 0;
-
-			if (nuodb_stmt_get_col(stmt, param->paramno, &value, &value_len, &caller_frees TSRMLS_CC)) {
-				switch (PDO_PARAM_TYPE(param->param_type)) {
-					case PDO_PARAM_STR:
-						if (value) {
-							ZVAL_STRINGL(param->parameter, value, value_len, 1);
-							break;
-						}
-					case PDO_PARAM_INT:
-						if (value) {
-							ZVAL_LONG(param->parameter, *(long*)value);
-							break;
-						}
-                    case PDO_PARAM_LOB:
-						if (value) {
-						    convert_to_string(param->parameter);
-							//ZVAL_LONG(param->parameter, *(long*)value);
-							ZVAL_STRINGL(param->parameter, value, value_len, 1);  // Is this correct?
-                            param->param_type = PDO_PARAM_STR;
-							break;
-						}
-
-                    case PDO_PARAM_EVT_NORMALIZE:
-                        if (!param->is_param) {
-                            char *s = param->name;
-                            while (s != NULL && *s != '\0') {
-                               *s = toupper(*s);
-                               s++;
-                            }
-                        }
+		    }
+                    case PDO_PARAM_STR:
+		    {
+                        nuodb_param->sqltype = PDO_NUODB_SQLTYPE_STRING;
                         break;
-					default: {
-						ZVAL_NULL(param->parameter);
-					}
-					break;
-				}
-				if (value && caller_frees) {
-					efree(value);
-				}
-				PDO_DBG_RETURN(1);
-			}
-			PDO_DBG_RETURN(0);
-		default:
-			break;
-	}
+		    }
+                    case PDO_PARAM_LOB:
+		    {
+                        nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
+                        break;
+		    }
+		}
+	        break;
 
+	    case PDO_PARAM_EVT_ALLOC:
+#if 0
+	    {
+	        int num_input_params = 0;
+		int index = 0;
+		if (!stmt->bound_param_map) {
+		    PDO_DBG_RETURN(0);
+	        }
+
+		num_input_params = zend_hash_num_elements(stmt->bound_param_map);
+ 		if ((num_input_params > 0) && (S->in_params == NULL)) 
+		{
+		    index = 0;
+		    S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
+		    S->in_params->num_alloc = S->in_params->num_params = num_input_params;
+		    for (index = 0; index<num_input_params; index++) {
+		        S->in_params->params[index].col_name[0] = '\0';
+		        S->in_params->params[index].col_name_length = 0;
+		        S->in_params->params[index].len = 0;
+		        S->in_params->params[index].data = NULL;
+		    }
+		}
+	        PDO_DBG_RETURN(1);
+	    }
+#endif
+	    PDO_DBG_RETURN(1);
+
+
+	    case PDO_PARAM_EVT_EXEC_POST:
+	    case PDO_PARAM_EVT_FETCH_PRE:
+	    case PDO_PARAM_EVT_FETCH_POST:
+	        /* work is handled by EVT_NORMALIZE */
+	        PDO_DBG_RETURN(1);
+
+	    case PDO_PARAM_EVT_EXEC_PRE: 
+	    {
+	        int num_input_params = 0;
+		if (!stmt->bound_param_map) {
+		    PDO_DBG_RETURN(0);
+	        }
+
+		num_input_params = zend_hash_num_elements(stmt->bound_param_map);
+
+		if (param->paramno >= 0) 
+		{
+		    if (param->paramno > num_input_params) {
+		        strcpy(stmt->error_code, "HY105");
+			pdo_nuodb_db_handle_set_last_app_error(S->H, "Inconsistent parameter number");
+			PDO_DBG_RETURN(0);
+		    }
+
+		    nuodb_param = &nuodb_params->params[param->paramno];
+
+		    if (param->name != NULL)
+		    {
+		    	memcpy(nuodb_param->col_name, param->name, (strlen(param->name) + 1));
+		    	nuodb_param->col_name_length = param->namelen;
+		    }
+
+		    // TODO: add code to process streaming LOBs here.
+
+		    if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_NULL ||
+			Z_TYPE_P(param->parameter) == IS_NULL) 
+		    {
+		        nuodb_param->len = 0;
+		        nuodb_param->data = NULL;
+		    } 
+		    else if (Z_TYPE_P(param->parameter) == IS_LONG) 
+		    {
+		        nuodb_param->len = 4;
+		        nuodb_param->data = (void *)Z_LVAL_P(param->parameter);
+			pdo_nuodb_stmt_set_integer(S, param->paramno,  (int)nuodb_param->data);
+		    } 
+		    else if (Z_TYPE_P(param->parameter) == IS_BOOL) 
+		    {
+		        nuodb_param->len = 1;
+		        nuodb_param->data = Z_BVAL_P(param->parameter) ? "t" : "f";
+		    } 
+		    else 
+		    {
+		        SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+			convert_to_string(param->parameter);
+		        nuodb_param->len = Z_STRLEN_P(param->parameter);
+		        nuodb_param->data = Z_STRVAL_P(param->parameter);
+			pdo_nuodb_stmt_set_string(S, param->paramno,  nuodb_param->data);
+			
+		    }
+		}
+	    }
+	    break;
+	}
+    }
     PDO_DBG_RETURN(1);
 }
 /* }}} */
