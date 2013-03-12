@@ -96,9 +96,6 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
         S->fetch_buf = NULL;
     }
 
-    zend_hash_destroy(S->named_params);
-    FREE_HASHTABLE(S->named_params);
-
     /* clean up input params */
     if (S->in_params != NULL)
     {
