@@ -134,11 +134,6 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len, /* {{{ */
                                  pdo_stmt_t * stmt, zval * driver_options TSRMLS_DC)
 {
-    zval ** value;
-    HashPosition iterator;
-    char * string_key;
-    ulong num_key;
-    uint str_len;
 
     int ret = 0;
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
@@ -192,10 +187,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
 
         // TODO: S->statement_type =
 
-        // allocate input params
-//        num_input_params = zend_hash_num_elements(np);
-
-	/* FOR NOW.. */
         stmt->driver_data = S;
         stmt->methods = &nuodb_stmt_methods;
 
@@ -221,6 +212,12 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
         index = 0;
         if (num_input_params > 0)
         {
+	    zval ** value;
+	    HashPosition iterator;
+	    char * string_key;
+	    ulong num_key;
+	    uint str_len;
+
             S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
             S->in_params->num_alloc = S->in_params->num_params = num_input_params;
             zend_hash_internal_pointer_reset_ex(np, &iterator);

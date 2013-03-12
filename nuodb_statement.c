@@ -356,19 +356,23 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
     PDO_DBG_INF_FMT("S=%ld", S);
 
     nuodb_params = param->is_param ? S->in_params : S->out_params;
-
     if (param->is_param) 
     {
 	switch (event_type) 
 	{
 	    case PDO_PARAM_EVT_FREE:
-		break;
+	    case PDO_PARAM_EVT_ALLOC:
+	    case PDO_PARAM_EVT_EXEC_POST:
+	    case PDO_PARAM_EVT_FETCH_PRE:
+	    case PDO_PARAM_EVT_FETCH_POST:
+	        PDO_DBG_RETURN(1);
 
 	    case PDO_PARAM_EVT_NORMALIZE:
 	        /* decode name from :pdo1, :pdo2 into 0, 1 etc. */
 	        if (param->name) 
 	        {
-		if (!strncmp(param->name, ":pdo", 4)) {
+		    if (!strncmp(param->name, ":pdo", 4)) 
+		    {
 		        param->paramno = atoi(param->name + 4);
 		    } 
 		    else 
@@ -412,39 +416,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 		}
 	        break;
 
-	    case PDO_PARAM_EVT_ALLOC:
-#if 0
-	    {
-	        int num_input_params = 0;
-		int index = 0;
-		if (!stmt->bound_param_map) {
-		    PDO_DBG_RETURN(0);
-	        }
-
-		num_input_params = zend_hash_num_elements(stmt->bound_param_map);
- 		if ((num_input_params > 0) && (S->in_params == NULL)) 
-		{
-		    index = 0;
-		    S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
-		    S->in_params->num_alloc = S->in_params->num_params = num_input_params;
-		    for (index = 0; index<num_input_params; index++) {
-		        S->in_params->params[index].col_name[0] = '\0';
-		        S->in_params->params[index].col_name_length = 0;
-		        S->in_params->params[index].len = 0;
-		        S->in_params->params[index].data = NULL;
-		    }
-		}
-	        PDO_DBG_RETURN(1);
-	    }
-#endif
-	    PDO_DBG_RETURN(1);
-
-
-	    case PDO_PARAM_EVT_EXEC_POST:
-	    case PDO_PARAM_EVT_FETCH_PRE:
-	    case PDO_PARAM_EVT_FETCH_POST:
-	        /* work is handled by EVT_NORMALIZE */
-	        PDO_DBG_RETURN(1);
 
 	    case PDO_PARAM_EVT_EXEC_PRE: 
 	    {
@@ -454,7 +425,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 	        }
 
 		num_input_params = zend_hash_num_elements(stmt->bound_param_map);
-
 		if (param->paramno >= 0) 
 		{
 		    if (param->paramno > num_input_params) {
@@ -463,7 +433,18 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 			PDO_DBG_RETURN(0);
 		    }
 
+		    if (nuodb_params == NULL) {
+		        strcpy(stmt->error_code, "HY105");
+			pdo_nuodb_db_handle_set_last_app_error(S->H, "Error processing parameters");
+			PDO_DBG_RETURN(0);
+		    }
+
 		    nuodb_param = &nuodb_params->params[param->paramno];
+		    if (nuodb_param == NULL) {
+		        strcpy(stmt->error_code, "HY105");
+			pdo_nuodb_db_handle_set_last_app_error(S->H, "Error locating parameters");
+			PDO_DBG_RETURN(0);
+		    }
 
 		    if (param->name != NULL)
 		    {
@@ -497,7 +478,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 		        nuodb_param->len = Z_STRLEN_P(param->parameter);
 		        nuodb_param->data = Z_STRVAL_P(param->parameter);
 			pdo_nuodb_stmt_set_string(S, param->paramno,  nuodb_param->data);
-			
 		    }
 		}
 	    }
@@ -512,7 +492,7 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
-	PDO_DBG_ENTER("nuodb_stmt_set_attribute");
+    PDO_DBG_ENTER("nuodb_stmt_set_attribute");
     PDO_DBG_INF_FMT("S=%ld", S);
 
     switch (attr)
