@@ -87,8 +87,8 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
     const char *error_msg = "UKNOWN ERROR";
     pdo_nuodb_db_handle * H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H
                               : (pdo_nuodb_db_handle *)dbh->driver_data;
+    if (H->last_app_error != NULL) error_msg = H->last_app_error;
     pdo_error_type * const error_code_str = stmt ? &stmt->error_code : &dbh->error_code;
-
 
     PDO_DBG_ENTER("_nuodb_error");
     PDO_DBG_INF_FMT("file=%s line=%d", file, line);
@@ -140,6 +140,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
     PdoNuoDbStatement * s;
     int num_input_params = 0;
     int index = 0;
+    char rewritten = 0;
 
     char *nsql = NULL;
     int nsql_len = 0;
@@ -154,6 +155,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
 	ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
 	if (ret == 1) /* the SQL query was re-written */
 	{
+	    rewritten = 1;
 	    sql = nsql;
 	    sql_len = nsql_len;
 	}
@@ -168,7 +170,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
         S->H = H;
         S->stmt = NULL;
         S->sql = strdup(sql);
-        S->fetch_buf = NULL; // TODO: Needed?
         S->error_code = 0;
         S->error_msg = NULL;
         S->in_params = NULL;
@@ -207,6 +208,8 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
         stmt->driver_data = S;
         stmt->methods = &nuodb_stmt_methods;
         stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
+
+	if (rewritten == 1) efree(sql);
 
         PDO_DBG_RETURN(1);
 

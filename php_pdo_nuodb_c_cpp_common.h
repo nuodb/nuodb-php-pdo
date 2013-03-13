@@ -195,8 +195,6 @@ typedef struct
 
     unsigned _reserved:22;
 
-    /* allocated space to convert fields values to other types */
-    char ** fetch_buf;
     int error_code;
     char *error_msg;  // pointer to error_msg.  NULL if no error.
 
@@ -214,8 +212,10 @@ int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt *S, long *row_count);
 char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
+int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
 int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno);
+char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno);
 int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno);
