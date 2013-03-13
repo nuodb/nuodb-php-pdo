@@ -176,19 +176,16 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
 typedef struct
 {
     /* the link that owns this statement */
-	void *H; // pdo_nuodb_db_handle * H;
+    void *H; // pdo_nuodb_db_handle * H;
 
     /* the statement handle */
-	void *stmt; // PdoNuoDbStatement * stmt;
+    void *stmt; // PdoNuoDbStatement * stmt;
 
-	/* copy of the sql statement */
-	char *sql;
+    /* copy of the sql statement */
+    char *sql;
 
     /* the name of the cursor (if it has one) */
     char name[32];
-
-    /* the type of statement that was issued */
-    char statement_type:8;
 
     /* whether EOF was reached for this statement */
     unsigned exhausted:1;
@@ -198,11 +195,6 @@ typedef struct
 
     unsigned _reserved:22;
 
-    /* the named params that were converted to ?'s by the driver */
-	void * named_params; // HashTable * named_params;
-
-    /* allocated space to convert fields values to other types */
-    char ** fetch_buf;
     int error_code;
     char *error_msg;  // pointer to error_msg.  NULL if no error.
 
@@ -221,9 +213,11 @@ char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, int flag_val);
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
+int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
 int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
 int pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno);
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno);
+char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno);
 int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno);

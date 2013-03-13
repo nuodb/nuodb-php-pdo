@@ -67,7 +67,7 @@ char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
 FILE *nuodb_log_fp = NULL;
 
-static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s, HashTable * TSRMLS_DC);
+static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s TSRMLS_DC);
 
 
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg) {
@@ -87,8 +87,8 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
     const char *error_msg = "UKNOWN ERROR";
     pdo_nuodb_db_handle * H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H
                               : (pdo_nuodb_db_handle *)dbh->driver_data;
+    if (H->last_app_error != NULL) error_msg = H->last_app_error;
     pdo_error_type * const error_code_str = stmt ? &stmt->error_code : &dbh->error_code;
-
 
     PDO_DBG_ENTER("_nuodb_error");
     PDO_DBG_INF_FMT("file=%s line=%d", file, line);
@@ -113,6 +113,7 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
 
 #define RECORD_ERROR(dbh) _nuodb_error(dbh, NULL, __FILE__, __LINE__ TSRMLS_CC)
 
+
 /* called by PDO to close a db handle */
 static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
@@ -133,71 +134,82 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len, /* {{{ */
                                  pdo_stmt_t * stmt, zval * driver_options TSRMLS_DC)
 {
-    zval ** value;
-    HashPosition iterator;
-    char * string_key;
-    ulong num_key;
-    uint str_len;
-
     int ret = 0;
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
     pdo_nuodb_stmt * S = NULL;
-    HashTable * np;
     PdoNuoDbStatement * s;
     int num_input_params = 0;
     int index = 0;
+    char rewritten = 0;
+
+    char *nsql = NULL;
+    int nsql_len = 0;
 
     PDO_DBG_ENTER("nuodb_handle_preparer");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
     do
     {
-        nuo_params params;
-        char result[8];
-        ALLOC_HASHTABLE(np);
-        zend_hash_init(np, 8, NULL, NULL, 0);
+	stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
+	stmt->named_rewrite_template = ":pdo%d";
+	ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
+	if (ret == 1) /* the SQL query was re-written */
+	{
+	    rewritten = 1;
+	    sql = nsql;
+	    sql_len = nsql_len;
+	}
+	else if (ret == -1) /* could not understand it! */
+	{
+	    strcpy(dbh->error_code, stmt->error_code);
+	    PDO_DBG_RETURN(0);
+	}
 
-        /* allocate and prepare statement */
-        if (!nuodb_alloc_prepare_stmt(dbh, sql, sql_len, &s, np TSRMLS_CC))
-        {
-            break;
-        }
 
         S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
         S->H = H;
-        S->stmt = s;
+        S->stmt = NULL;
         S->sql = strdup(sql);
-        S->fetch_buf = NULL; // TODO: Needed?
         S->error_code = 0;
         S->error_msg = NULL;
-        S->named_params = np;
         S->in_params = NULL;
         S->out_params = NULL;
 
-        // TODO: S->statement_type =
+        stmt->driver_data = S;
+        stmt->methods = &nuodb_stmt_methods;
 
-        // allocate input params
-        num_input_params = zend_hash_num_elements(np);
-        index = 0;
-        if (num_input_params > 0)
+	num_input_params = 0;
+	if (stmt->bound_param_map) 
+	{
+	    num_input_params = zend_hash_num_elements(stmt->bound_param_map);
+ 	    if ((num_input_params > 0) && (S->in_params == NULL)) 
+	    {
+		index = 0;
+		S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
+		S->in_params->num_alloc = S->in_params->num_params = num_input_params;
+		for (index = 0; index<num_input_params; index++) 
+		{
+		    S->in_params->params[index].col_name[0] = '\0';
+		    S->in_params->params[index].col_name_length = 0;
+		    S->in_params->params[index].len = 0;
+		    S->in_params->params[index].data = NULL;
+		}
+	    }
+	}
+
+        /* allocate and prepare statement */
+        if (!nuodb_alloc_prepare_stmt(dbh, sql, sql_len, &s TSRMLS_CC))
         {
-            S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(num_input_params));
-            S->in_params->num_alloc = S->in_params->num_params = num_input_params;
-            zend_hash_internal_pointer_reset_ex(np, &iterator);
-            while (zend_hash_get_current_data_ex(np, (void **) &value, &iterator) == SUCCESS)
-            {
-                zend_hash_get_current_key_ex(np, &string_key, &str_len, &num_key, 0, &iterator);
-                memcpy(S->in_params->params[index].col_name, string_key, str_len+1);
-                S->in_params->params[index].col_name_length = str_len;
-                S->in_params->params[index].len = 0;
-                S->in_params->params[index].data = NULL;
-                zend_hash_move_forward_ex(np, &iterator);
-            }
+            break;
         }
+        S->stmt = s;
 
+        index = 0;
         stmt->driver_data = S;
         stmt->methods = &nuodb_stmt_methods;
         stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
+
+	if (rewritten == 1) efree(sql);
 
         PDO_DBG_RETURN(1);
 
@@ -205,8 +217,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
     while (0);
 
     RECORD_ERROR(dbh);
-    zend_hash_destroy(np);
-    FREE_HASHTABLE(np);
     nuodb_stmt_dtor(stmt TSRMLS_CC);
     PDO_DBG_RETURN(0);
 
@@ -329,18 +339,17 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 
 /* used by prepare and exec to allocate a statement handle and prepare the SQL */
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, const char * sql, long sql_len, /* {{{ */
-                                    PdoNuoDbStatement ** s, HashTable * named_params TSRMLS_DC)
+                                    PdoNuoDbStatement ** s TSRMLS_DC)
 {
-	pdo_nuodb_db_handle * H = NULL;
+    pdo_nuodb_db_handle * H = NULL;
     char * c, *new_sql, in_quote, in_param, pname[64], *ppname;
     long l, pindex = -1;
 
-	PDO_DBG_ENTER("nuodb_alloc_prepare_stmt");
+    PDO_DBG_ENTER("nuodb_alloc_prepare_stmt");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
 
-	H = (pdo_nuodb_db_handle *)dbh->driver_data;
-
+    H = (pdo_nuodb_db_handle *)dbh->driver_data;
     *s = NULL;
 
     /* There is no max sql statement length in NuoDB - but use 1Mib for now */
@@ -397,11 +406,6 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, const char * sql, long sql_
                 else
                 {
                     *ppname++ = 0;
-                    if (named_params)
-                    {
-                        zend_hash_update(named_params, pname, (unsigned int)(ppname-pname),
-                                         (void *)&pindex, sizeof(long)+1,NULL);
-                    }
                 }
             }
         }
