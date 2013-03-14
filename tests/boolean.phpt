@@ -24,7 +24,17 @@ Test processing of boolean
       $stmt = $db->prepare("SELECT * from test");
       $stmt->execute();
       $result = $stmt->fetchAll();
-      print_r($result);
+      foreach ($result as $row) 
+      {
+          echo "ROW = ";
+	  if ($row[0] == true) {
+             echo "1";
+      	  } else {
+            echo "0";
+      	  }
+      	  echo "\n";
+      }
+      // print_r($result);
     } catch (PDOException $e) {
       print $e;
     }
@@ -36,20 +46,7 @@ Dropping TEST table
 Creating TEST table
 Inserting a boolean
 Selecting boolean
-Array
-(
-    [0] => Array
-        (
-            [FLAG] => 0
-            [0] => 0
-        )
-
-    [1] => Array
-        (
-            [FLAG] => 1
-            [0] => 1
-        )
-
-)
+ROW = 0
+ROW = 1
 
 done

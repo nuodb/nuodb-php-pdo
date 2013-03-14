@@ -163,7 +163,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
     {
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
-            col->param_type = PDO_PARAM_STR;
+            col->param_type = PDO_PARAM_BOOL;
             break;
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
@@ -246,17 +246,11 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
     {
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
-<<<<<<< HEAD
-	    int val = pdo_nuodb_stmt_get_boolean(S, colno);
-            *ptr = (char *)emalloc(CHAR_BUF_LEN);
-            *len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
-=======
         	char val = pdo_nuodb_stmt_get_boolean(S, colno);
         	*ptr = (char *)emalloc(CHAR_BUF_LEN);
         	//*len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
             (*ptr)[0] = val;
             *len = 1;
->>>>>>> tgates/DB-1987
             break;
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
@@ -349,19 +343,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
     PDO_DBG_ENTER("nuodb_stmt_param_hook");
     PDO_DBG_INF_FMT("S=%ld", S);
 
-<<<<<<< HEAD
-	nuodb_params = param->is_param ? S->in_params : S->out_params;
-
-	if (nuodb_params == NULL)
-	{
-		PDO_DBG_RETURN(1);
-	}
-
-    if (event_type == PDO_PARAM_EVT_FREE)   /* not used */
-=======
     nuodb_params = param->is_param ? S->in_params : S->out_params;
     if (param->is_param) 
->>>>>>> tgates/DB-1987
     {
 	switch (event_type) 
 	{
@@ -422,140 +405,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                             nuodb_param->sqltype = PDO_NUODB_SQLTYPE_STRING;
 			    break;
 			}
-<<<<<<< HEAD
-            if (param->paramno == -1) {
-                return 0;
-            }
-            switch(param->param_type) {
-                case PDO_PARAM_BOOL:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BOOLEAN;
-                    break;
-                }
-                case PDO_PARAM_INT:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_INTEGER;
-                    break;
-                }
-                case PDO_PARAM_STR:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_STRING;
-                    break;
-                }
-                case PDO_PARAM_LOB:
-                {
-                    nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
-                    break;
-                }
-	        default: 
-	        {
- 		    strcpy(stmt->error_code, "HY000");
-		    pdo_nuodb_db_handle_set_last_app_error(S->H, "Unknown PDO param_type");
-		    PDO_DBG_RETURN(0);
-	        }
-            }
-            break;
-
-		case PDO_PARAM_EVT_EXEC_PRE:
-			if (!param->is_param) {
-				break;
-			}
-            if (param->paramno == -1) {
-                return 0;
-            }
-
-			//*nuodb_param->sqlind = 0;
-
-			switch (nuodb_param->sqltype & ~1) {
-				case PDO_NUODB_SQLTYPE_ARRAY:
- 					strcpy(stmt->error_code, "HY000");
-					pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot bind to array field");
-					PDO_DBG_RETURN(0);
-
-			}
-
-			switch (nuodb_param->sqltype) {
-			    case PDO_NUODB_SQLTYPE_BOOLEAN: {
-                    pdo_nuodb_stmt_set_boolean(S, param->paramno,  Z_LVAL_P(param->parameter));
-                    break;
-			    }
-			    case PDO_NUODB_SQLTYPE_INTEGER: {
-                    pdo_nuodb_stmt_set_integer(S, param->paramno,  Z_LVAL_P(param->parameter));
-                    break;
-			    }
-			    case PDO_NUODB_SQLTYPE_STRING: {
-                    pdo_nuodb_stmt_set_string(S, param->paramno,  Z_STRVAL_P(param->parameter));
-                    break;
-			    }
-			    case PDO_NUODB_SQLTYPE_BLOB: {
-			        pdo_nuodb_stmt_set_blob(S, param->paramno, Z_STRVAL_P(param->parameter), Z_STRLEN_P(param->parameter));
-			        break;
-			    }
-			    case PDO_NUODB_SQLTYPE_CLOB: {
-			        pdo_nuodb_stmt_set_clob(S, param->paramno, Z_STRVAL_P(param->parameter), Z_STRLEN_P(param->parameter));
-			        break;
-			    }
-			    default: {
-					strcpy(stmt->error_code, "HY000");
-					pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot bind unsupported type!");
-					PDO_DBG_RETURN(0);
-					break;
-			    }
-			}
-
-#if 0  //TODO - Shutoff NULL stuff for now
-			/* check if a NULL should be inserted */
-			switch (Z_TYPE_P(param->parameter)) {
-				int force_null;
-
-				case IS_LONG:
-					nuodb_param->sqltype = sizeof(long) == 8 ? SQL_INT64 : SQL_LONG;
-					nuodb_param->data = (void*)&Z_LVAL_P(param->parameter);
-					nuodb_param->len = sizeof(long);
-					break;
-				case IS_DOUBLE:
-					nuodb_param->sqltype = SQL_DOUBLE;
-					nuodb_param->data = (void*)&Z_DVAL_P(param->parameter);
-					nuodb_param->len = sizeof(double);
-					break;
-				case IS_STRING:
-					force_null = 0;
-
-					/* for these types, an empty string can be handled like a NULL value */
-					switch (nuodb_param->sqltype & ~1) {
-						case SQL_SHORT:
-						case SQL_LONG:
-						case SQL_INT64:
-						case SQL_FLOAT:
-						case SQL_DOUBLE:
-						case SQL_TIMESTAMP:
-						case SQL_TYPE_DATE:
-						case SQL_TYPE_TIME:
-							force_null = (Z_STRLEN_P(param->parameter) == 0);
-					}
-					if (!force_null) {
-						nuodb_param->sqltype = SQL_TEXT;
-						nuodb_param->data = Z_STRVAL_P(param->parameter);
-						nuodb_param->len	 = Z_STRLEN_P(param->parameter);
-						break;
-					}
-
-				case IS_NULL:
-					/* complain if this field doesn't allow NULL values */
-					if (~nuodb_param->sqltype & 1) {
-						strcpy(stmt->error_code, "HY105");
-						S->H->last_app_error = "Parameter requires non-null value";
-						PDO_DBG_RETURN(0);
-					}
-					//*nuodb_param->sqlind = -1;
-					break;
-				default:
-					strcpy(stmt->error_code, "HY105");
-					S->H->last_app_error = "Binding arrays/objects is not supported";
-					PDO_DBG_RETURN(0);
-			}
-#endif // end of #if 0  //TODO - Shutoff NULL stuff for now
-=======
                         case PDO_PARAM_LOB:
 		        {
                             nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
@@ -581,7 +430,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 			pdo_nuodb_db_handle_set_last_app_error(S->H, "Inconsistent parameter number");
 			PDO_DBG_RETURN(0);
 		    }
->>>>>>> tgates/DB-1987
 
 		    if (nuodb_params == NULL) {
 		        strcpy(stmt->error_code, "HY105");

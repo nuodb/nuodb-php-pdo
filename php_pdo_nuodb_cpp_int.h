@@ -104,7 +104,6 @@ public:
     char const * getColumnName(size_t column);
     int getSqlType(size_t column);
     char const * getString(size_t column);
-    int getBoolean(size_t column);
     int getInteger(size_t column);
     bool getBoolean(size_t column);
     int64_t getLong(size_t column);
@@ -116,7 +115,6 @@ public:
     size_t getNumberOfParameters();
     int getGeneratedKeyLastId(const char *name);
 
-    void setBoolean(size_t index, int value);
     void setInteger(size_t index, int value);
     void setBoolean(size_t index, bool value);
     void setString(size_t index, const char *value);
