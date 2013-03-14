@@ -386,7 +386,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
 		if (nuodb_params == NULL) {
 		    strcpy(stmt->error_code, "HY105");
-		    do_nuodb_db_handle_set_last_app_error(S->H, "Error processing parameters");
+		    pdo_nuodb_db_handle_set_last_app_error(S->H, "Error processing parameters");
 		    PDO_DBG_RETURN(0);
 		}
 

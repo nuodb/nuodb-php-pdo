@@ -85,10 +85,13 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
 {
     int error_code = 0;
     const char *error_msg = "UKNOWN ERROR";
-    pdo_nuodb_db_handle * H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H
+    pdo_nuodb_db_handle * H = NULL;
+	pdo_error_type *error_code_str = NULL;
+	
+	H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H
                               : (pdo_nuodb_db_handle *)dbh->driver_data;
     if (H->last_app_error != NULL) error_msg = H->last_app_error;
-    pdo_error_type * const error_code_str = stmt ? &stmt->error_code : &dbh->error_code;
+    error_code_str = stmt ? &stmt->error_code : &dbh->error_code;
 
     PDO_DBG_ENTER("_nuodb_error");
     PDO_DBG_INF_FMT("file=%s line=%d", file, line);
