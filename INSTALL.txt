@@ -3,7 +3,7 @@ NuoDB PHP PDO Driver install instructions for:
   32-bit Windows
   64-bit Linux
 
-The NuoDB PHP PDO Driver is a shared library that is dynamically loaded by the PHP executable.  This shared library conforms to the PHP extension API and must be copied to your PHP extension directory. If you don't know the location of your extension directory, then you can use the following command to find the location:
+The NuoDB PHP PDO Driver is a shared library that is dynamically loaded by the PHP executable.  This shared library conforms to the PHP PDO extension API and must be copied to your PHP extension directory. If you don't know the location of your extension directory, then you can use the following command to find the location:
  
   php -i | grep extension_dir
 
@@ -23,7 +23,7 @@ The MSVC10 one is located in:
 
 You should use the version that matches the MSVC compiler version of your PHP executable.  To find out MSVC compiler version that was used to build your PHP executable, use the following command:
 
-  php -i | grep Compiler
+  php -i | findstr Compiler
 
 After you have copied the NuoDB PHP PDO driver to the extension directory, you need to modify your PHP configuration to automatically load the NuoDB PHP PDO driver when PHP runs. You can do this by adding the following line to your php.ini.  On Linux:
 
