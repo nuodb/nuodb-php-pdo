@@ -10,9 +10,10 @@ notifications:
   recipients:
     - buck.robert.j@gmail.com
     - rbuck@nuodb.com
+    - tgates@nuodb.com
 
 before_install:
-  - wget -q http://www.nuodb.com/latest/nuodb-1.0-GA.linux.x86_64.deb --output-document=/var/tmp/nuodb.deb
+  - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
   - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie --verbose debug --archive /var/tmp/nuodb --initialize --force &
