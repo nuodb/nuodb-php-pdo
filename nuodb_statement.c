@@ -418,17 +418,17 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 	    case PDO_PARAM_EVT_EXEC_PRE: 
 	    {
 	        int num_input_params = 0;
-		if (!stmt->bound_param_map) {
-		    PDO_DBG_RETURN(0);
+      		if (!stmt->bound_param_map) {
+		      PDO_DBG_RETURN(0);
 	        }
 
-		num_input_params = zend_hash_num_elements(stmt->bound_param_map);
 		if (param->paramno >= 0) 
 		{
-		    if (param->paramno > num_input_params) {
+		    if (param->paramno >= S->qty_input_params) {
 		        strcpy(stmt->error_code, "HY105");
-			pdo_nuodb_db_handle_set_last_app_error(S->H, "Inconsistent parameter number");
-			PDO_DBG_RETURN(0);
+		        //nuodb_throw_format_zend_exception("HY105", 105, "Invalid parameter number %d", param->paramno);
+		        nuodb_throw_zend_exception("HY105", 105, strdup("Invalid parameter number"));
+			    PDO_DBG_RETURN(0);
 		    }
 
 		    if (nuodb_params == NULL) {
