@@ -145,8 +145,7 @@ typedef struct
 extern "C" {
 #endif
 
-void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg);
-//void nuodb_throw_format_zend_exception(const char *sql_state, int code, char *format, ...);
+void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
 
 typedef struct
 {

@@ -70,27 +70,21 @@ FILE *nuodb_log_fp = NULL;
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s TSRMLS_DC);
 
 
-void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg) {
-  TSRMLS_FETCH();
-  PDO_DBG_ENTER("nuodb_throw_zend_exception");
-  PDO_DBG_INF_FMT("Throwing exception: SQLSTATE[%s] [%d] %s", sql_state, code, msg);
-  zend_throw_exception_ex(php_pdo_get_exception(), code TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
-			  sql_state, code, msg);
-  free((char *)msg);
-  PDO_DBG_VOID_RETURN;
-}
-
-/*
-void nuodb_throw_format_zend_exception(const char *sql_state, int code, char *format, ...) {
+void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...) {
   va_list arg;
   char 	*message;
+  TSRMLS_FETCH();
 
+  PDO_DBG_ENTER("nuodb_throw_zend_exception");
   va_start(arg, format);
   vspprintf(&message, 0, format, arg);
-  va_end(arg);;
-  nuodb_throw_zend_exception(sql_state, code, message);
+  va_end(arg);
+  PDO_DBG_INF_FMT("Throwing exception: SQLSTATE[%s] [%d] %s", sql_state, code, message);
+  zend_throw_exception_ex(php_pdo_get_exception(), code TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
+			  sql_state, code, message);
+  efree((char *)message);
+  PDO_DBG_VOID_RETURN;
 }
-*/
 
 
 /* map driver specific SQLSTATE error message to PDO error */
@@ -122,7 +116,7 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
         }
     }
 
-    nuodb_throw_zend_exception(*error_code_str, error_code, strdup(error_msg));
+    nuodb_throw_zend_exception(*error_code_str, error_code, error_msg);
     PDO_DBG_VOID_RETURN;
 }
 /* }}} */
@@ -645,7 +639,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
 
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
     if (status == 0) {
-		nuodb_throw_zend_exception("HY000", 38, strdup(errMessage));
+		nuodb_throw_zend_exception("HY000", 38, errMessage);
     }
 
     dbh->methods = &nuodb_methods;

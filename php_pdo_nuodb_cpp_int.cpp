@@ -152,22 +152,14 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     // is a reasonable implementation for multiple keys.  Assuming
     // seqName is a column name.
 
-    nuodb_throw_zend_exception("IM001", 1, strdup("getLastId sequence-name argument is not supported"));
+    nuodb_throw_zend_exception("IM001", 1, "getLastId sequence-name argument is not supported");
     return 0;
 
     for (int i=0; i<_qty; i++)
         if (!strcmp(_keys[i].columnName, seqName))
             return _keys[i].columnKeyValue;
 
-    char errMsg[1024];
-    char *errMsgBase = "No generated ID for specified column name: ";
-    int errMsgBaseLen = strlen(errMsgBase);
-    strcpy(errMsg, errMsgBase);
-    int seqNameLen = strlen(seqName);
-    if (seqNameLen > (1024 - errMsgBaseLen - 1))
-        seqNameLen = (1024 - errMsgBaseLen -1);
-    strncat(errMsg, seqName, seqNameLen);
-    nuodb_throw_zend_exception("HY000", 1, strdup(errMsg));
+    nuodb_throw_zend_exception("HY000", 1, "No generated ID for specified column name: %s", seqName);
     return 0;
 }
 
@@ -308,7 +300,7 @@ void PdoNuoDbHandle::rollback()
 int PdoNuoDbHandle::getLastId(const char *name)
 {
     if (_last_keys == NULL) {
-                nuodb_throw_zend_exception("HY000", -40, strdup("No generated keys"));
+                nuodb_throw_zend_exception("HY000", -40, "No generated keys");
                 return 0;
     }
 
@@ -381,9 +373,9 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY000", error_code, strdup(error_text));
+        nuodb_throw_zend_exception("HY000", error_code, error_text);
     } catch (...) {
-        nuodb_throw_zend_exception("HY000", 0, strdup("UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()"));
+        nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
     }
 
     return _stmt;
@@ -475,10 +467,10 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY000", error_code, strdup(error_text));
+        nuodb_throw_zend_exception("HY000", error_code, error_text);
 
     } catch (...) {
-        nuodb_throw_zend_exception("HY000", 0, strdup("UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()"));
+        nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
     }
 
     return rval;

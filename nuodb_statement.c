@@ -426,8 +426,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 		{
 		    if (param->paramno >= S->qty_input_params) {
 		        strcpy(stmt->error_code, "HY105");
-		        //nuodb_throw_format_zend_exception("HY105", 105, "Invalid parameter number %d", param->paramno);
-		        nuodb_throw_zend_exception("HY105", 105, strdup("Invalid parameter number"));
+		        nuodb_throw_zend_exception("HY105", 105, "Invalid parameter number %d", param->paramno);
+		        //nuodb_throw_zend_exception("HY105", 105, strdup("Invalid parameter number"));
 			    PDO_DBG_RETURN(0);
 		    }
 
