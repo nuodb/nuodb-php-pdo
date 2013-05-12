@@ -109,8 +109,8 @@ ZEND_GET_MODULE(pdo_nuodb)
 */
 /* Remove comments and fill if you need to have entries in php.ini */
 PHP_INI_BEGIN()
-  STD_PHP_INI_ENTRY("pdo_nuodb.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_pdo_nuodb_globals, pdo_nuodb_globals)
-  STD_PHP_INI_ENTRY("pdo_nuodb.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+//  STD_PHP_INI_ENTRY("pdo_nuodb.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+//  STD_PHP_INI_ENTRY("pdo_nuodb.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, enable_log, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 PHP_INI_END()
