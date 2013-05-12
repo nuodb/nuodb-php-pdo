@@ -146,6 +146,7 @@ extern "C" {
 #endif
 
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *msg);
+//void nuodb_throw_format_zend_exception(const char *sql_state, int code, char *format, ...);
 
 typedef struct
 {
@@ -198,6 +199,7 @@ typedef struct
     int error_code;
     char *error_msg;  // pointer to error_msg.  NULL if no error.
 
+    unsigned qty_input_params;
     /* the input params */
     nuo_params * in_params;
 
