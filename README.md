@@ -172,3 +172,5 @@ Similarly, on Windows run the following command:
 ```bash
   cpack -G ZIP
 ```
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/eebba2b3f495d19d760a0b42e0ce67fd "githalytics.com")](http://githalytics.com/nuodb/nuodb-php-pdo)
