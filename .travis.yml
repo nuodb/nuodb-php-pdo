@@ -1,7 +1,8 @@
-language: java
+language: php
 
-jdk:
-  - openjdk7
+php:
+  - 5.3
+  - 5.4
 
 env:
   - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/local/include/php
@@ -13,6 +14,8 @@ notifications:
     - tgates@nuodb.com
 
 before_install:
+  - ls /usr/local/lib
+  - ls /usr/local/include
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
