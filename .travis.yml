@@ -16,6 +16,8 @@ notifications:
 before_install:
   - ls /usr/local/lib
   - ls /usr/local/include
+  - which php
+  - apt-cache search php
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
@@ -23,16 +25,6 @@ before_install:
   - sleep 2
   - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie &
   - sleep 2
-  - wget -q http://www.php.net/distributions/php-5.4.3.tar.gz --output-document=/var/tmp/php-5.4.3.tar.gz
-  - cd /var/tmp/ && tar xzf /var/tmp/php-5.4.3.tar.gz
-  - cd /var/tmp/php-5.4.3 && ./configure --enable-shared --with-zlib --enable-cli --enable-pdo
-  - cd /var/tmp/php-5.4.3 && make
-  - cd /var/tmp/php-5.4.3 && sudo make install
-  - cd /var/tmp/php-5.4.3 && cp php.ini-production php.ini
-  - cd /var/tmp/php-5.4.3 && echo 'extension=pdo_nuodb.so' >> php.ini
-  - cd /var/tmp/php-5.4.3 && sudo cp php.ini /usr/local/lib/php.ini
-  - sudo mkdir /usr/local/lib/php/extensions
-  - sudo mkdir /usr/local/lib/php/extensions/no-debug-non-zts-20100525
 
 install:
   - true
