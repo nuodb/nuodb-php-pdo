@@ -17,6 +17,7 @@ before_install:
   - uname -a
   - cat /etc/debian_version
   - sudo apt-get install php5-dev php5-mysql
+  - ls -al `php-config --extension-dir`
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
