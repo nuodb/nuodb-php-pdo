@@ -16,7 +16,7 @@ notifications:
 before_install:
   - uname -a
   - cat /etc/debian_version
-  - sudo apt-get install php5-dev
+  - sudo apt-get install php5-dev php5-mysql
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
@@ -33,13 +33,7 @@ script:
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - cat ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
-  - ls `php-config --extension-dir`
-  - ls ~/.phpenv/versions/$(phpenv version-name)/lib/php/extensions
-  - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/
-  - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/no-debug-zts-20090626/
-  - phpenv
   - php -i
   - pear run-tests tests/*.phpt
 
