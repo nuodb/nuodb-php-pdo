@@ -5,7 +5,7 @@ php:
   - 5.4
 
 env:
-  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5 PHP_EXTENSION_DIR=`php-config --extension-dir`
+  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5
 
 notifications:
   recipients:
@@ -34,7 +34,8 @@ script:
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - cat ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - sudo cp pdo_nuodb.so ${PHP_EXTENSION_DIR}
+  - sudo cp pdo_nuodb.so `php-config --extension-dir`
+  - ls `php-config --extension-dir`
   - ls ~/.phpenv/versions/$(phpenv version-name)/lib/php/extensions
   - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/
   - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/no-debug-zts-20090626/
