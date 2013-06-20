@@ -14,13 +14,9 @@ notifications:
     - tgates@nuodb.com
 
 before_install:
-  - ls /etc
   - uname -a
   - cat /etc/debian_version
   - sudo apt-get install gcc php5-dev
-  - ls /usr/local/lib
-  - ls /usr/local/include
-  - which php
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
@@ -36,7 +32,8 @@ script:
   - cd /home/travis/build/nuodb/nuodb-php-pdo
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
-  - sudo cp pdo_nuodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20100525
+  - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - sudo cp pdo_nuodb.so ~/.phpenv/versions/$(phpenv version-name)/lib/php/extensions
   - php -i
   - pear run-tests tests/*.phpt
 
