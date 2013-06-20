@@ -5,7 +5,7 @@ php:
   - 5.4
 
 env:
-  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5 USE_ZTS=1
+  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5
 
 notifications:
   recipients:
