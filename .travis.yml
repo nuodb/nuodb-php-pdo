@@ -15,6 +15,7 @@ notifications:
 
 before_install:
   - uname -a
+  - phpenv versions
   - cat /etc/debian_version
   - sudo apt-get install php5-dev php5-mysql
   - ls -al `php-config --extension-dir`
