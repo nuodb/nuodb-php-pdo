@@ -14,6 +14,8 @@ notifications:
     - tgates@nuodb.com
 
 before_install:
+  - ls /etc
+  - uname -a
   - apt-cache search php
   - sudo apt-get install libxml2 libxml2-dev php5-dev
   - ls /usr/local/lib
