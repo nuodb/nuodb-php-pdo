@@ -5,7 +5,7 @@ php:
   - 5.4
 
 env:
-  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/local/include/php
+  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5
 
 notifications:
   recipients:
@@ -17,8 +17,7 @@ before_install:
   - ls /etc
   - uname -a
   - cat /etc/debian_version
-  - apt-cache search php
-  - sudo apt-get install libxml2 libxml2-dev php5-dev
+  - sudo apt-get install gcc php5-dev
   - ls /usr/local/lib
   - ls /usr/local/include
   - which php
