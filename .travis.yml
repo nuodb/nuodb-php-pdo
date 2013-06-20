@@ -14,11 +14,11 @@ notifications:
     - tgates@nuodb.com
 
 before_install:
+  - apt-cache search php
+  - sudo apt-get install libxml2 libxml2-dev php5-dev
   - ls /usr/local/lib
   - ls /usr/local/include
   - which php
-  - apt-cache search php
-  - sudo apt-get install libxml2 libxml2-dev php5-dev
   - wget -q http://www.nuodb.com/latest/nuodb-1.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 2
