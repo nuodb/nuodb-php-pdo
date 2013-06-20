@@ -36,6 +36,9 @@ script:
   - cat ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so ~/.phpenv/versions/$(phpenv version-name)/lib/php/extensions
   - ls ~/.phpenv/versions/$(phpenv version-name)/lib/php/extensions
+  - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/
+  - ls -al /home/travis/.phpenv/versions/$(phpenv version-name)/lib/php/extensions/no-debug-zts-20090626/
+  - phpenv
   - php -i
   - pear run-tests tests/*.phpt
 
