@@ -1,0 +1,139 @@
+NuoDB PHP PDO Driver Windows install instructions
+================================================
+
+This file contains instructions for installing the NuoDB PHP PDO Driver 
+on Windows operating systems.
+
+1.0 PHP Information
+=====================
+
+On Windows, there are four pieces of information you need to obtain from your PHP installation:
+
+1) PHP Version number
+2) PHP Thread Safety model (TS or NTS)
+3) Compiler version
+4) Location of PHP Configuration File (php.ini)
+5) Location of PHP extension directory (extension_dir)
+
+PHP can be used from the command line or within a web server.
+
+1.1 Using PHP from the command line
+------------------------------------
+
+If you are using PHP from the command line, you can run the following commands to obtain that information.  
+
+$ php -i | grep "PHP Version"
+$ php -i | grep "Thread Safety"
+$ php -i | grep "Configuration File"
+$ php -i | grep "extension_dir"
+
+
+1.2 Using PHP from a web server
+--------------------------------
+
+If you are running PHP from a web server, create a phpinfo.php that contains the following:
+
+<?php
+phpinfo();
+?>
+
+Copy that phpinfo.php file to your web server and browse it to obtain the above PHP information.
+
+
+2.0 NuoDB PHP PDO Driver for Linux
+===================================
+
+The NuoDB PHP PDO Driver is located in your NuoDB installation directory.  You must manually install and configure the NuoDB PHP PDO Driver.  There are two versions of the NuoDB PHP PDO Driver that is provided for Linux. In the directory /opt/nuodb/drivers/php_pdo you will find the following files:
+
+
+  INSTALL_LINUX.txt  <-- this file
+  php-5.3.NTS  <-- contains NuoDB PHP PDO Driver for PHP version 5.3, Non Thread Safe
+  php-5.4.NTS  <-- contains NuoDB PHP PDO Driver for PHP version 5.4, Non Thread Safe
+  sample       <-- contains an example program.
+
+Note: If your PHP information does not match the above PHP Version number and Thread Safety, you can obtain source code for the NuoDB PHP PDO Driver on GitHub which you can use to build your own NuoDB PHP PDO Driver that matches your particular version/thread safety of your PHP install.
+
+2.1 NuoDB PHP PDO Driver shared library (pdo_nuodb.so)
+------------------------------------------------------
+
+The NuoDB PHP PDO Driver is a shared library that is dynamically loaded by the PHP executable.  This shared library conforms to the PHP PDO extension API and must be copied to your PHP extension directory. The shared library name is 'pdo_nuodb.so' on Linux.  You must copy the shared library that matches your PHP version information to your PHP Extension Directory.  For example, Ubuntu 12.04 comes with PHP Version 5.3.10 NTS and uses '/usr/lib/php5/20090626' for the PHP Extension Directory:
+
+  $ sudo cp /opt/nuodb/drivers/php_pdo/php-5.3.NTS/pdo_nuodb.so /usr/lib/php5/20090626
+
+2.2 libNuoRemote.so
+--------------------
+
+The NuoDB PHP PDO Driver shared library 'pdo_nuodb.so' is dependent on the 'libNuoRemote.so' shared library, which is located in the '/opt/nuodb/lib64' directory.  If you installed NuoDB using the RPM or Debian installers, then '/opt/nuodb/lib64' is already added to your system's dynamic load library path.  If you installed NuoDB from a .tar file, then you must manually add '/opt/nuodb/lib64' to your dynamic load library path.
+
+
+2.3 Enable the NuoDB PHP PDO Driver
+------------------------------------
+
+After you have copied the NuoDB PHP PDO driver to the PHP extension directory, you need to modify your PHP configuration to automatically load the NuoDB PHP PDO driver when PHP runs. You can do this by adding the following line to your php.ini.
+
+  extension=pdo_nuodb.so
+ 
+
+3.0 Verifying the NuoDB PHP PDO Driver
+======================================
+
+After you have modified your PHP configuration, you can check if the NuoDB PHP PDO driver is loading correctly.  
+
+3.1 If you are using the PHP command line
+------------------------------------------
+ 
+ $ php -i | grep PDO
+ 
+Which should show 'nuodb' in the list of PDO drivers and should also show "PDO Driver for NuoDB => enabled".
+
+
+3.2 If you are using PHP from a web server
+------------------------------------------
+
+Rerun the phpinfo.php script in your web browser.  The PDO section, PDO Drivers should show 'nuodb'.
+ 
+
+4.0 Running the NuoDB PHP PDO Driver example
+==============================================
+ 
+If you have run the NuoDB quick start (run-quickstart), then you can use the example.php script to display information from the example "hockey" database.  Example execution output:
+ 
+$ php /opt/nuodb/drivers/php_pdo/sample/example.php
+ Array
+ (
+ [ID] => 2
+ [0] => 2
+ [NUMBER] => 11
+ [1] => 11
+ [NAME] => GREGORY CAMPBELL
+ [2] => GREGORY CAMPBELL
+ [POSITION] => Forward
+ [3] => Forward
+ [TEAM] => Bruins
+ [4] => Bruins
+ )
+ Array
+ (
+ [ID] => 25
+ [0] => 25
+ [NUMBER] => 1
+ [1] => 1
+ [NAME] => MAX SUMMIT
+ [2] => MAX SUMMIT
+ [POSITION] => Fan
+ [3] => Fan
+ [TEAM] => Bruins
+ [4] => Bruins
+ )
+ done
+ 
+
+5.0 NuoDB PHP PDO Driver logging
+================================
+
+When you are developing an application, it can be useful to have the NuoDB PHP PDO driver log its actions.  You can enable a NuoDB PHP PDO Driver logfile by adding the following to your PHP Configuration (php.ini):
+
+[pdo_nuodb]
+pdo_nuodb.enable_log=1
+pdo_nuodb.logfile_path=/tmp/nuodb_pdo.log
+
