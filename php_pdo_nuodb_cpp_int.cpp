@@ -492,13 +492,16 @@ int PdoNuoDbStatement::getSqlType(size_t column)
         case NuoDB::NUOSQL_INTEGER:
         case NuoDB::NUOSQL_SMALLINT:
         case NuoDB::NUOSQL_TINYINT:
-        case NuoDB::NUOSQL_DECIMAL:
             return PDO_NUODB_SQLTYPE_INTEGER;
+
+        // We are returning numeric types as a string because of
+        // DB-2288.
         case NuoDB::NUOSQL_BIGINT:
-            return PDO_NUODB_SQLTYPE_BIGINT;
         case NuoDB::NUOSQL_FLOAT:
         case NuoDB::NUOSQL_DOUBLE:
+        case NuoDB::NUOSQL_DECIMAL:
             return PDO_NUODB_SQLTYPE_STRING;
+
         case NuoDB::NUOSQL_CHAR:
         case NuoDB::NUOSQL_VARCHAR:
         case NuoDB::NUOSQL_LONGVARCHAR:
