@@ -59,6 +59,8 @@ The NuoDB PHP PDO Driver is a shared library that is dynamically loaded by the P
 
   $ sudo cp /opt/nuodb/drivers/php_pdo/php-5.3.NTS/pdo_nuodb.so /usr/lib/php5/20090626
 
+As another example, the Amazon Linux AMI, which is based on CentOS, uses '/usr/lib64/php/modules/' for the PHP Extension Directory.
+
 2.2 libNuoRemote.so
 --------------------
 
@@ -68,7 +70,7 @@ The NuoDB PHP PDO Driver shared library 'pdo_nuodb.so' is dependent on the 'libN
 2.3 Enable the NuoDB PHP PDO Driver
 ------------------------------------
 
-After you have copied the NuoDB PHP PDO driver to the PHP extension directory, you need to modify your PHP configuration to automatically load the NuoDB PHP PDO driver when PHP runs. You can do this by adding the following line to your php.ini.
+After you have copied the NuoDB PHP PDO driver to the PHP extension directory, you need to modify your PHP configuration to automatically load the NuoDB PHP PDO driver when PHP runs. You can do this by adding the following line to the end of your pdo.ini file in your PHP configuration directory (commonly '/etc/php.d' on Linux).
 
   extension=pdo_nuodb.so
  
