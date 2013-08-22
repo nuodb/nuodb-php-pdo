@@ -975,11 +975,12 @@ void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char *
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char * sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn))
 {
         unsigned in_txn_state = in_txn;
+        long res;
     try
     {
         PdoNuoDbStatement * stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, sql);
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, 1);
-        stmt->execute();
+        res = stmt->execute();
     }
     catch (NuoDB::SQLException & e)
     {
@@ -996,7 +997,7 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
         return -1;
     }
     (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
-    return 1;
+    return res;
 }
 
 

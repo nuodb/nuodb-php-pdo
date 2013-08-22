@@ -269,11 +269,11 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
 
 	H = (pdo_nuodb_db_handle *)dbh->driver_data;
-	if (pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn) == -1) {
+	long res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
+	if (res == -1) {
         RECORD_ERROR(dbh);
-		PDO_DBG_RETURN(-1);
 	}
-    PDO_DBG_RETURN(1);
+    PDO_DBG_RETURN(res);
 }
 /* }}} */
 
