@@ -2,7 +2,11 @@
 Test processing of special characters.
 --FILE--
 <?php 
-  $db = new PDO("nuodb:database=test@localhost", "dba", "goalie") or die;
+
+require("testdb.inc");
+global $db;  
+open_db();
+
   try {
       print "Dropping TEST table\n";
       $db->query("DROP TABLE TEST CASCADE IF EXISTS");

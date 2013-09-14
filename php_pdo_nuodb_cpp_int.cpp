@@ -56,6 +56,7 @@
 
 /* describes a column -- stolen from <path-to-php-sdk>/include/ext/pdo/php_pdo_driver.h */
 
+#ifdef NONE
 enum pdo_param_type {
         PDO_PARAM_NULL,
 
@@ -95,7 +96,7 @@ struct pdo_column_data {
         /* don't touch this unless your name is dbdo */
         void *dbdo_data;
 };
-
+#endif
 
 PdoNuoDbGeneratedKeys::PdoNuoDbGeneratedKeys()
     : _qty(0), _keys(NULL)
@@ -159,7 +160,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
         if (!strcmp(_keys[i].columnName, seqName))
             return _keys[i].columnKeyValue;
 
-    nuodb_throw_zend_exception("HY000", 1, "No generated ID for specified column name: %s", seqName);
+    nuodb_throw_zend_exception("HY001", 1, "No generated ID for specified column name: %s", seqName);
     return 0;
 }
 
@@ -236,13 +237,25 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
 NuoDB::Connection * PdoNuoDbHandle::createConnection()
 {
     closeConnection();
-    _con = NuoDB::Connection::create((const char *)_opts->array[0].extra,
-                                     (const char *)_opts->array[1].extra,
-                                     (const char *)_opts->array[2].extra,
-                                     1,
-                                     (const char *)_opts->array[3].option,
-                                     (const char *)_opts->array[3].extra);
 
+    _con = NuoDB::Connection::create((const char *)_opts->array[0].extra,
+                                    (const char *)_opts->array[1].extra,
+                                    (const char *)_opts->array[2].extra,
+                                    1,
+                                    (const char *)_opts->array[3].option,
+                                    (const char *)_opts->array[3].extra);
+
+
+/*
+    _con = NuoDB::Connection::createUtf8();
+    NuoDB::Properties* properties = _con->allocProperties();
+
+    properties->putValue("user", (const char *)_opts->array[1].extra);
+    properties->putValue("password", (const char *)_opts->array[2].extra);
+    properties->putValue((const char *)_opts->array[3].option, (const char *)_opts->array[3].extra);
+
+    _con->openDatabase((const char *)_opts->array[0].extra, properties);
+*/
     //TODO add properties
     return _con;
 }
@@ -300,7 +313,7 @@ void PdoNuoDbHandle::rollback()
 int PdoNuoDbHandle::getLastId(const char *name)
 {
     if (_last_keys == NULL) {
-                nuodb_throw_zend_exception("HY000", -40, "No generated keys");
+                nuodb_throw_zend_exception("HY002", -40, "No generated keys");
                 return 0;
     }
 
@@ -373,9 +386,10 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY000", error_code, error_text);
+        nuodb_throw_zend_exception("HY003", error_code, error_text);
+        //_nuodb_error_new(_dbh, _stmt, __FILE__, __LINE__, "HY003", error_code, error_text);
     } catch (...) {
-        nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
+        nuodb_throw_zend_exception("HY004", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
     }
 
     return _stmt;
@@ -467,10 +481,10 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
     } catch (NuoDB::SQLException & e) {
         int error_code = e.getSqlcode();
         const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY000", error_code, error_text);
+        nuodb_throw_zend_exception("HY005", error_code, error_text);
 
     } catch (...) {
-        nuodb_throw_zend_exception("HY000", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
+        nuodb_throw_zend_exception("HY006", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
     }
 
     return rval;
@@ -526,11 +540,14 @@ int PdoNuoDbStatement::getSqlType(size_t column)
 
 char const * PdoNuoDbStatement::getString(size_t column)
 {
+    char const *res = NULL;
+
     if (_rs == NULL)
     {
-        return NULL;
+        return res;
     }
-    return _rs->getString(column+1);
+    res =  _rs->getString(column+1);
+    return res;
 }
 
 int PdoNuoDbStatement::getInteger(size_t column)
@@ -560,6 +577,7 @@ int64_t PdoNuoDbStatement::getLong(size_t column)
     return _rs->getLong(column+1);
 }
 
+/*
 unsigned long PdoNuoDbStatement::getTimestamp(size_t column)
 {
     if (_rs == NULL)
@@ -568,6 +586,18 @@ unsigned long PdoNuoDbStatement::getTimestamp(size_t column)
     }
     NuoDB::Timestamp *ts = _rs->getTimestamp(column+1);
     return ts->getSeconds();
+}
+*/
+char const *PdoNuoDbStatement::getTimestamp(size_t column)
+{
+    char const *res = NULL;
+
+    if (_rs == NULL)
+    {
+        return res;
+    }
+    res =  _rs->getString(column+1);
+    return res;
 }
 
 unsigned long PdoNuoDbStatement::getTime(size_t column)
@@ -1013,7 +1043,7 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
         *errMessage = strdup(e.getText());
         //TODO: throw if PDO::ATTR_ERRMODE is set to PDO::ERRMODE_EXCEPTION
         //TODO: see: DB-2558
-        //nuodb_throw_zend_exception("HY000", error_code, error_text);
+        //nuodb_throw_zend_exception("HY007", error_code, error_text);
         return 0;
     } catch (...) {
         *errMessage = strdup("Error constructing a NuoDB handle");
@@ -1105,60 +1135,70 @@ int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt * S, long *row_count) {
 
     if (!S->exhausted)
     {
-                PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-                if (pdo_stmt->next())
-        {
-            (*row_count)++;
-            return 1;
-        }
-        else
-        {
-            S->exhausted = 1;
-            return 0;
+        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+        try {
+            if (pdo_stmt->next())
+            {
+                (*row_count)++;
+                return 1;
+            } else {
+                S->exhausted = 1;
+                return 0;
+            }
+        } catch (NuoDB::SQLException & e) {
+            int error_code = e.getSqlcode();
+            const char *error_text = e.getText();
+            pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+            //nuodb_throw_zend_exception("HY008", error_code, error_text);
+        } catch (...) {
+            const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_integer()";
+            pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+            nuodb_throw_zend_exception("HY009", 0, error_text);
         }
     }
+    S->exhausted = 1;
     return 0;
 
 }
 
 char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno) {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
     char const * column_name = pdo_stmt->getColumnName(colno);
-        return column_name;
+    return column_name;
 }
 
 int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno) {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
     int sql_type = pdo_stmt->getSqlType(colno);
-        return sql_type;
+    return sql_type;
 }
 
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        pdo_stmt->setInteger(paramno,  int_val);
-        return 1;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    pdo_stmt->setInteger(paramno,  int_val);
+    return 1;
 }
 
 int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        pdo_stmt->setBoolean(paramno,  (bool_val == 't') ? 1 : 0);
-        return 1;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    pdo_stmt->setBoolean(paramno,  (bool_val == 't') ? 1 : 0);
+    return 1;
 }
 
 int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        pdo_stmt->setString(paramno,  str_val);
-        return 1;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    pdo_stmt->setString(paramno,  str_val);
+    return 1;
 }
 
 int pdo_nuodb_stmt_set_blob(pdo_nuodb_stmt *S, int paramno, char *blob_val, int len)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        pdo_stmt->setBlob(paramno,  blob_val, len);
-        return 1;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    pdo_stmt->setBlob(paramno,  blob_val, len);
+    return 1;
 }
 
 int pdo_nuodb_stmt_set_clob(pdo_nuodb_stmt *S, int paramno, char *clob_val, int len)
@@ -1170,58 +1210,214 @@ int pdo_nuodb_stmt_set_clob(pdo_nuodb_stmt *S, int paramno, char *clob_val, int 
 
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getInteger(colno);
+    int res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getInteger(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY010", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_integer()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY011", 0, error_text);
+    }
+    return res;
 }
 
 char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getBoolean(colno);
+    char res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getBoolean(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY012", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_boolean()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY013", 0, error_text);
+    }
+    return res;
 }
 
 int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getLong(colno);
+    int64_t res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getLong(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY014", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_long()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY015", 0, error_text);
+    }
+    return res;
 }
 
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getString(colno);
+    const char *res = NULL;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getString(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY016", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_string()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY017", 0, error_text);
+    }
+    return res;
 }
 
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getDate(colno);
+    unsigned long res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getDate(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY018", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_date()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY019", 0, error_text);
+    }
+    return res;
 }
 
 unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getTime(colno);
+    unsigned long res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getTime(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY020", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_time()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY021", 0, error_text);
+    }
+    return res;
 }
 
+/*
 unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno)
 {
-        PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-        return pdo_stmt->getTimestamp(colno);
+    unsigned long res = 0;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getTimestamp(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY022", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_timestamp()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY023", 0, error_text);
+    }
+    return res;
+}
+*/
+
+const char *pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno)
+{
+    const char *res = NULL;
+    PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+        res = pdo_stmt->getTimestamp(colno);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY024", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_timestamp()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY025", 0, error_text);
+    }
+    return res;
 }
 
 
-void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len,
+                             void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-    pdo_stmt->getBlob(colno, ptr, len, erealloc);
+    try {
+        pdo_stmt->getBlob(colno, ptr, len, erealloc);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY026", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_blob()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY027", 0, error_text);
+    }
     return;
 }
 
-void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len,
+                             void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
 {
     PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-    pdo_stmt->getClob(colno, ptr, len, erealloc);
+    try {
+        pdo_stmt->getClob(colno, ptr, len, erealloc);
+    } catch (NuoDB::SQLException & e) {
+        int error_code = e.getSqlcode();
+        const char *error_text = e.getText();
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY028", error_code, error_text);
+    }
+    catch (...)
+    {
+        const char *error_text = "UNKNOWN ERROR in pdo_nuodb_stmt_get_clob()";
+        pdo_nuodb_db_handle_set_last_app_error((pdo_nuodb_db_handle *)S->H, error_text);
+        nuodb_throw_zend_exception("HY029", 0, error_text);
+    }
     return;
 }
 

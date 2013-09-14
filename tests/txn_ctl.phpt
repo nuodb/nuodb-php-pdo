@@ -3,10 +3,16 @@ Test autocommit mode
 --FILE--
 <?php 
 
+  $nuotestport = getenv("NUOTESTPORT");
+  if (! $nuotestport) {
+      $nuotestport = "48004";
+  }
+  $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=PDOTEST";
+
 // autocommit mode with explicit calls to beginTransction() and commit().
 echo "autocommit enabled test with explicit calls to beginTransction() and commit().\n";
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+  $db = new PDO($url, "dba", "goalie") or die;
 
   // autocommit should be on by default			       
   if (1 !== ($tmp = $db->getAttribute(PDO::ATTR_AUTOCOMMIT)))
@@ -36,7 +42,7 @@ $db = NULL;
 // issue "There is no active transaction" error message.
 echo "autocommit enabled test with explicit call to commit().\n";
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+  $db = new PDO($url, "dba", "goalie") or die;
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 
@@ -59,7 +65,7 @@ $db = NULL;
 // issue "There is no active transaction" error message.
 echo "autocommit enabled test with explicit call to rollback().\n";
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+  $db = new PDO($url, "dba", "goalie") or die;
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 
@@ -82,7 +88,7 @@ $db = NULL;
 // auto commit disabled tests with commits and rollback.
 echo "autocommit disabled test.\n";
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie", array(PDO::ATTR_AUTOCOMMIT => false)) or die;
+  $db = new PDO($url, "dba", "goalie", array(PDO::ATTR_AUTOCOMMIT => false)) or die;
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 

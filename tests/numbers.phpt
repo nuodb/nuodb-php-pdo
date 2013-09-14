@@ -2,8 +2,12 @@
 numbers test 
 --FILE--
 <?php 
+
+require("testdb.inc");
+global $db;  
+open_db();
+
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
   $sql1 = "drop table numbers_test cascade if exists";
   $db->query($sql1);

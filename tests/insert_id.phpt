@@ -3,12 +3,14 @@ Test last insert id
 --FILE--
 <?php 
 
+require("testdb.inc");
+global $db;  
+open_db();
 
 // auto commit disabled tests with commits and rollback.
 echo "Last insert id test.\n";
-$db = null;
+
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
   $sql1 = "DROP TABLE INSERT_ID_TEST CASCADE IF EXISTS";
   echo $sql1 . "\n";

@@ -38,7 +38,7 @@
 
 class PdoNuoDbStatement;
 
-struct PdoNuoDbGeneratedKeyElement 
+struct PdoNuoDbGeneratedKeyElement
 {
     char *columnName;
     int columnIndex;
@@ -107,7 +107,8 @@ public:
     int getInteger(size_t column);
     bool getBoolean(size_t column);
     int64_t getLong(size_t column);
-    unsigned long getTimestamp(size_t column);
+    //unsigned long getTimestamp(size_t column);
+    char const * getTimestamp(size_t column);
     unsigned long getDate(size_t column);
     unsigned long getTime(size_t column);
     void getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));

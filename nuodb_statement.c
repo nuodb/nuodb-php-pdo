@@ -107,7 +107,7 @@ static int nuodb_stmt_execute(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
 
     status = pdo_nuodb_stmt_execute(S, &stmt->column_count, &stmt->row_count);
     if (status == 0) {
-        RECORD_ERROR(stmt);
+//       RECORD_ERROR(stmt);
         PDO_DBG_RETURN(0);
     }
 
@@ -124,7 +124,7 @@ static int nuodb_stmt_fetch(pdo_stmt_t * stmt, /* {{{ */
     PDO_DBG_INF_FMT("S=%ld", S);
     if (!stmt->executed)
     {
-        strcpy(stmt->error_code, "HY000");
+        strcpy(stmt->error_code, "HY030");
         pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot fetch from a closed cursor");
         PDO_DBG_RETURN(0);
     }
@@ -198,11 +198,18 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
             col->param_type = PDO_PARAM_INT;
             break;
         }
-        case PDO_NUODB_SQLTYPE_TIMESTAMP:
+/*        case PDO_NUODB_SQLTYPE_TIMESTAMP:
         {
             col->param_type = PDO_PARAM_INT;
             break;
         }
+        */
+        case PDO_NUODB_SQLTYPE_TIMESTAMP:
+        {
+            col->param_type = PDO_PARAM_STR;
+            break;
+        }
+
         case PDO_NUODB_SQLTYPE_BLOB:
         {
             col->param_type = PDO_PARAM_STR;
@@ -236,7 +243,12 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
     PDO_DBG_ENTER("nuodb_stmt_get_col");
     PDO_DBG_INF_FMT("S=%ld", S);
 
+    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
+
+    H->last_app_error = NULL;
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
+    if (H->last_app_error != NULL)
+        PDO_DBG_RETURN(0);
 
     *len = 0;
     *caller_frees = 1;
@@ -302,12 +314,28 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
             memmove(*ptr, &t, *len);
             break;
         }
-        case PDO_NUODB_SQLTYPE_TIMESTAMP:
+/*        case PDO_NUODB_SQLTYPE_TIMESTAMP:
         {
             unsigned long ts = pdo_nuodb_stmt_get_timestamp(S, colno);
             *len = sizeof(long);
             *ptr = (char *)emalloc(*len);
             memmove(*ptr, &ts, *len);
+            break;
+        }
+*/
+        case PDO_NUODB_SQLTYPE_TIMESTAMP:
+        {
+            int str_len;
+            const char * str = pdo_nuodb_stmt_get_timestamp(S, colno);
+            if (str == NULL)
+            {
+                break;
+            }
+            str_len = strlen(str);
+            *ptr = (char *) emalloc(str_len+1);
+            memmove(*ptr, str, str_len);
+            *((*ptr)+str_len)= 0;
+            *len = str_len;
             break;
         }
         case PDO_NUODB_SQLTYPE_BLOB:
@@ -327,6 +355,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
             break;
         }
     }
+
+
+    if (H->last_app_error != NULL)
+        PDO_DBG_RETURN(0);
 
     PDO_DBG_RETURN(1);
 }
@@ -368,7 +400,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         /* resolve parameter name to rewritten name */
                         char *nameptr;
                         if (stmt->bound_param_map &&
-          		    SUCCESS == zend_hash_find(stmt->bound_param_map,
+                            SUCCESS == zend_hash_find(stmt->bound_param_map,
                                               param->name,
                                               param->namelen + 1,
                                               (void**)&nameptr))
@@ -446,8 +478,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
                     if (param->name != NULL)
                     {
-                    	memcpy(nuodb_param->col_name, param->name, (strlen(param->name) + 1));
-                    	nuodb_param->col_name_length = param->namelen;
+                        memcpy(nuodb_param->col_name, param->name, (strlen(param->name) + 1));
+                        nuodb_param->col_name_length = param->namelen;
                     }
 
                     // TODO: add code to process streaming LOBs here.

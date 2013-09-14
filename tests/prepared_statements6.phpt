@@ -4,8 +4,12 @@ Prepared statement with Integer parameter for NuoDB Timestamp column.
 <?php 
 // Test prepared statement with Integer parameter for NuoDB Timestamp column.
 date_default_timezone_set('America/New_York');
+
+require("testdb.inc");
+global $db;  
+open_db();
+
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $date = '1962-12-28';
   $sql = "select * from test1 where d = :date";

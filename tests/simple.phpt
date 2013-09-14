@@ -2,8 +2,12 @@
 Simple test.
 --FILE--
 <?php 
+
+require("testdb.inc");
+global $db;  
+open_db();
+
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
 
   $sql = "DROP TABLE SIMPLE CASCADE IF EXISTS";
   $db->query($sql);

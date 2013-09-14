@@ -29,6 +29,16 @@
 #ifndef PHP_PDO_NUODB_C_CPP_COMMON_H
 #define PHP_PDO_NUODB_C_CPP_COMMON_H
 
+#include "php.h"
+#ifdef ZEND_ENGINE_2
+# include "zend_exceptions.h"
+#endif
+#include "php_ini.h"
+#include "ext/standard/info.h"
+#include "pdo/php_pdo.h"
+#include "pdo/php_pdo_driver.h"
+#include "php_pdo_nuodb.h"
+
 /*
 ** This is a common file that will be compiled by both C and C++.
 ** The definitions here are use by both the "C/PHP/Zend" parts of this
@@ -60,10 +70,10 @@ struct pdo_nuodb_timer_t {
     LARGE_INTEGER frequency; // ticks per second
     LARGE_INTEGER startCount;
     LARGE_INTEGER endCount;
-#else 
+#else
     struct timeval startCount;
     struct timeval endCount;
-#endif    
+#endif
 };
 void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
 void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
@@ -146,11 +156,16 @@ extern "C" {
 #endif
 
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
+//void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line, const char *sql_state, int nuodb_error_code, const char *format, ...);
+
 
 typedef struct
 {
     /* the connection handle */
-	void *db; // PdoNuoDbHandle * db;
+    void *db; // PdoNuoDbHandle * db;
+
+    /* PHP PDO parent pdo_dbh_t handle */
+    pdo_dbh_t *pdo_dbh;
 
     /* the last error that didn't come from the API */
     char const * last_app_error;
@@ -170,7 +185,7 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
 int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage);
 void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg);
 int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name);
-const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H); 
+const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H);
 const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H);
 
 typedef struct
@@ -221,7 +236,8 @@ int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno);
-unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
+//unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
+const char * pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
 void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
 void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int));
 

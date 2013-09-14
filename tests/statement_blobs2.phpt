@@ -2,7 +2,10 @@
 Prepared Statements and BLOBs
 --FILE--
 <?php
-	$db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+
+require("testdb.inc");
+global $db;  
+open_db();
 
 	$blobs = array(
 //		'TINYBLOB'		=> 255,

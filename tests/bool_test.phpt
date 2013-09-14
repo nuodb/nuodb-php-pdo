@@ -2,10 +2,13 @@
 boolean tests
 --FILE--
 <?php 
+
+require("testdb.inc");
+global $db;  
+open_db();
+
 try 
 {  
-  $db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
-
   $db->exec('DROP TABLE IF EXISTS bool_test');
   $db->exec('CREATE TABLE bool_test(id INT, mybool BOOLEAN)');
 

@@ -2,9 +2,13 @@
 Select AS
 --FILE--
 <?php 
+
+require("testdb.inc");
+global $db;  
+open_db();
+
 // Test Select as
 try {  
-  $db = new PDO("nuodb:database=test@localhost;schema=test", "cloud", "user") or die;
 //  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $sql = "DROP TABLE TEST CASCADE IF EXISTS";
   $stmt = $db->prepare($sql);
