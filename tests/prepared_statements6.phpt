@@ -29,6 +29,6 @@ $db = NULL;
 echo "\ndone\n";
 ?>
 --EXPECT--
-SQLSTATE[HY000] [-25] can't find table "TEST1"
+SQLSTATE[HY003] [-25] can't find table "TEST1"
 SQL: select * from test1 where d = ?
 done

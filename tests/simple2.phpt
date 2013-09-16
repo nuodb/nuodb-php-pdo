@@ -20,5 +20,5 @@ $db = NULL;
 echo "done\n";
 ?>
 --EXPECT--
-SQLSTATE[HY000] [-25] can't find table "TEST1"
+SQLSTATE[HY003] [-25] can't find table "TEST1"
 SQL: select * from test1 where t=1234567done

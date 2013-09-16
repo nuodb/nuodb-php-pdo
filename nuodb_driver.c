@@ -154,6 +154,64 @@ void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, lon
 }
 */
 
+
+int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line TSRMLS_DC)
+{
+	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
+	pdo_error_type *pdo_err;
+	pdo_nuodb_error_info *einfo;
+	pdo_nuodb_stmt *S = NULL;
+
+	PDO_DBG_ENTER("_pdo_mysql_error");
+	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
+	if (stmt) {
+		S = (pdo_nuodb_stmt*)stmt->driver_data;
+		pdo_err = &stmt->error_code;
+		einfo   = &S->einfo;
+	} else {
+		pdo_err = &dbh->error_code;
+		einfo   = &H->einfo;
+	}
+
+	if (S && S->stmt) {
+		einfo->errcode = nuodb_stmt_errno(S->stmt);
+	}
+	else
+	{
+		einfo->errcode = nuodb_errno(H);
+	}
+
+	einfo->file = file;
+	einfo->line = line;
+
+	if (einfo->errmsg) {
+		pefree(einfo->errmsg, dbh->is_persistent);
+		einfo->errmsg = NULL;
+	}
+
+	if (einfo->errcode) {
+		einfo->errmsg = pestrdup(nuodb_error(H), dbh->is_persistent);
+	} else { /* no error */
+		strcpy(*pdo_err, PDO_ERR_NONE);
+		PDO_DBG_RETURN(0);
+	}
+
+	if (S && S->stmt) {
+		strcpy(*pdo_err, nuodb_stmt_sqlstate(S->stmt));
+	} else {
+		strcpy(*pdo_err, nuodb_sqlstate(H));
+	}
+
+	if (!dbh->methods) {
+		PDO_DBG_INF("Throwing exception");
+		zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
+				*pdo_err, einfo->errcode, einfo->errmsg);
+	}
+
+	PDO_DBG_RETURN(einfo->errcode);
+}
+
+
 #define RECORD_ERROR(dbh) _nuodb_error(dbh, NULL, __FILE__, __LINE__ TSRMLS_CC)
 
 
@@ -218,6 +276,8 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
     S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
     S->H = H;
     S->stmt = NULL;
+	S->einfo.errcode = 0;
+	S->einfo.errmsg = NULL;
     S->sql = strdup(sql);
     S->error_code = 0;
     S->error_msg = NULL;
@@ -605,8 +665,20 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
 static int pdo_nuodb_fetch_error_func(pdo_dbh_t * dbh, pdo_stmt_t * stmt, zval * info TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    // TODO:
-    return 1;
+ 	pdo_nuodb_error_info *einfo = &H->einfo;
+	PDO_DBG_ENTER("pdo_nmuodb_fetch_error_func");
+	PDO_DBG_INF_FMT("dbh=%p stmt=%p", dbh, stmt);
+	if (stmt) {
+		pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)stmt->driver_data;
+		einfo = &S->einfo;
+	} else {
+		einfo = &H->einfo;
+	}
+	if (einfo->errcode) {
+		add_next_index_long(info, einfo->errcode);
+		add_next_index_string(info, einfo->errmsg, 1);
+	}
+	PDO_DBG_RETURN(1);
 }
 /* }}} */
 
@@ -654,6 +726,9 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     PDO_DBG_ENTER("pdo_nuodb_handle_factory");
     dbh->driver_data = pecalloc(1, sizeof(*H), dbh->is_persistent);
     H = (pdo_nuodb_db_handle *) dbh->driver_data;
+	H->einfo.errcode = 0;
+	H->einfo.errmsg = NULL;
+
     php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, 2);
 
     options[0].option = "database";

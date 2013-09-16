@@ -119,6 +119,13 @@ static inline void PDO_DBG_ENTER(const char *func_name) {}
 
 #endif
 
+typedef struct {
+	const char *file;
+	int line;
+	int errcode;
+	char *errmsg;
+} pdo_nuodb_error_info;
+
 typedef struct SqlOption_t
 {
     char const * option;
@@ -162,13 +169,16 @@ void nuodb_throw_zend_exception(const char *sql_state, int code, const char *for
 typedef struct
 {
     /* the connection handle */
-    void *db; // PdoNuoDbHandle * db;
+    void *db; // opaque for PdoNuoDbHandle * db;
 
     /* PHP PDO parent pdo_dbh_t handle */
     pdo_dbh_t *pdo_dbh;
 
+    /* NuoDB error information */
+    pdo_nuodb_error_info einfo;
+
     /* the last error that didn't come from the API */
-    char const * last_app_error;
+    char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
 
     /* prepend table names on column names in fetch */
     unsigned fetch_table_names:1;
@@ -191,10 +201,13 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
 typedef struct
 {
     /* the link that owns this statement */
-    void *H; // pdo_nuodb_db_handle * H;
+    void *H; // opaque for pdo_nuodb_db_handle *H;
 
     /* the statement handle */
-    void *stmt; // PdoNuoDbStatement * stmt;
+    void *stmt; // opaque for PdoNuoDbStatement *stmt;
+
+    /* NuoDB error information */
+    pdo_nuodb_error_info einfo;
 
     /* copy of the sql statement */
     char *sql;
@@ -210,8 +223,8 @@ typedef struct
 
     unsigned _reserved:22;
 
-    int error_code;
-    char *error_msg;  // pointer to error_msg.  NULL if no error.
+    int error_code;  // TODO: this needs to go away in favor of 'einfo'
+    char *error_msg;  // pointer to error_msg.  NULL if no error.  // TODO: this needs to go away in favor of 'einfo'
 
     unsigned qty_input_params;
     /* the input params */
