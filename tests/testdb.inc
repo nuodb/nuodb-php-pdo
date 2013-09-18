@@ -21,6 +21,7 @@ function open_db()
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=PDOTEST";
   try {
     $db = new PDO($url, $user, $password) or die;
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   }
   catch(PDOException $e) {
     echo "FAILED: ";

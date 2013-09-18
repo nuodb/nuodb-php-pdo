@@ -62,20 +62,34 @@ class PdoNuoDbHandle
 {
 private:
     NuoDB::Connection * _con;
+    _pdo_dbh_t *_pdo_dbh;
     SqlOptionArray * _opts;
     SqlOption _opt_arr[4];
+    pdo_nuodb_error_info einfo; /* NuoDB error information */
+    pdo_error_type sqlstate;
     PdoNuoDbStatement * _last_stmt; // will be NULL if the last statement was closed.
     PdoNuoDbGeneratedKeys *_last_keys;  // pointer to array of generated keys.
     void deleteOptions();
 public:
-    PdoNuoDbHandle(SqlOptionArray * options);
+    PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options);
     ~PdoNuoDbHandle();
+    _pdo_dbh_t *getPdoDbh();
+    int getEinfoLine();
+    const char *getEinfoFile();
+    int getEinfoErrcode();
+    const char *getEinfoErrmsg();
+    pdo_error_type *getSqlstate();
+    void setEinfoLine(int line);
+    void setEinfoFile(const char *file);
+    void setEinfoErrcode(int errcode);
+    void setEinfoErrmsg(const char *errmsg);
+    void setSqlstate(const char *sqlstate);
     void setLastStatement(PdoNuoDbStatement *lastStatement);
     void setLastKeys(PdoNuoDbGeneratedKeys *lastKeys);
     void setOptions(SqlOptionArray * options);
     NuoDB::Connection * createConnection();
     NuoDB::Connection * getConnection();
-    PdoNuoDbStatement * createStatement(char const * sql);
+    PdoNuoDbStatement * createStatement(pdo_stmt_t *pdo_stmt, char const * sql);
     void closeConnection();
     void commit();
     void rollback();
@@ -89,13 +103,26 @@ class PdoNuoDbStatement
 {
 private:
     PdoNuoDbHandle * _dbh;
+    pdo_stmt_t *_pdo_stmt;
+    pdo_nuodb_error_info einfo; /* NuoDB error information */
+    pdo_error_type sqlstate;
     const char *_sql;
     NuoDB::PreparedStatement * _stmt;
     NuoDB::ResultSet * _rs;
 public:
-    PdoNuoDbStatement(PdoNuoDbHandle * dbh);
+    PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt);
     ~PdoNuoDbStatement();
     NuoDB::PreparedStatement * createStatement(char const * sql);
+    int getEinfoLine();
+    const char *getEinfoFile();
+    int getEinfoErrcode();
+    const char *getEinfoErrmsg();
+    pdo_error_type *getSqlstate();
+    void setEinfoLine(int line);
+    void setEinfoFile(const char *file);
+    void setEinfoErrcode(int errcode);
+    void setEinfoErrmsg(const char *errmsg);
+    void setSqlstate(const char *sqlstate);
     int execute();
     void executeQuery();
     bool hasResultSet();

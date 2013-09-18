@@ -14,11 +14,12 @@ try {
   }
   $db = NULL;
 } catch(PDOException $e) {  
-  echo $e->getMessage();  
+  echo $e->getMessage() . "\n";  
 }
 $db = NULL;  
 echo "done\n";
 ?>
 --EXPECT--
-SQLSTATE[HY003] [-25] can't find table "TEST1"
-SQL: select * from test1 where t=1234567done
+SQLSTATE[42000]: Syntax error or access violation: -25 can't find table "TEST1"
+SQL: select * from test1 where t=1234567
+done

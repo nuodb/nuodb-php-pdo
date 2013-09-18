@@ -164,9 +164,14 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     return 0;
 }
 
-PdoNuoDbHandle::PdoNuoDbHandle(SqlOptionArray * options)
-    : _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
+    : _pdo_dbh(pdo_dbh), _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
+	einfo.errcode = 0;
+	einfo.errmsg = NULL;
+	einfo.file = NULL;
+	einfo.line = 0;
+	strcpy(sqlstate, PDO_ERR_NONE);
     for (int i=0; i<4; i++)
     {
         _opt_arr[i].option = NULL;
@@ -178,8 +183,57 @@ PdoNuoDbHandle::PdoNuoDbHandle(SqlOptionArray * options)
 PdoNuoDbHandle::~PdoNuoDbHandle()
 {
     if (_last_keys != NULL) delete _last_keys;
+	if (einfo.errmsg) free(einfo.errmsg);
     closeConnection();
     deleteOptions();
+}
+
+_pdo_dbh_t *PdoNuoDbHandle::getPdoDbh() {
+	return _pdo_dbh;
+}
+
+int PdoNuoDbHandle::getEinfoLine() {
+	return einfo.line;
+}
+
+const char *PdoNuoDbHandle::getEinfoFile() {
+	return einfo.file;
+}
+
+int PdoNuoDbHandle::getEinfoErrcode() {
+	return einfo.errcode;
+}
+
+const char *PdoNuoDbHandle::getEinfoErrmsg() {
+	return einfo.errmsg;
+}
+
+pdo_error_type *PdoNuoDbHandle::getSqlstate() {
+	return &sqlstate;
+}
+
+void PdoNuoDbHandle::setEinfoLine(int line) {
+	einfo.line = line;
+}
+
+void PdoNuoDbHandle::setEinfoFile(const char *file) {
+	if (einfo.file)
+		free(einfo.file);
+	einfo.file = strdup(file);
+}
+
+void PdoNuoDbHandle::setEinfoErrcode(int errcode) {
+	einfo.errcode = errcode;
+}
+
+void PdoNuoDbHandle::setEinfoErrmsg(const char *errmsg) {
+	if (einfo.errmsg)
+		free(einfo.errmsg);
+	einfo.errmsg = strdup(errmsg);
+}
+
+void PdoNuoDbHandle::setSqlstate(const char *sqlState) {
+	strncpy(this->sqlstate, sqlState, 6);
 }
 
 void PdoNuoDbHandle::deleteOptions()
@@ -265,14 +319,14 @@ NuoDB::Connection * PdoNuoDbHandle::getConnection()
     return _con;
 }
 
-PdoNuoDbStatement * PdoNuoDbHandle::createStatement(char const * sql)
+PdoNuoDbStatement * PdoNuoDbHandle::createStatement(pdo_stmt_t * pdo_stmt, char const * sql)
 {
     PdoNuoDbStatement * rval = NULL;
     if (sql == NULL)
     {
         return NULL;
     }
-    rval = new PdoNuoDbStatement(this);
+    rval = new PdoNuoDbStatement(this, pdo_stmt);
     rval->createStatement(sql);
     setLastStatement(rval);
     return rval;
@@ -341,13 +395,22 @@ const char *PdoNuoDbHandle::getNuoDBProductVersion()
     return dbmd->getDatabaseProductVersion();
 }
 
-PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh) : _dbh(dbh), _sql(NULL), _stmt(NULL), _rs(NULL)
+PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt) : _dbh(dbh), _pdo_stmt(pdo_stmt), _sql(NULL), _stmt(NULL), _rs(NULL)
 {
-    // empty
+	if (pdo_stmt != NULL) {
+		pdo_nuodb_stmt *S = (pdo_nuodb_stmt *) pdo_stmt->driver_data;
+		S->stmt = this;
+	}
+	einfo.errcode = 0;
+	einfo.errmsg = NULL;
+	einfo.file = NULL;
+	einfo.line = 0;
+	strcpy(sqlstate, PDO_ERR_NONE);
 }
 
 PdoNuoDbStatement::~PdoNuoDbStatement()
 {
+	if (einfo.errmsg) free(einfo.errmsg);
     _dbh->setLastStatement(NULL);
     if (_sql != NULL)
     {
@@ -384,15 +447,67 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     try {
         _stmt = _con->prepareStatement(sql, NuoDB::RETURN_GENERATED_KEYS);
     } catch (NuoDB::SQLException & e) {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY003", error_code, error_text);
-        //_nuodb_error_new(_dbh, _stmt, __FILE__, __LINE__, "HY003", error_code, error_text);
+    	// because the exception happened in the process of creating a prepared
+    	// statement, PHP won't be looking for the error information on the
+    	// statement handle. Instead PHP will look for error information in
+    	// the DB handle.
+    	_dbh->setEinfoErrcode(e.getSqlcode());
+    	_dbh->setEinfoErrmsg(e.getText());
+    	_dbh->setEinfoFile(__FILE__);
+    	_dbh->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	_dbh->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(_dbh->getPdoDbh(), NULL, getEinfoFile(), getEinfoLine() TSRMLS_DC);
     } catch (...) {
         nuodb_throw_zend_exception("HY004", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
     }
 
     return _stmt;
+}
+
+int PdoNuoDbStatement::getEinfoLine() {
+	return einfo.line;
+}
+
+const char *PdoNuoDbStatement::getEinfoFile() {
+	return einfo.file;
+}
+
+int PdoNuoDbStatement::getEinfoErrcode() {
+	return einfo.errcode;
+}
+
+const char *PdoNuoDbStatement::getEinfoErrmsg() {
+	return einfo.errmsg;
+}
+
+pdo_error_type *PdoNuoDbStatement::getSqlstate() {
+	return &sqlstate;
+}
+
+void PdoNuoDbStatement::setEinfoLine(int line) {
+	einfo.line = line;
+}
+
+void PdoNuoDbStatement::setEinfoFile(const char *file) {
+	if (einfo.file)
+		free(einfo.file);
+	einfo.file = strdup(file);
+}
+
+void PdoNuoDbStatement::setEinfoErrcode(int errcode) {
+	einfo.errcode = errcode;
+}
+
+void PdoNuoDbStatement::setEinfoErrmsg(const char *errmsg) {
+	if (einfo.errmsg)
+		free(einfo.errmsg);
+	einfo.errmsg = strdup(errmsg);
+}
+
+void PdoNuoDbStatement::setSqlstate(const char *sqlState) {
+	strncpy(this->sqlstate, sqlState, 6);
 }
 
 int PdoNuoDbStatement::execute()
@@ -479,9 +594,19 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
         rval = md->getColumnLabel(column+1);
 
     } catch (NuoDB::SQLException & e) {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        nuodb_throw_zend_exception("HY005", error_code, error_text);
+    	setEinfoErrcode(e.getSqlcode());
+    	setEinfoErrmsg(e.getText());
+    	setEinfoFile(__FILE__);
+    	setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(_dbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine() TSRMLS_DC);
+
+
+//        int error_code = e.getSqlcode();
+//        const char *error_text = e.getText();
+//        nuodb_throw_zend_exception("HY005", error_code, error_text);
 
     } catch (...) {
         nuodb_throw_zend_exception("HY006", 0, "UNKNOWN ERROR caught in doNuoDbStatement::getColumnName()");
@@ -865,6 +990,27 @@ void pdo_nuodb_func_leave(int lineno, const char *file) {
   return;
 }
 
+int pdo_nuodb_db_handle_errno(pdo_nuodb_db_handle *H) {
+	if (H == NULL) return 0;
+	if (H->db == NULL) return 0;
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    return db->getEinfoErrcode();
+}
+
+const char *pdo_nuodb_db_handle_errmsg(pdo_nuodb_db_handle *H) {
+	if (H == NULL) return 0;
+	if (H->db == NULL) return 0;
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    return db->getEinfoErrmsg();
+}
+
+pdo_error_type * pdo_nuodb_db_handle_sqlstate(pdo_nuodb_db_handle *H) {
+	if (H == NULL) return 0;
+	if (H->db == NULL) return 0;
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    return db->getSqlstate();
+}
+
 
 int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H) {
         try {
@@ -987,13 +1133,13 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
 }
 
 
-void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char * sql)
+void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t * pdo_stmt, const char * sql)
 {
         PdoNuoDbStatement *stmt = NULL;
     try
     {
                 PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
-                stmt = db->createStatement(sql);
+                stmt = db->createStatement(pdo_stmt, sql);
     }
     catch (...)
     {
@@ -1008,7 +1154,7 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
         long res;
     try
     {
-        PdoNuoDbStatement * stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, sql);
+        PdoNuoDbStatement * stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, NULL, sql);
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, 1);
         res = stmt->execute();
     }
@@ -1035,7 +1181,7 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
 {
     *errMessage = NULL;
     try {
-        PdoNuoDbHandle *db = new PdoNuoDbHandle(optionsArray);
+        PdoNuoDbHandle *db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
         H->db = (void *) db;
         db->createConnection();
     } catch (NuoDB::SQLException & e) {
@@ -1064,6 +1210,26 @@ int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name) {
   return last_id;
 }
 
+int pdo_nuodb_stmt_errno(pdo_nuodb_stmt *S) {
+	if (S == NULL) return 0;
+	if (S->stmt == NULL) return 0;
+    PdoNuoDbStatement *pdo_nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+    return pdo_nuodb_stmt->getEinfoErrcode();
+}
+
+const char *pdo_nuodb_stmt_errmsg(pdo_nuodb_stmt *S) {
+	if (S == NULL) return 0;
+	if (S->stmt == NULL) return 0;
+    PdoNuoDbStatement *pdo_nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+    return pdo_nuodb_stmt->getEinfoErrmsg();
+}
+
+pdo_error_type *pdo_nuodb_stmt_sqlstate(pdo_nuodb_stmt *S) {
+	if (S == NULL) return 0;
+	if (S->stmt == NULL) return 0;
+    PdoNuoDbStatement *pdo_nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+    return pdo_nuodb_stmt->getSqlstate();
+}
 
 int pdo_nuodb_stmt_delete(pdo_nuodb_stmt * S) {
         try {
@@ -1073,8 +1239,8 @@ int pdo_nuodb_stmt_delete(pdo_nuodb_stmt * S) {
                 if (S->stmt == NULL) {
                         return 1;
                 }
-                PdoNuoDbStatement *pdo_stmt = (PdoNuoDbStatement *) S->stmt;
-                delete pdo_stmt;
+                PdoNuoDbStatement *pdo_nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+                delete pdo_nuodb_stmt;
                 S->stmt = NULL;
 
     }

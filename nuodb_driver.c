@@ -57,6 +57,12 @@
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_int.h"
 
+// Workaround DB-4112
+struct sqlcode_to_sqlstate_t {
+	int sqlcode;
+	char *sqlstate;
+};
+
 ZEND_DECLARE_MODULE_GLOBALS(pdo_nuodb)
 
 char const * const NUODB_OPT_DATABASE = "database";
@@ -67,8 +73,68 @@ char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
 FILE *nuodb_log_fp = NULL;
 
-static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, const char *, long, PdoNuoDbStatement ** s TSRMLS_DC);
+static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** s TSRMLS_DC);
 
+// Workaround DB-4112
+static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
+	 	{-1, "42000"},
+		{-2, "0A000"},
+		{-3, "58000"},
+		{-4, "42000"},
+		{-5, "58000"},
+		{-6, "08000"},
+		{-7, "08000"},
+		{-8, "22000"},
+		{-9, "22000"},
+		{-10, "08000"},
+		{-11, "42000"},
+		{-12, "58000"},
+		{-13, "58000"},
+		{-14, "58000"},
+		{-15, "58000"},
+		{-16, "58000"},
+		{-17, "58000"},
+		{-18, "58000"},
+		{-19, "22000"},
+		{-20, "22000"},
+		{-21, "22000"},
+		{-22, "58000"},
+		{-23, "58000"},
+		{-24, "40002"},
+		{-25, "42000"},
+		{-26, "58000"},
+		{-27, "23000"},
+		{-28, "58000"},
+		{-29, "40001"},
+		{-30, "58000"},
+		{-31, "58000"},
+		{-32, "58000"},
+		{-36, "58000"},
+		{-37, "58000"},
+		{-38, "58000"},
+		{-39, "58000"},
+		{-40, "58000"},
+		{-41, "58000"},
+		{-42, "01000"},
+		{-43, "0A000"},
+		{-44, "58000"},
+		{-45, "23001"},
+		{-46, "58000"},
+		{-47, "58000"},
+		{-48, "HY008"},
+	    {-49, "58000"},
+	    {-50, "58000"},
+		{-51, "58000"},
+		{-52, "58000"},
+		{-53, "58000"}
+};
+
+// Workaround DB-4112
+const char *nuodb_get_sqlstate(int sqlcode) {
+	int index = abs(sqlcode) - 1;
+	if ((sqlcode > -1) || (sqlcode < -53)) return NULL;
+	return sqlcode_to_sqlstate[index].sqlstate;
+}
 
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...) {
   va_list arg;
@@ -155,6 +221,65 @@ void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, lon
 */
 
 
+
+/*
+ *
+ * Stolen from NuoDB's SQLCode.java to workaround DB-4112
+ 	SYNTAX_ERROR(-1, "42000"),
+	FEATURE_NOT_YET_IMPLEMENTED(-2, "0A000"),
+	BUG_CHECK(-3, "58000"),
+	COMPILE_ERROR(-4, "42000"),
+	RUNTIME_ERROR(-5, "58000"),
+	IO_ERROR(-6, "08000"),
+	NETWORK_ERROR(-7, "08000"),
+	CONVERSION_ERROR(-8, "22000"),
+	TRUNCATION_ERROR(-9, "22000"),
+	CONNECTION_ERROR(-10, "08000"),
+	DDL_ERROR(-11, "42000"),
+	APPLICATION_ERROR(-12, "58000"),
+	SECURITY_ERROR(-13, "58000"),
+	DATABASE_CORRUPTION(-14, "58000"),
+	VERSION_ERROR(-15, "58000"),
+	LICENSE_ERROR(-16, "58000"),
+	INTERNAL_ERROR(-17, "58000"),
+	DEBUG_ERROR(-18, "58000"),
+	LOST_BLOB(-19, "22000"),
+	INCONSISTENT_BLOB(-20, "22000"),
+	DELETED_BLOB(-21, "22000"),
+	LOG_ERROR(-22, "58000"),
+	DATABASE_DAMAGED(-23, "58000"),
+	UPDATE_CONFLICT(-24, "40002"),
+	NO_SUCH_TABLE(-25, "42000"),
+	INDEX_OVERFLOW(-26, "58000"),
+	UNIQUE_DUPLICATE(-27, "23000"),
+	UNCOMMITTED_UPDATES(-28, "58000"),
+	DEADLOCK(-29, "40001"),
+	OUT_OF_MEMORY_ERROR(-30, "58000"),
+	OUT_OF_RECORD_MEMORY_ERROR(-31, "58000"),
+	LOCK_TIMEOUT(-32, "58000"),
+	PLATFORM_ERROR(-36, "58000"),
+	NO_SCHEMA(-37, "58000"),
+	CONFIGURATION_ERROR(-38, "58000"),
+	READ_ONLY_ERROR(-39, "58000"),
+	NO_GENERATED_KEYS(-40, "58000"),
+	THROWN_EXCEPTION(-41, "58000"),
+	INVALID_TRANSACTION_ISOLATION(-42,"01000"),
+	UNSUPPORTED_TRANSACTION_ISOLATION(-43, "0A000"),
+	INVALID_UTF8(-44,"58000"),
+	CONSTRAINT_ERROR(-45,"23001"),	// Must start with "23" for Hibernate
+	UPDATE_ERROR(-46, "58000"),     // update error catch all
+	I18N_ERROR(-47, "58000"),
+	OPERATION_KILLED(-48, "HY008"),
+    INVALID_STATEMENT(-49,"58000"),
+    IS_SHUTDOWN(-50,"58000"),
+	IN_QUOTED_STRING(-51,"58000"),
+	BATCH_UPDATE_ERROR(-52,"58000"),
+	JAVA_ERROR(-53,"58000");
+
+ *
+ */
+
+
 int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line TSRMLS_DC)
 {
 	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
@@ -174,11 +299,11 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 	}
 
 	if (S && S->stmt) {
-		einfo->errcode = nuodb_stmt_errno(S->stmt);
+		einfo->errcode = pdo_nuodb_stmt_errno(S);
 	}
 	else
 	{
-		einfo->errcode = nuodb_errno(H);
+		einfo->errcode = pdo_nuodb_db_handle_errno(H);
 	}
 
 	einfo->file = file;
@@ -189,17 +314,24 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 		einfo->errmsg = NULL;
 	}
 
-	if (einfo->errcode) {
-		einfo->errmsg = pestrdup(nuodb_error(H), dbh->is_persistent);
-	} else { /* no error */
+	if (!einfo->errcode) { /* no error */
 		strcpy(*pdo_err, PDO_ERR_NONE);
 		PDO_DBG_RETURN(0);
 	}
 
+
+
+
 	if (S && S->stmt) {
-		strcpy(*pdo_err, nuodb_stmt_sqlstate(S->stmt));
+		const char *error_message = pdo_nuodb_stmt_errmsg(S);
+		//einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
+		einfo->errmsg = error_message;
+		strncpy(*pdo_err, *(pdo_nuodb_stmt_sqlstate(S)), 6);
 	} else {
-		strcpy(*pdo_err, nuodb_sqlstate(H));
+		const char *error_message = pdo_nuodb_db_handle_errmsg(H);
+		//einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
+		einfo->errmsg = error_message;
+		strncpy(*pdo_err, pdo_nuodb_db_handle_sqlstate(H), 6);
 	}
 
 	if (!dbh->methods) {
@@ -256,91 +388,86 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   PDO_DBG_ENTER("nuodb_handle_preparer");
   PDO_DBG_INF_FMT("dbh=%p", dbh);
   PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
-  do
+
+  stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
+  stmt->named_rewrite_template = ":pdo%d";
+  ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
+  if (ret == 1) /* the SQL query was re-written */
   {
-    stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
-    stmt->named_rewrite_template = ":pdo%d";
-    ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
-    if (ret == 1) /* the SQL query was re-written */
-    {
-      rewritten = 1;
-      sql = nsql;
-      sql_len = nsql_len;
-    }
-    else if (ret == -1) /* could not understand it! */
-    {
-      strcpy(dbh->error_code, stmt->error_code);
-      PDO_DBG_RETURN(0);
-    }
-
-    S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
-    S->H = H;
-    S->stmt = NULL;
-	S->einfo.errcode = 0;
-	S->einfo.errmsg = NULL;
-    S->sql = strdup(sql);
-    S->error_code = 0;
-    S->error_msg = NULL;
-    S->qty_input_params = 0;
-    S->in_params = NULL;
-    S->out_params = NULL;
-
-    stmt->driver_data = S;
-    stmt->methods = &nuodb_stmt_methods;
-
-    map_size = 0;
-    if (stmt->bound_param_map)
-    {
-      map_size = zend_hash_num_elements(stmt->bound_param_map);
-      if ((map_size > 0) && (S->in_params == NULL))
-      {
-        index = 0;
-        S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(map_size));
-        S->in_params->num_alloc = S->in_params->num_params = map_size;
-        for (index = 0; index < map_size; index++)
-        {
-          // zend_hash_index_find(stmt->bound_param_map, index, (void **)&pData);
-          S->in_params->params[index].col_name[0] = '\0';
-          S->in_params->params[index].col_name_length = 0;
-          S->in_params->params[index].len = 0;
-          S->in_params->params[index].data = NULL;
-        }
-      }
-    }
-
-    if (stmt->bound_param_map != NULL) /* find the largest int key */
-    {
-      zend_hash_internal_pointer_reset_ex(stmt->bound_param_map, &pos);
-      while (HASH_KEY_NON_EXISTANT != (keytype = zend_hash_get_current_key_ex(
-               stmt->bound_param_map, &strindex, &strindexlen, &intindex, 0, &pos)))
-      {
-        if (HASH_KEY_IS_LONG == keytype) {
-          if (intindex > max_index) {
-            max_index = intindex;
-          }
-        }
-        zend_hash_move_forward_ex(stmt->bound_param_map, &pos);
-      }
-      S->qty_input_params = max_index + 1;
-    }
-
-    /* allocate and prepare statement */
-    if (!nuodb_alloc_prepare_stmt(dbh, sql, sql_len, &s TSRMLS_CC)) {
-      break;
-    }
-    S->stmt = s;
-    index = 0;
-    stmt->driver_data = S;
-    stmt->methods = &nuodb_stmt_methods;
-    stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
-    if (rewritten == 1) efree(sql);
-    PDO_DBG_RETURN(1);
+    rewritten = 1;
+    sql = nsql;
+    sql_len = nsql_len;
   }
-  while (0);
+  else if (ret == -1) /* could not understand it! */
+  {
+    strcpy(dbh->error_code, stmt->error_code);
+    PDO_DBG_RETURN(0);
+  }
 
-  RECORD_ERROR(dbh);
-  nuodb_stmt_dtor(stmt TSRMLS_CC);
-  PDO_DBG_RETURN(0);
+  S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
+  S->H = H;
+  S->stmt = NULL;
+  S->einfo.errcode = 0;
+  S->einfo.errmsg = NULL;
+  S->sql = strdup(sql);
+  S->error_code = 0;
+  S->error_msg = NULL;
+  S->qty_input_params = 0;
+  S->in_params = NULL;
+  S->out_params = NULL;
+
+  stmt->driver_data = S;
+  stmt->methods = &nuodb_stmt_methods;
+
+  map_size = 0;
+  if (stmt->bound_param_map)
+  {
+    map_size = zend_hash_num_elements(stmt->bound_param_map);
+    if ((map_size > 0) && (S->in_params == NULL))
+    {
+      index = 0;
+      S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(map_size));
+      S->in_params->num_alloc = S->in_params->num_params = map_size;
+      for (index = 0; index < map_size; index++)
+      {
+        // zend_hash_index_find(stmt->bound_param_map, index, (void **)&pData);
+        S->in_params->params[index].col_name[0] = '\0';
+        S->in_params->params[index].col_name_length = 0;
+        S->in_params->params[index].len = 0;
+        S->in_params->params[index].data = NULL;
+      }
+    }
+  }
+
+  if (stmt->bound_param_map != NULL) /* find the largest int key */
+  {
+    zend_hash_internal_pointer_reset_ex(stmt->bound_param_map, &pos);
+    while (HASH_KEY_NON_EXISTANT != (keytype = zend_hash_get_current_key_ex(
+             stmt->bound_param_map, &strindex, &strindexlen, &intindex, 0, &pos)))
+    {
+      if (HASH_KEY_IS_LONG == keytype) {
+        if (intindex > max_index) {
+          max_index = intindex;
+        }
+      }
+      zend_hash_move_forward_ex(stmt->bound_param_map, &pos);
+    }
+    S->qty_input_params = max_index + 1;
+  }
+
+  /* allocate and prepare statement */
+  if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &s TSRMLS_CC)) {
+	  // There was an error preparing the statement
+	  if (rewritten == 1) efree(sql);
+	  PDO_DBG_RETURN(0);
+  }
+  S->stmt = s;
+  index = 0;
+  stmt->driver_data = S;
+  stmt->methods = &nuodb_stmt_methods;
+  stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
+  if (rewritten == 1) efree(sql);
+  PDO_DBG_RETURN(1);
 }
 /* }}} */
 
@@ -460,7 +587,7 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 /* }}} */
 
 /* used by prepare and exec to allocate a statement handle and prepare the SQL */
-static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, const char * sql, long sql_len, /* {{{ */
+static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, const char * sql, long sql_len, /* {{{ */
                                     PdoNuoDbStatement ** s TSRMLS_DC)
 {
     pdo_nuodb_db_handle * H = NULL;
@@ -535,11 +662,19 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, const char * sql, long sql_
     }
 
     /* prepare the statement */
-    *s = pdo_nuodb_db_handle_create_statement(H, new_sql);
+    *s = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
     PDO_DBG_INF_FMT("S=%ld", *s);
     if (*s == NULL)
     {
         RECORD_ERROR(dbh);
+        efree(new_sql);
+        PDO_DBG_RETURN(0);
+    }
+
+    pdo_nuodb_stmt *S = (pdo_nuodb_stmt *) pdo_stmt->driver_data;
+    if ((S->einfo.errcode != 0) || (H->einfo.errcode != 0))
+    {
+        //RECORD_ERROR(dbh);
         efree(new_sql);
         PDO_DBG_RETURN(0);
     }
@@ -726,6 +861,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     PDO_DBG_ENTER("pdo_nuodb_handle_factory");
     dbh->driver_data = pecalloc(1, sizeof(*H), dbh->is_persistent);
     H = (pdo_nuodb_db_handle *) dbh->driver_data;
+    H->pdo_dbh = dbh;
 	H->einfo.errcode = 0;
 	H->einfo.errmsg = NULL;
 

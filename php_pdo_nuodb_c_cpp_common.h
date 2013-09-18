@@ -120,7 +120,7 @@ static inline void PDO_DBG_ENTER(const char *func_name) {}
 #endif
 
 typedef struct {
-	const char *file;
+	char *file;
 	int line;
 	int errcode;
 	char *errmsg;
@@ -162,8 +162,12 @@ typedef struct
 extern "C" {
 #endif
 
+// Workaround DB-4112
+const char *nuodb_get_sqlstate(int sqlcode);
+
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
 //void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line, const char *sql_state, int nuodb_error_code, const char *format, ...);
+int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line TSRMLS_DC);
 
 
 typedef struct
@@ -185,12 +189,15 @@ typedef struct
 
 } pdo_nuodb_db_handle;
 
+int pdo_nuodb_db_handle_errno(pdo_nuodb_db_handle *H);
+const char *pdo_nuodb_db_handle_errmsg(pdo_nuodb_db_handle *H);
+pdo_error_type * pdo_nuodb_db_handle_sqlstate(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_rollback(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_close_connection(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
 int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
-void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, const char *sql) ;
+void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t * stmt, const char *sql) ;
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
 int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage);
 void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg);
@@ -235,6 +242,9 @@ typedef struct
 
 } pdo_nuodb_stmt;
 
+int pdo_nuodb_stmt_errno(pdo_nuodb_stmt *S);
+const char *pdo_nuodb_stmt_errmsg(pdo_nuodb_stmt *S);
+pdo_error_type *pdo_nuodb_stmt_sqlstate(pdo_nuodb_stmt *S);
 int pdo_nuodb_stmt_delete(pdo_nuodb_stmt *S);
 int pdo_nuodb_stmt_execute(pdo_nuodb_stmt *S, int *column_count, long *row_count);
 int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt *S, long *row_count);
