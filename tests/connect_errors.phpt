@@ -10,11 +10,11 @@ if (!$nuotestport) {
 
 try {  
   $url = "nuodb:database=no-such-test@localhost:" . $nuotestport . ";schema=no-such-schema";
-  $db = new PDO($url, "dba", "goalie") or die;
+  $db = new PDO($url, "dba", "goalie", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[HY000] [38] no NuoDB nodes are available for database "no-such-test@localhost:' . $nuotestport . '"';
+  $expected_message = 'SQLSTATE[08000] [-7] no NuoDB nodes are available for database "no-such-test@localhost:' . $nuotestport . '"';
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
@@ -23,11 +23,11 @@ try {
 
 try {  
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "no-such-user", "goalie") or die;
+  $db = new PDO($url, "no-such-user", "goalie", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[HY000] [38] "no-such-user" is not a known user for database "test"';
+  $expected_message = 'SQLSTATE[58000] [-13] "no-such-user" is not a known user for database "test"';
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
@@ -36,11 +36,11 @@ try {
 
 try {  
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", "wrong-password") or die;
+  $db = new PDO($url, "dba", "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[HY000] [38] Authentication failed';
+  $expected_message = 'SQLSTATE[58000] [-13] Authentication failed';
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
@@ -49,11 +49,11 @@ try {
 
 try {  
   $url = "nuodb:database=test@no-such-localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", "wrong-password") or die;
+  $db = new PDO($url, "dba", "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = "SQLSTATE[HY000] [38] can't find broker for database" . ' "test@no-such-localhost:' . $nuotestport . '"';
+  $expected_message = "SQLSTATE[08000] [-10] can't find broker for database" . ' "test@no-such-localhost:' . $nuotestport . '"';
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }

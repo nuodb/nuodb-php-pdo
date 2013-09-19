@@ -319,19 +319,14 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 		PDO_DBG_RETURN(0);
 	}
 
-
-
-
 	if (S && S->stmt) {
 		const char *error_message = pdo_nuodb_stmt_errmsg(S);
-		//einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
 		einfo->errmsg = error_message;
 		strncpy(*pdo_err, *(pdo_nuodb_stmt_sqlstate(S)), 6);
 	} else {
 		const char *error_message = pdo_nuodb_db_handle_errmsg(H);
-		//einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
 		einfo->errmsg = error_message;
-		strncpy(*pdo_err, pdo_nuodb_db_handle_sqlstate(H), 6);
+		strncpy(*pdo_err, *(pdo_nuodb_db_handle_sqlstate(H)), 6);
 	}
 
 	if (!dbh->methods) {
@@ -458,7 +453,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   /* allocate and prepare statement */
   if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &s TSRMLS_CC)) {
 	  // There was an error preparing the statement
-	  if (rewritten == 1) efree(sql);
+	  if (rewritten == 1) efree((void *)sql);
 	  PDO_DBG_RETURN(0);
   }
   S->stmt = s;
@@ -466,7 +461,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   stmt->driver_data = S;
   stmt->methods = &nuodb_stmt_methods;
   stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
-  if (rewritten == 1) efree(sql);
+  if (rewritten == 1) efree((void *)sql);
   PDO_DBG_RETURN(1);
 }
 /* }}} */
@@ -883,17 +878,15 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
                     options[0].extra, options[1].extra, options[3].extra);
 
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
-    if (status == 0) {
-                nuodb_throw_zend_exception("HY000", 38, errMessage);
+    if (status != 0) {
+    	ret = 1;
     }
 
     dbh->methods = &nuodb_methods;
     dbh->native_case = PDO_CASE_UPPER;  // TODO: the value should reflect how the database returns the names of the columns in result sets. If the name matches the case that was used in the query, set it to PDO_CASE_NATURAL (this is actually the default). If the column names are always returned in upper case, set it to PDO_CASE_UPPER. If the column names are always returned in lower case, set it to PDO_CASE_LOWER. The value you set is used to determine if PDO should perform case folding when the user sets the PDO_ATTR_CASE attribute.  Maybe switch to PDO_CASE_NATURAL when DB-1239 is fixed.
     dbh->alloc_own_columns = 1;  // if true, the driver requires that memory be allocated explicitly for the columns that are returned
-
     dbh->auto_commit = 1;  // NuoDB always starts in Auto Commit mode.
 
-    ret = 1;
     for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
     {
         if (vars[i].freeme)
@@ -902,10 +895,6 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
         }
     }
 
-    if (!ret)
-    {
-        nuodb_handle_closer(dbh TSRMLS_CC);
-    }
     PDO_DBG_RETURN(ret);
 }
 /* }}} */

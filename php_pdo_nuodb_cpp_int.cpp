@@ -594,6 +594,7 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
         rval = md->getColumnLabel(column+1);
 
     } catch (NuoDB::SQLException & e) {
+    	// TODO: need to write a test case for this.
     	setEinfoErrcode(e.getSqlcode());
     	setEinfoErrmsg(e.getText());
     	setEinfoFile(__FILE__);
@@ -1056,16 +1057,27 @@ int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H) {
 
 int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit)
 {
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
     try {
-        PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
         bool bAutoCommit = (auto_commit != 0);
         db->setAutoCommit(bAutoCommit);
     }
     catch (NuoDB::SQLException & e)
     {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
+    	// TODO: need to write a test case for this.
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+
+
+        //int error_code = e.getSqlcode();
+        //const char *error_text = e.getText();
+        //pdo_nuodb_db_handle_set_last_app_error(H, error_text);
         // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
         return 0;
     }
@@ -1080,18 +1092,24 @@ int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int aut
 
 const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
 {
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
     const char *rval = NULL;
     try
     {
-        PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
         rval = db->getNuoDBProductName();
     }
     catch (NuoDB::SQLException & e)
     {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
+    	// TODO: need to write a test case for this.
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+
         return rval;
     }
     catch (...)
@@ -1105,11 +1123,11 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
 
 const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H)
 {
-    char *default_version = "1.0.1"; // Workaround DB-962.
+    PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    char *default_version = "2.0"; // Workaround DB-962.
     const char *rval = NULL;
     try
     {
-        PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
         rval = db->getNuoDBProductVersion();
         if (strcmp(rval, "%%PRODUCT_VERSION%%") == 0) { // DB-2559 -- Workaround DB-962
             rval = default_version;
@@ -1117,10 +1135,16 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
     }
     catch (NuoDB::SQLException & e)
     {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
+    	// TODO: need to write a test case for this.
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+
         return rval;
     }
     catch (...)
@@ -1135,23 +1159,24 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
 
 void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t * pdo_stmt, const char * sql)
 {
-        PdoNuoDbStatement *stmt = NULL;
+	PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    PdoNuoDbStatement *stmt = NULL;
     try
     {
-                PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
-                stmt = db->createStatement(pdo_stmt, sql);
+        stmt = db->createStatement(pdo_stmt, sql);
     }
     catch (...)
     {
-                stmt = NULL; // TODO - save the error message text.
+        stmt = NULL; // TODO - save the error message text.
     }
-        return (void *)stmt;
+    return (void *)stmt;
 }
 
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char * sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn))
 {
-        unsigned in_txn_state = in_txn;
-        long res;
+	PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+    unsigned in_txn_state = in_txn;
+    long res;
     try
     {
         PdoNuoDbStatement * stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, NULL, sql);
@@ -1160,9 +1185,16 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
     }
     catch (NuoDB::SQLException & e)
     {
-        int error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        pdo_nuodb_db_handle_set_last_app_error(H, error_text);
+    	// TODO: need to write a test case for this.
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
         return -1;
     }
@@ -1179,17 +1211,22 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
 
 int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage)
 {
+    PdoNuoDbHandle *db = NULL;
     *errMessage = NULL;
     try {
-        PdoNuoDbHandle *db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
+        db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
         H->db = (void *) db;
         db->createConnection();
     } catch (NuoDB::SQLException & e) {
-        int error_code = e.getSqlcode();
-        *errMessage = strdup(e.getText());
-        //TODO: throw if PDO::ATTR_ERRMODE is set to PDO::ERRMODE_EXCEPTION
-        //TODO: see: DB-2558
-        //nuodb_throw_zend_exception("HY007", error_code, error_text);
+    	// TODO: need to write a test case for this.
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
         return 0;
     } catch (...) {
         *errMessage = strdup("Error constructing a NuoDB handle");
