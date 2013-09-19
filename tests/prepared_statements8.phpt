@@ -85,5 +85,5 @@ create table Hockey_test
 NUMBER=23 NAME=CHRIS KELLY POSITION=Forward TEAM=Bruins
 NUMBER=33 NAME=ZDENO CHARA POSITION=Defense TEAM=Bruins
 NUMBER=99 NAME=Mickey Mouse POSITION=Defense TEAM=Disney
-Got expected exception: SQLSTATE[HY105] [105] Invalid parameter number 1
+Got expected exception: SQLSTATE[HY093]: Invalid parameter number: -12 Invalid parameter number 1
 done

@@ -109,6 +109,9 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
 		{-30, "58000"},
 		{-31, "58000"},
 		{-32, "58000"},
+		{-33, "0X000"}, // filler -- does not exist in nuodb
+		{-34, "0X000"}, // filler -- does not exist in nuodb
+		{-35, "0x000"}, // filler -- does not exist in nuodb
 		{-36, "58000"},
 		{-37, "58000"},
 		{-38, "58000"},
@@ -280,14 +283,75 @@ void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, lon
  */
 
 
-int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line TSRMLS_DC)
+int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message)
 {
 	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
 	pdo_error_type *pdo_err;
 	pdo_nuodb_error_info *einfo;
 	pdo_nuodb_stmt *S = NULL;
 
-	PDO_DBG_ENTER("_pdo_mysql_error");
+	PDO_DBG_ENTER("_record_error");
+	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
+	if (stmt) {
+		S = (pdo_nuodb_stmt*)stmt->driver_data;
+		pdo_err = &stmt->error_code;
+		einfo   = &S->einfo;
+	} else {
+		pdo_err = &dbh->error_code;
+		einfo   = &H->einfo;
+	}
+
+	einfo->errcode = error_code;
+	einfo->file = file;
+	einfo->line = line;
+	if (einfo->errmsg) {
+		pefree(einfo->errmsg, dbh->is_persistent);
+		einfo->errmsg = NULL;
+	}
+
+	if (!einfo->errcode) { /* no error */
+		strcpy(*pdo_err, PDO_ERR_NONE);
+		PDO_DBG_RETURN(0);
+	}
+
+	einfo->errmsg = error_message;
+	strncpy(*pdo_err, sql_state, 6);
+
+	if (!dbh->methods) {
+		PDO_DBG_INF("Throwing exception");
+		zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
+				*pdo_err, einfo->errcode, einfo->errmsg);
+	}
+
+	PDO_DBG_RETURN(einfo->errcode);
+
+}
+
+int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...)
+{
+  va_list arg;
+  char 	*error_message;
+  int ret = 1;
+
+  va_start(arg, format);
+  vspprintf(&error_message, 0, format, arg);
+  va_end(arg);
+
+  ret = _record_error(dbh, stmt, file, line, sql_state, error_code, strdup(error_message));
+  efree((char *)error_message);
+  return ret;
+}
+
+
+#if 0
+int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/)
+{
+	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
+	pdo_error_type *pdo_err;
+	pdo_nuodb_error_info *einfo;
+	pdo_nuodb_stmt *S = NULL;
+
+	PDO_DBG_ENTER("_pdo_nuodb_error");
 	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
 	if (stmt) {
 		S = (pdo_nuodb_stmt*)stmt->driver_data;
@@ -336,6 +400,33 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 	}
 
 	PDO_DBG_RETURN(einfo->errcode);
+}
+#endif
+
+
+int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/)
+{
+	int ret = 1;
+	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
+	pdo_nuodb_stmt *S = NULL;
+	const char *sql_state = NULL;
+	int error_code = 0;
+	const char *error_message = NULL;
+
+	PDO_DBG_ENTER("_pdo_nuodb_error");
+	if (stmt) {
+		S = (pdo_nuodb_stmt*)stmt->driver_data;
+		sql_state = *(pdo_nuodb_stmt_sqlstate(S));
+		error_code = pdo_nuodb_stmt_errno(S);
+		error_message = pdo_nuodb_stmt_errmsg(S);
+	} else {
+		sql_state = *(pdo_nuodb_db_handle_sqlstate(H));
+		error_code =  pdo_nuodb_db_handle_errno(H);
+		error_message = pdo_nuodb_db_handle_errmsg(H);
+	}
+	ret = _record_error(dbh, stmt, file, line, sql_state,  error_code, error_message);
+
+	PDO_DBG_RETURN(ret);
 }
 
 
@@ -667,14 +758,21 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     }
 
     pdo_nuodb_stmt *S = (pdo_nuodb_stmt *) pdo_stmt->driver_data;
-    if ((S->einfo.errcode != 0) || (H->einfo.errcode != 0))
+
+    efree(new_sql);
+
+    // do we have a statement error code?
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
     {
-        //RECORD_ERROR(dbh);
-        efree(new_sql);
         PDO_DBG_RETURN(0);
     }
 
-    efree(new_sql);
+    // do we have a dbh error code?
+    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6))
+    {
+        PDO_DBG_RETURN(0);
+    }
+
     PDO_DBG_RETURN(1);
 
 }

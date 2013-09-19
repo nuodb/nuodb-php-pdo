@@ -367,7 +367,17 @@ void PdoNuoDbHandle::rollback()
 int PdoNuoDbHandle::getLastId(const char *name)
 {
     if (_last_keys == NULL) {
-                nuodb_throw_zend_exception("HY002", -40, "No generated keys");
+    	setEinfoErrcode(-40);
+    	setEinfoErrmsg("No generated keys");
+    	setEinfoFile(__FILE__);
+    	setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	//setSqlstate(nuodb_get_sqlstate(getEinfoErrcode()));
+    	setSqlstate("P0001");
+    	_pdo_nuodb_error(_pdo_dbh, NULL, getEinfoFile(), getEinfoLine() /*TSRMLS_DC*/);
+
+                //nuodb_throw_zend_exception("HY002", -40, "No generated keys");
                 return 0;
     }
 
@@ -458,7 +468,7 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	_dbh->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(_dbh->getPdoDbh(), NULL, getEinfoFile(), getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(_dbh->getPdoDbh(), NULL, getEinfoFile(), getEinfoLine()/* TSRMLS_DC*/);
     } catch (...) {
         nuodb_throw_zend_exception("HY004", 0, "UNKNOWN ERROR caught in PdoNuoDbStatement::createStatement()");
     }
@@ -602,7 +612,7 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(_dbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(_dbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine() /*TSRMLS_DC*/);
 
 
 //        int error_code = e.getSqlcode();
@@ -1072,7 +1082,7 @@ int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int aut
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
 
 
         //int error_code = e.getSqlcode();
@@ -1108,7 +1118,7 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
 
         return rval;
     }
@@ -1143,7 +1153,7 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
 
         return rval;
     }
@@ -1193,7 +1203,7 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
 
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
         return -1;
@@ -1226,7 +1236,7 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
     	// Workaround DB-4112
     	// _dbh->setSqlstate(e.getSQLState());
     	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() TSRMLS_DC);
+    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     } catch (...) {
         *errMessage = strdup("Error constructing a NuoDB handle");

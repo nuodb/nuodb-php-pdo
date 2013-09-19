@@ -457,22 +457,18 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                 if (param->paramno >= 0)
                 {
                     if (param->paramno >= S->qty_input_params) {
-                        strcpy(stmt->error_code, "HY105");
-                        nuodb_throw_zend_exception("HY105", 105, "Invalid parameter number %d", param->paramno);
-                        //nuodb_throw_zend_exception("HY105", 105, strdup("Invalid parameter number"));
-                            PDO_DBG_RETURN(0);
+                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
+                        PDO_DBG_RETURN(0);
                     }
 
                     if (nuodb_params == NULL) {
-                        strcpy(stmt->error_code, "HY105");
-                        pdo_nuodb_db_handle_set_last_app_error(S->H, "Error processing parameters");
+                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "nuodb_params is NULL");
                         PDO_DBG_RETURN(0);
                     }
 
                     nuodb_param = &nuodb_params->params[param->paramno];
                     if (nuodb_param == NULL) {
-                        strcpy(stmt->error_code, "HY105");
-                        pdo_nuodb_db_handle_set_last_app_error(S->H, "Error locating parameters");
+                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Error locating parameters");
                         PDO_DBG_RETURN(0);
                     }
 
