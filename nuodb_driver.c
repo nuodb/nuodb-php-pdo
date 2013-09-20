@@ -139,6 +139,7 @@ const char *nuodb_get_sqlstate(int sqlcode) {
 	return sqlcode_to_sqlstate[index].sqlstate;
 }
 
+#if 0
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...) {
   va_list arg;
   char 	*message;
@@ -154,7 +155,7 @@ void nuodb_throw_zend_exception(const char *sql_state, int code, const char *for
   efree((char *)message);
   PDO_DBG_VOID_RETURN;
 }
-
+#endif
 
 /* map driver specific SQLSTATE error message to PDO error */
 void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line TSRMLS_DC) /* {{{ */
@@ -185,102 +186,9 @@ void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long li
         }
     }
     PDO_DBG_INF_FMT("ERROR: SQLSTATE[%s] [%d] [%s:%d] %s", *error_code_str, error_code, file, line, error_msg);
-
-//    nuodb_throw_zend_exception(*error_code_str, error_code, error_msg);
     PDO_DBG_VOID_RETURN;
 }
 /* }}} */
-
-
-/* map driver specific SQLSTATE error message to PDO error */
-/*
-void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line, const char *sql_state, int nuodb_error_code, const char *format, ...)
-{
-  va_list arg;
-  char 	*message;
-  pdo_nuodb_db_handle * H = NULL;
-  pdo_error_type *error_code_str = NULL;
-
-  PDO_DBG_ENTER("_nuodb_error_new");
-  va_start(arg, format);
-  vspprintf(&message, 0, format, arg);
-  va_end(arg);
-  PDO_DBG_VOID_RETURN;
-
-  //H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H : (pdo_nuodb_db_handle *)dbh->driver_data;
-  //if (H->last_app_error != NULL) error_msg = H->last_app_error;
-  if (stmt) {
-      error_code_str = &(stmt->error_code);
-      strncpy(stmt->error_code, sql_state, 6);
-  } else {
-      error_code_str = &(dbh->error_code);
-      strncpy(dbh->error_code, sql_state, 6);
-  }
-  PDO_DBG_INF_FMT("file=%s line=%d", file, line);
-  PDO_DBG_INF_FMT("ERROR: SQLSTATE[%s] [%d] [%s:%d] %s", *error_code_str, nuodb_error_code, file, line, message);
-  efree((char *)message);
-  PDO_DBG_VOID_RETURN;
-}
-*/
-
-
-
-/*
- *
- * Stolen from NuoDB's SQLCode.java to workaround DB-4112
- 	SYNTAX_ERROR(-1, "42000"),
-	FEATURE_NOT_YET_IMPLEMENTED(-2, "0A000"),
-	BUG_CHECK(-3, "58000"),
-	COMPILE_ERROR(-4, "42000"),
-	RUNTIME_ERROR(-5, "58000"),
-	IO_ERROR(-6, "08000"),
-	NETWORK_ERROR(-7, "08000"),
-	CONVERSION_ERROR(-8, "22000"),
-	TRUNCATION_ERROR(-9, "22000"),
-	CONNECTION_ERROR(-10, "08000"),
-	DDL_ERROR(-11, "42000"),
-	APPLICATION_ERROR(-12, "58000"),
-	SECURITY_ERROR(-13, "58000"),
-	DATABASE_CORRUPTION(-14, "58000"),
-	VERSION_ERROR(-15, "58000"),
-	LICENSE_ERROR(-16, "58000"),
-	INTERNAL_ERROR(-17, "58000"),
-	DEBUG_ERROR(-18, "58000"),
-	LOST_BLOB(-19, "22000"),
-	INCONSISTENT_BLOB(-20, "22000"),
-	DELETED_BLOB(-21, "22000"),
-	LOG_ERROR(-22, "58000"),
-	DATABASE_DAMAGED(-23, "58000"),
-	UPDATE_CONFLICT(-24, "40002"),
-	NO_SUCH_TABLE(-25, "42000"),
-	INDEX_OVERFLOW(-26, "58000"),
-	UNIQUE_DUPLICATE(-27, "23000"),
-	UNCOMMITTED_UPDATES(-28, "58000"),
-	DEADLOCK(-29, "40001"),
-	OUT_OF_MEMORY_ERROR(-30, "58000"),
-	OUT_OF_RECORD_MEMORY_ERROR(-31, "58000"),
-	LOCK_TIMEOUT(-32, "58000"),
-	PLATFORM_ERROR(-36, "58000"),
-	NO_SCHEMA(-37, "58000"),
-	CONFIGURATION_ERROR(-38, "58000"),
-	READ_ONLY_ERROR(-39, "58000"),
-	NO_GENERATED_KEYS(-40, "58000"),
-	THROWN_EXCEPTION(-41, "58000"),
-	INVALID_TRANSACTION_ISOLATION(-42,"01000"),
-	UNSUPPORTED_TRANSACTION_ISOLATION(-43, "0A000"),
-	INVALID_UTF8(-44,"58000"),
-	CONSTRAINT_ERROR(-45,"23001"),	// Must start with "23" for Hibernate
-	UPDATE_ERROR(-46, "58000"),     // update error catch all
-	I18N_ERROR(-47, "58000"),
-	OPERATION_KILLED(-48, "HY008"),
-    INVALID_STATEMENT(-49,"58000"),
-    IS_SHUTDOWN(-50,"58000"),
-	IN_QUOTED_STRING(-51,"58000"),
-	BATCH_UPDATE_ERROR(-52,"58000"),
-	JAVA_ERROR(-53,"58000");
-
- *
- */
 
 
 int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message)
@@ -341,68 +249,6 @@ int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, 
   efree((char *)error_message);
   return ret;
 }
-
-
-#if 0
-int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/)
-{
-	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
-	pdo_error_type *pdo_err;
-	pdo_nuodb_error_info *einfo;
-	pdo_nuodb_stmt *S = NULL;
-
-	PDO_DBG_ENTER("_pdo_nuodb_error");
-	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
-	if (stmt) {
-		S = (pdo_nuodb_stmt*)stmt->driver_data;
-		pdo_err = &stmt->error_code;
-		einfo   = &S->einfo;
-	} else {
-		pdo_err = &dbh->error_code;
-		einfo   = &H->einfo;
-	}
-
-	if (S && S->stmt) {
-		einfo->errcode = pdo_nuodb_stmt_errno(S);
-	}
-	else
-	{
-		einfo->errcode = pdo_nuodb_db_handle_errno(H);
-	}
-
-	einfo->file = file;
-	einfo->line = line;
-
-	if (einfo->errmsg) {
-		pefree(einfo->errmsg, dbh->is_persistent);
-		einfo->errmsg = NULL;
-	}
-
-	if (!einfo->errcode) { /* no error */
-		strcpy(*pdo_err, PDO_ERR_NONE);
-		PDO_DBG_RETURN(0);
-	}
-
-	if (S && S->stmt) {
-		const char *error_message = pdo_nuodb_stmt_errmsg(S);
-		einfo->errmsg = error_message;
-		strncpy(*pdo_err, *(pdo_nuodb_stmt_sqlstate(S)), 6);
-	} else {
-		const char *error_message = pdo_nuodb_db_handle_errmsg(H);
-		einfo->errmsg = error_message;
-		strncpy(*pdo_err, *(pdo_nuodb_db_handle_sqlstate(H)), 6);
-	}
-
-	if (!dbh->methods) {
-		PDO_DBG_INF("Throwing exception");
-		zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
-				*pdo_err, einfo->errcode, einfo->errmsg);
-	}
-
-	PDO_DBG_RETURN(einfo->errcode);
-}
-#endif
-
 
 int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/)
 {

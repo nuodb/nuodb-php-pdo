@@ -153,14 +153,11 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     // is a reasonable implementation for multiple keys.  Assuming
     // seqName is a column name.
 
-    nuodb_throw_zend_exception("IM001", 1, "getLastId sequence-name argument is not supported");
-    return 0;
-
     for (int i=0; i<_qty; i++)
         if (!strcmp(_keys[i].columnName, seqName))
             return _keys[i].columnKeyValue;
 
-    nuodb_throw_zend_exception("HY001", 1, "No generated ID for specified column name: %s", seqName);
+    //nuodb_throw_zend_exception("HY001", 1, "No generated ID for specified column name: %s", seqName);
     return 0;
 }
 
