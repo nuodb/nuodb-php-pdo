@@ -1245,25 +1245,38 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
         H->db = (void *) db;
         db->createConnection();
     } catch (NuoDB::SQLException & e) {
-    	db->setEinfoErrcode(e.getSqlcode());
-    	db->setEinfoErrmsg(e.getText());
-    	db->setEinfoFile(__FILE__);
-    	db->setEinfoLine(__LINE__);
-    	// Workaround DB-4112
-    	// _dbh->setSqlstate(e.getSQLState());
-    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
-    	_pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
+    	if (db != NULL) {
+    	   db->setEinfoErrcode(e.getSqlcode());
+    	   db->setEinfoErrmsg(e.getText());
+    	   db->setEinfoFile(__FILE__);
+    	   db->setEinfoLine(__LINE__);
+    	   // Workaround DB-4112
+    	   // _dbh->setSqlstate(e.getSQLState());
+    	   db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	   _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
+    	}
         return 0;
     } catch (...) {
+    	if (db != NULL) {
+    	   db->setEinfoErrcode(-17);
+    	   db->setEinfoErrmsg("Unknown Error in pdo_nuodb_db_handle_factory()");
+    	   db->setEinfoFile(__FILE__);
+    	   db->setEinfoLine(__LINE__);
+    	   db->setSqlstate("XX000");
+    	   _pdo_nuodb_error(db->getPdoDbh(), NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
+    	}
         *errMessage = strdup("Error constructing a NuoDB handle");
         return 0;
     }
     return 1;
 }
 
+
+// This can go away later -- T.Gates 09/20/2013
 void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg) {
-        H->last_app_error = err_msg;
+//        H->last_app_error = err_msg;
 }
+
 
 int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name) {
   int last_id = 0;
@@ -1295,27 +1308,37 @@ pdo_error_type *pdo_nuodb_stmt_sqlstate(pdo_nuodb_stmt *S) {
 }
 
 int pdo_nuodb_stmt_delete(pdo_nuodb_stmt * S) {
-        try {
-                if (S == NULL) {
-                        return 1;
-                }
-                if (S->stmt == NULL) {
-                        return 1;
-                }
-                PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
-                delete nuodb_stmt;
-                S->stmt = NULL;
-
+    PdoNuoDbStatement *nuodb_stmt = NULL;
+    if (S == NULL) {
+       return 1;
+    }
+    if (S->stmt == NULL) {
+       return 1;
+    }
+    nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+    PdoNuoDbHandle *db = nuodb_stmt->getNuoDbHandle();
+    try {
+       delete nuodb_stmt;
+       S->stmt = NULL;
     }
     catch (NuoDB::SQLException & e) {
-        S->error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        S->error_msg = strdup(error_text);
+    	db->setEinfoErrcode(e.getSqlcode());
+    	db->setEinfoErrmsg(e.getText());
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// _dbh->setSqlstate(e.getSQLState());
+    	db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(db->getPdoDbh(), NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     }
     catch (...) {
-        S->error_code = 0;
-        S->error_msg = strdup("UNKNOWN ERROR");
+    	db->setEinfoErrcode(-17);
+    	db->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_delete()");
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	db->setSqlstate("XX000");
+    	_pdo_nuodb_error(db->getPdoDbh(), NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     }
    return 1;
@@ -1323,6 +1346,7 @@ int pdo_nuodb_stmt_delete(pdo_nuodb_stmt * S) {
 
 int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_count) {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *) S->H;
+    PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     if (!H) {
         return 0;
     }
@@ -1335,21 +1359,32 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
 
     try
     {
-        PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
         affected_rows = nuodb_stmt->execute();
         S->cursor_open = nuodb_stmt->hasResultSet();
         *column_count = nuodb_stmt->getColumnCount();
     }
     catch (NuoDB::SQLException & e)
     {
-        S->error_code = e.getSqlcode();
-        const char *error_text = e.getText();
-        S->error_msg = strdup(error_text);
+    	if (e.getSqlcode() == -27) {
+    		return 0;
+    	}
+    	nuodb_stmt->setEinfoErrcode(e.getSqlcode());
+    	nuodb_stmt->setEinfoErrmsg(e.getText());
+    	nuodb_stmt->setEinfoFile(__FILE__);
+    	nuodb_stmt->setEinfoLine(__LINE__);
+    	// Workaround DB-4112
+    	// pdo_stmt->setSqlstate(e.getSQLState());
+    	nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+    	_pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     }
     catch (...) {
-        S->error_code = 0;
-        S->error_msg = strdup("UNKNOWN ERROR");
+    	nuodb_stmt->setEinfoErrcode(-17);
+    	nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_execute()");
+    	nuodb_stmt->setEinfoFile(__FILE__);
+    	nuodb_stmt->setEinfoLine(__LINE__);
+    	nuodb_stmt->setSqlstate("XX000");
+    	_pdo_nuodb_error(H->pdo_dbh, nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
         return 0;
     }
     *row_count = affected_rows;
@@ -1375,6 +1410,7 @@ int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt * S, long *row_count) {
                 return 0;
             }
         } catch (NuoDB::SQLException & e) {
+        	if (e.getSqlcode() == -5) return 0;
         	nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         	nuodb_stmt->setEinfoErrmsg(e.getText());
         	nuodb_stmt->setEinfoFile(__FILE__);

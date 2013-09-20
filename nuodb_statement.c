@@ -83,10 +83,10 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
     }
 
 
-    if (S->error_msg) {
-        free(S->error_msg);
-        S->error_msg = NULL;
-    }
+//    if (S->error_msg) {
+//        free(S->error_msg);
+//        S->error_msg = NULL;
+//    }
 
     /* clean up input params */
     if (S->in_params != NULL)
@@ -130,8 +130,10 @@ static int nuodb_stmt_fetch(pdo_stmt_t * stmt, /* {{{ */
     PDO_DBG_INF_FMT("S=%ld", S);
     if (!stmt->executed)
     {
-        strcpy(stmt->error_code, "HY030");
-        pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot fetch from a closed cursor");
+        //strcpy(stmt->error_code, "HY030");
+        //pdo_nuodb_db_handle_set_last_app_error(S->H, "Cannot fetch from a closed cursor");
+    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
+
         PDO_DBG_RETURN(0);
     }
     PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &stmt->row_count));
@@ -238,12 +240,12 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ */
+static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
                               unsigned long * len, int * caller_frees TSRMLS_DC)
 {
     static void * (*ereallocPtr)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int) = &_erealloc;
 
-    pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
+    pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     int sqlTypeNumber = 0;
 
     PDO_DBG_ENTER("nuodb_stmt_get_col");
@@ -251,10 +253,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
 
     pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
 
-    H->last_app_error = NULL;
+    //H->last_app_error = NULL;
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
-    if (H->last_app_error != NULL)
-        PDO_DBG_RETURN(0);
+    //if (H->last_app_error != NULL)
+    //    PDO_DBG_RETURN(0);
 
     *len = 0;
     *caller_frees = 1;
@@ -362,9 +364,20 @@ static int nuodb_stmt_get_col(pdo_stmt_t * stmt, int colno, char ** ptr, /* {{{ 
         }
     }
 
-
-    if (H->last_app_error != NULL)
+    // do we have a statement error code?
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
+    {
         PDO_DBG_RETURN(0);
+    }
+
+    // do we have a dbh error code?
+    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, 6))
+    {
+        PDO_DBG_RETURN(0);
+    }
+
+    //if (H->last_app_error != NULL)
+    //    PDO_DBG_RETURN(0);
 
     PDO_DBG_RETURN(1);
 }

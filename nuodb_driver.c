@@ -148,8 +148,10 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 
 	PDO_DBG_ENTER("_record_error");
 	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
+	PDO_DBG_INF_FMT("sql_state=%s  error_code=%d  error_message=%s", sql_state, error_code, error_message);
 	if (stmt) {
 		S = (pdo_nuodb_stmt*)stmt->driver_data;
+		PDO_DBG_INF_FMT("sql=%s", S->sql);
 		pdo_err = &stmt->error_code;
 		einfo   = &S->einfo;
 	} else {
@@ -289,8 +291,8 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   S->einfo.errcode = 0;
   S->einfo.errmsg = NULL;
   S->sql = strdup(sql);
-  S->error_code = 0;
-  S->error_msg = NULL;
+  //S->error_code = 0;
+  //S->error_msg = NULL;
   S->qty_input_params = 0;
   S->in_params = NULL;
   S->out_params = NULL;
@@ -688,7 +690,7 @@ static int pdo_nuodb_fetch_error_func(pdo_dbh_t * dbh, pdo_stmt_t * stmt, zval *
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
  	pdo_nuodb_error_info *einfo = &H->einfo;
-	PDO_DBG_ENTER("pdo_nmuodb_fetch_error_func");
+	PDO_DBG_ENTER("pdo_nuodb_fetch_error_func");
 	PDO_DBG_INF_FMT("dbh=%p stmt=%p", dbh, stmt);
 	if (stmt) {
 		pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)stmt->driver_data;

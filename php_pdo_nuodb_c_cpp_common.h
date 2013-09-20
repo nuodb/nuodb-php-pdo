@@ -184,7 +184,7 @@ typedef struct
     pdo_nuodb_error_info einfo;
 
     /* the last error that didn't come from the API */
-    char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
+    //char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
 
     /* prepend table names on column names in fetch */
     unsigned fetch_table_names:1;
@@ -232,8 +232,8 @@ typedef struct
 
     unsigned _reserved:22;
 
-    int error_code;  // TODO: this needs to go away in favor of 'einfo'
-    char *error_msg;  // pointer to error_msg.  NULL if no error.  // TODO: this needs to go away in favor of 'einfo'
+    //int error_code;  // TODO: this needs to go away in favor of 'einfo'
+    //char *error_msg;  // pointer to error_msg.  NULL if no error.  // TODO: this needs to go away in favor of 'einfo'
 
     unsigned qty_input_params;
     /* the input params */
