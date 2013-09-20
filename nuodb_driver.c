@@ -139,58 +139,6 @@ const char *nuodb_get_sqlstate(int sqlcode) {
 	return sqlcode_to_sqlstate[index].sqlstate;
 }
 
-#if 0
-void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...) {
-  va_list arg;
-  char 	*message;
-  TSRMLS_FETCH();
-
-  PDO_DBG_ENTER("nuodb_throw_zend_exception");
-  va_start(arg, format);
-  vspprintf(&message, 0, format, arg);
-  va_end(arg);
-  PDO_DBG_INF_FMT("Throwing exception: SQLSTATE[%s] [%d] %s", sql_state, code, message);
-  zend_throw_exception_ex(php_pdo_get_exception(), code TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
-                          sql_state, code, message);
-  efree((char *)message);
-  PDO_DBG_VOID_RETURN;
-}
-#endif
-
-/* map driver specific SQLSTATE error message to PDO error */
-void _nuodb_error(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line TSRMLS_DC) /* {{{ */
-{
-    int error_code = 0;
-    const char *error_msg = "UKNOWN ERROR";
-    pdo_nuodb_db_handle * H = NULL;
-        pdo_error_type *error_code_str = NULL;
-
-        H = stmt ? ((pdo_nuodb_stmt *)stmt->driver_data)->H
-                              : (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (H->last_app_error != NULL) error_msg = H->last_app_error;
-    error_code_str = stmt ? &stmt->error_code : &dbh->error_code;
-
-    PDO_DBG_ENTER("_nuodb_error");
-    PDO_DBG_INF_FMT("file=%s line=%d", file, line);
-
-    // TODO -- We could do a better job of mapping NuoDB errors codes into PDO error
-    // codes, but for now just use "HY000"
-    strcpy(*error_code_str, "HY000");
-
-    if (stmt != NULL) {
-        pdo_nuodb_stmt *pdo_stmt = (pdo_nuodb_stmt *) stmt->driver_data;
-        if (pdo_stmt != NULL) {
-            if (pdo_stmt->error_msg != NULL)
-                error_msg = pdo_stmt->error_msg;
-            error_code = pdo_stmt->error_code;
-        }
-    }
-    PDO_DBG_INF_FMT("ERROR: SQLSTATE[%s] [%d] [%s:%d] %s", *error_code_str, error_code, file, line, error_msg);
-    PDO_DBG_VOID_RETURN;
-}
-/* }}} */
-
-
 int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message)
 {
 	pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
@@ -276,18 +224,12 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 }
 
 
-#define RECORD_ERROR(dbh) _nuodb_error(dbh, NULL, __FILE__, __LINE__ TSRMLS_CC)
-
 
 /* called by PDO to close a db handle */
 static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (H == NULL)
-    {
-        RECORD_ERROR(dbh);
-        return 0;
-    }
+    if (H == NULL) return 0;
     pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
     pdo_nuodb_db_handle_delete(H); //delete H->db;
 	if (H->einfo.errmsg) {
@@ -420,17 +362,19 @@ static void pdo_dbh_t_set_in_txn(void *dbh_opaque, unsigned in_txn) /* {{{ */
 static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = NULL;
-        long res;
+    long res;
 
-        PDO_DBG_ENTER("nuodb_handle_doer");
+    PDO_DBG_ENTER("nuodb_handle_doer");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
 
-        H = (pdo_nuodb_db_handle *)dbh->driver_data;
-        res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
-        if (res == -1) {
-        RECORD_ERROR(dbh);
-        }
+    H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
+
+//    if (res == -1) {
+//       RECORD_ERROR(dbh);
+//    }
+
     PDO_DBG_RETURN(res);
 }
 /* }}} */
@@ -498,7 +442,7 @@ static int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
     if (pdo_nuodb_db_handle_commit(H) == 0)
     {
-        RECORD_ERROR(dbh);
+        //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0);
     }
     PDO_DBG_RETURN(1);
@@ -516,7 +460,7 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
         H = (pdo_nuodb_db_handle *)dbh->driver_data;
     if (pdo_nuodb_db_handle_rollback(H) == 0)
     {
-        RECORD_ERROR(dbh);
+        //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0);
     }
     PDO_DBG_RETURN(1);
@@ -550,7 +494,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     {
         if (!nuodb_handle_begin(dbh TSRMLS_CC))
         {
-            RECORD_ERROR(dbh);
+            //RECORD_ERROR(dbh);
             PDO_DBG_RETURN(0);
         }
         dbh->in_txn = 1;
@@ -603,7 +547,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     PDO_DBG_INF_FMT("S=%ld", *nuodb_stmt);
     if (*nuodb_stmt == NULL)
     {
-        RECORD_ERROR(dbh);
+        //RECORD_ERROR(dbh);
         efree(new_sql);
         PDO_DBG_RETURN(0);
     }
@@ -666,8 +610,7 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
                 {
                     /* turning on auto_commit with an open transaction is illegal, because
                     we won't know what to do with it */
-                    H->last_app_error = "Cannot enable auto-commit while a transaction is already open";
-                    RECORD_ERROR(dbh);
+                	_record_error_formatted(dbh, NULL, __FILE__, __LINE__, "HY011", -17, "Cannot enable auto-commit while a transaction is already open");
                     PDO_DBG_RETURN(0);
                 }
                 else
@@ -694,7 +637,7 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         PDO_DBG_ERR_FMT("unknown/unsupported attribute: %d", attr);
         break;
     }
-    RECORD_ERROR(dbh);
+    //RECORD_ERROR(dbh);
     PDO_DBG_RETURN(0);
 }
 /* }}} */
@@ -735,7 +678,7 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         ZVAL_BOOL(val, H->fetch_table_names);
         return 1;
     }
-    RECORD_ERROR(dbh);
+    //RECORD_ERROR(dbh);
     return 0;
 }
 /* }}} */

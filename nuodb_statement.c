@@ -54,7 +54,7 @@
 
 #include <time.h>
 
-#define RECORD_ERROR(stmt) _nuodb_error(NULL, stmt,  __FILE__, __LINE__ TSRMLS_CC)
+//#define RECORD_ERROR(stmt) _nuodb_error(NULL, stmt,  __FILE__, __LINE__ TSRMLS_CC)
 #define CHAR_BUF_LEN 24
 
 static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
