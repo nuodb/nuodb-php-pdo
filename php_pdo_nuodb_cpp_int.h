@@ -102,7 +102,7 @@ public:
 class PdoNuoDbStatement
 {
 private:
-    PdoNuoDbHandle * _dbh;
+    PdoNuoDbHandle * _nuodbh;
     pdo_stmt_t *_pdo_stmt;
     pdo_nuodb_error_info einfo; /* NuoDB error information */
     pdo_error_type sqlstate;
@@ -113,6 +113,8 @@ public:
     PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt);
     ~PdoNuoDbStatement();
     NuoDB::PreparedStatement * createStatement(char const * sql);
+    PdoNuoDbHandle * getNuoDbHandle();
+    pdo_stmt_t *getPdoStmt();
     int getEinfoLine();
     const char *getEinfoFile();
     int getEinfoErrcode();
