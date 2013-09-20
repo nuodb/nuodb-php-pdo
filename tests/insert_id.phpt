@@ -135,6 +135,6 @@ INSERT INSERT_ID_TEST (A) VALUES('e')
 INSERT INSERT_ID_TEST (A) VALUES('f')
 INSERT INSERT_ID_TEST (A) VALUES('g')
 Test 'getLastId sequence-name argument is not supported' exception
-SQLSTATE[IM001] [1] getLastId sequence-name argument is not supported
+SQLSTATE[XX000]: Internal error: -17 Unknown Error in PdoNuoDbStatement::createStatement
 DROP TABLE INSERT_ID_TEST CASCADE IF EXISTS
 done

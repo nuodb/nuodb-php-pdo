@@ -73,7 +73,7 @@ char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
 FILE *nuodb_log_fp = NULL;
 
-static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** s TSRMLS_DC);
+static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC);
 
 // Workaround DB-4112
 static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
@@ -314,7 +314,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 		PDO_DBG_RETURN(0);
 	}
 
-	einfo->errmsg = error_message;
+	einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
 	strncpy(*pdo_err, sql_state, 6);
 
 	if (!dbh->methods) {
@@ -444,6 +444,11 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     }
     pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
     pdo_nuodb_db_handle_delete(H); //delete H->db;
+	if (H->einfo.errmsg) {
+		pefree(H->einfo.errmsg, dbh->is_persistent);
+		H->einfo.errmsg = NULL;
+	}
+
     pefree(H, dbh->is_persistent);
     return 1;
 }
@@ -456,7 +461,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   int ret = 0;
   pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
   pdo_nuodb_stmt * S = NULL;
-  PdoNuoDbStatement * s;
+  PdoNuoDbStatement * nuodb_stmt;
   int map_size = 0;
   int count_input_params = 0;
   int index = 0;
@@ -542,12 +547,12 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   }
 
   /* allocate and prepare statement */
-  if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &s TSRMLS_CC)) {
+  if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &nuodb_stmt TSRMLS_CC)) {
 	  // There was an error preparing the statement
 	  if (rewritten == 1) efree((void *)sql);
 	  PDO_DBG_RETURN(0);
   }
-  S->stmt = s;
+  S->stmt = nuodb_stmt;
   index = 0;
   stmt->driver_data = S;
   stmt->methods = &nuodb_stmt_methods;
@@ -674,7 +679,7 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 
 /* used by prepare and exec to allocate a statement handle and prepare the SQL */
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, const char * sql, long sql_len, /* {{{ */
-                                    PdoNuoDbStatement ** s TSRMLS_DC)
+                                    PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC)
 {
     pdo_nuodb_db_handle * H = NULL;
     char * c, *new_sql, in_quote, in_param, pname[64], *ppname;
@@ -685,7 +690,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    *s = NULL;
+    *nuodb_stmt = NULL;
 
     /* There is no max sql statement length in NuoDB - but use 1Mib for now */
     if (sql_len > 0x100000)
@@ -748,9 +753,9 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     }
 
     /* prepare the statement */
-    *s = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
-    PDO_DBG_INF_FMT("S=%ld", *s);
-    if (*s == NULL)
+    *nuodb_stmt = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
+    PDO_DBG_INF_FMT("S=%ld", *nuodb_stmt);
+    if (*nuodb_stmt == NULL)
     {
         RECORD_ERROR(dbh);
         efree(new_sql);

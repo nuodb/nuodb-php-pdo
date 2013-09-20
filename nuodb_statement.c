@@ -77,6 +77,12 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
         S->sql = NULL;
     }
 
+   	if (S->einfo.errmsg) {
+    	pefree(S->einfo.errmsg, stmt->dbh->is_persistent);
+    	S->einfo.errmsg = NULL;
+    }
+
+
     if (S->error_msg) {
         free(S->error_msg);
         S->error_msg = NULL;
