@@ -126,7 +126,6 @@ public:
     void setEinfoErrmsg(const char *errmsg);
     void setSqlstate(const char *sqlstate);
     int execute();
-    void executeQuery();
     bool hasResultSet();
     bool next();
     size_t getColumnCount();
