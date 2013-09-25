@@ -1131,7 +1131,6 @@ int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int aut
     }
     catch (NuoDB::SQLException & e)
     {
-        // TODO: need to write a test case for this.
         db->setEinfoErrcode(e.getSqlcode());
         db->setEinfoErrmsg(e.getText());
         db->setEinfoFile(__FILE__);
@@ -1140,18 +1139,16 @@ int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int aut
         // _dbh->setSqlstate(e.getSQLState());
         db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
-
-
-        //int error_code = e.getSqlcode();
-        //const char *error_text = e.getText();
-        //pdo_nuodb_db_handle_set_last_app_error(H, error_text);
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
         return 0;
     }
     catch (...)
     {
-        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_doer()");
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
+    	db->setEinfoErrcode(-17);
+    	db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_set_auto_commit()");
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	db->setSqlstate("XX000");
+        _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     }
     return 1;
@@ -1167,7 +1164,6 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
     }
     catch (NuoDB::SQLException & e)
     {
-        // TODO: need to write a test case for this.
         db->setEinfoErrcode(e.getSqlcode());
         db->setEinfoErrmsg(e.getText());
         db->setEinfoFile(__FILE__);
@@ -1176,14 +1172,17 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
         // _dbh->setSqlstate(e.getSQLState());
         db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
-
-        return rval;
+        return NULL;
     }
     catch (...)
     {
-        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_name()");
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
-        return rval;
+    	db->setEinfoErrcode(-17);
+    	db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_name()");
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	db->setSqlstate("XX000");
+        _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
+        return NULL;
     }
     return rval;
 }
@@ -1211,14 +1210,17 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
         // _dbh->setSqlstate(e.getSQLState());
         db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
-
-        return rval;
+        return NULL;
     }
     catch (...)
     {
-        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_version()");
-        // TODO: Optionally throw an error depending on PDO::ATTR_ERRMODE
-        return rval;
+    	db->setEinfoErrcode(-17);
+    	db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_version()");
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	db->setSqlstate("XX000");
+        _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
+        return NULL;
     }
     return rval;
 }
@@ -1261,13 +1263,17 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
         // _dbh->setSqlstate(e.getSQLState());
         db->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
-
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
         return -1;
     }
     catch (...)
     {
-        pdo_nuodb_db_handle_set_last_app_error(H, "UNKNOWN ERROR in pdo_nuodb_db_handle_doer()");
+    	db->setEinfoErrcode(-17);
+    	db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_doer()");
+    	db->setEinfoFile(__FILE__);
+    	db->setEinfoLine(__LINE__);
+    	db->setSqlstate("XX000");
+        _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine() /*TSRMLS_DC*/);
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
         return -1;
     }
@@ -1310,13 +1316,6 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
     }
     return 1;
 }
-
-
-// This can go away later -- T.Gates 09/20/2013
-void pdo_nuodb_db_handle_set_last_app_error(pdo_nuodb_db_handle *H, const char *err_msg) {
-//        H->last_app_error = err_msg;
-}
-
 
 int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name) {
   int last_id = 0;
