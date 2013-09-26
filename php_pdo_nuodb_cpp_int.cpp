@@ -820,7 +820,7 @@ unsigned long PdoNuoDbStatement::getDate(size_t column)
     return date->getSeconds();
 }
 
-void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
 	// NOTE: caller catches exceptions.
     if (_rs == NULL)
@@ -832,14 +832,15 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
-        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0, __FILE__, __LINE__, NULL, 0);
+
+        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0 ZEND_FILE_LINE_CC ZEND_FILE_LINE_EMPTY_CC);
         blob->getBytes(0, *len, (unsigned char *)*ptr);
         (*ptr)[*len] = '\0';
     }
     return;
 }
 
-void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
 	// NOTE: caller catches exceptions.
     if (_rs == NULL)
@@ -851,7 +852,7 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len,
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
-        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0, __FILE__, __LINE__, NULL, 0);
+        *ptr = (char *)(*erealloc)((void *)*ptr, *len+1, 0 ZEND_FILE_LINE_CC ZEND_FILE_LINE_EMPTY_CC);
         clob->getChars(0, *len, (char *)*ptr);
         (*ptr)[*len] = '\0';
     }
@@ -1908,7 +1909,7 @@ const char *pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno)
 
 
 void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len,
-                             void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+                             void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
@@ -1936,7 +1937,7 @@ void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned
 }
 
 void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len,
-                             void * (*erealloc)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int))
+                             void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {

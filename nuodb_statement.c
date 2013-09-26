@@ -66,7 +66,6 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 /* static */ int nuodb_stmt_dtor(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
 {
     int result = 1;
-    int i;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_dtor");
     PDO_DBG_INF_FMT("S=%ld", S);
@@ -243,7 +242,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * stmt, int colno TSRMLS_DC) /* {{{ */
 static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
                               unsigned long * len, int * caller_frees TSRMLS_DC)
 {
-    static void * (*ereallocPtr)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int) = &_erealloc;
+    static void * (*ereallocPtr)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC) = &_erealloc;
 
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     int sqlTypeNumber = 0;
@@ -251,7 +250,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     PDO_DBG_ENTER("nuodb_stmt_get_col");
     PDO_DBG_INF_FMT("S=%ld", S);
 
-    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
+//    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
 
     //H->last_app_error = NULL;
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
@@ -475,7 +474,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
                 if (param->paramno >= 0)
                 {
-                    if (param->paramno >= S->qty_input_params) {
+                    if (param->paramno >= (long) S->qty_input_params) {
                     	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
                         PDO_DBG_RETURN(0);
                     }
