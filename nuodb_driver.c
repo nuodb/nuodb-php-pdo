@@ -175,13 +175,13 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 	einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
 	strncpy(*pdo_err, sql_state, 6);
 
-/*
+
 	if (!dbh->methods) {
 		PDO_DBG_INF("Throwing exception");
 		zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
 				*pdo_err, einfo->errcode, einfo->errmsg);
 	}
-*/
+
 	PDO_DBG_RETURN(einfo->errcode);
 
 }

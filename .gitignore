@@ -10,3 +10,5 @@ Testing/
 CMakeScripts/
 *.build/
 *.xcodeproj/
+/tests/nbproject/private/
+/nbproject/private/
