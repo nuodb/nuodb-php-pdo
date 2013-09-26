@@ -65,7 +65,6 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 /* static */ int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 {
     int result = 1;
-    int i;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_dtor");
     PDO_DBG_INF_FMT("S=%ld", S);
@@ -76,9 +75,9 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
         S->sql = NULL;
     }
 
-   	if (S->einfo.errmsg) {
-    	pefree(S->einfo.errmsg, pdo_stmt->dbh->is_persistent);
-    	S->einfo.errmsg = NULL;
+        if (S->einfo.errmsg) {
+        pefree(S->einfo.errmsg, pdo_stmt->dbh->is_persistent);
+        S->einfo.errmsg = NULL;
     }
 
     /* clean up input params */
@@ -123,7 +122,7 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
     PDO_DBG_INF_FMT("S=%ld", S);
     if (!pdo_stmt->executed)
     {
-    	_record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
+        _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
         PDO_DBG_RETURN(0);
     }
     PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &pdo_stmt->row_count));
@@ -146,7 +145,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
     column_name = pdo_nuodb_stmt_get_column_name(S, colno);
     if (column_name == NULL)
     {
-    	return 0;
+        return 0;
     }
     colname_len = strlen(column_name);
     col->namelen = colname_len;
@@ -210,7 +209,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
         }
         default:
         {
-        	_record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_describe()", sqlTypeNumber);
+                _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_describe()", sqlTypeNumber);
             return 0;
         }
     }
@@ -222,12 +221,11 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
 static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
                               unsigned long * len, int * caller_frees TSRMLS_DC)
 {
-    static void * (*ereallocPtr)(void *ptr, size_t size, int, char *, unsigned int, char *, unsigned int) = &_erealloc;
+    static void * (*ereallocPtr)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC) = &_erealloc;
 
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     int sqlTypeNumber = 0;
     pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
-
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
 
     *len = 0;
@@ -321,8 +319,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         default:
         {
-        	_record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_get_col()", sqlTypeNumber);
-        	return 0;
+                _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_get_col()", sqlTypeNumber);
+                return 0;
             break;
         }
     }
@@ -330,13 +328,13 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     // do we have a statement error code?
     if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
     {
-    	return 0;
+        return 0;
     }
 
     // do we have a dbh error code?
     if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, 6))
     {
-    	return 0;
+        return 0;
     }
 
     return 1;
@@ -367,7 +365,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             case PDO_PARAM_EVT_FETCH_PRE:
             case PDO_PARAM_EVT_FETCH_POST:
                 //PDO_DBG_RETURN(1);
-            	return 1;
+                return 1;
 
             case PDO_PARAM_EVT_NORMALIZE:
                 /* decode name from :pdo1, :pdo2 into 0, 1 etc. */
@@ -391,17 +389,17 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         }
                         else
                         {
-                        	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%d'", param->name);
+                                _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%d'", param->name);
                             //PDO_DBG_RETURN(0);
-                        	return 0;
+                                return 0;
                         }
                     }
                 }
 
                 if (nuodb_params == NULL) {
-                	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Error processing parameters");
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Error processing parameters");
                     //PDO_DBG_RETURN(0);
-                	return 0;
+                        return 0;
                 }
 
                 nuodb_param = &nuodb_params->params[param->paramno];
@@ -434,26 +432,26 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                 int num_input_params = 0;
                 if (!stmt->bound_param_map) {
                     //PDO_DBG_RETURN(0);
-                	return 0;
+                        return 0;
                 }
 
                 if (param->paramno >= 0)
                 {
-                    if (param->paramno >= S->qty_input_params) {
-                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
+                    if (param->paramno >= (long) S->qty_input_params) {
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
                         //PDO_DBG_RETURN(0);
-                    	return 0;
+                        return 0;
                     }
 
                     if (nuodb_params == NULL) {
-                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "nuodb_params is NULL");
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "nuodb_params is NULL");
                         //PDO_DBG_RETURN(0);
-                    	return 0;
+                        return 0;
                     }
 
                     nuodb_param = &nuodb_params->params[param->paramno];
                     if (nuodb_param == NULL) {
-                    	_record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Error locating parameters");
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Error locating parameters");
                         //PDO_DBG_RETURN(0);
                         return 0;
                     }
