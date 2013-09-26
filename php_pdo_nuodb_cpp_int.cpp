@@ -34,9 +34,23 @@
 #include <stdarg.h>
 #include <time.h>
 
+extern "C" {
+#include "php.h"
+#ifdef ZEND_ENGINE_2
+# include "zend_exceptions.h"
+#endif
+#include "php_ini.h"
+#include "ext/standard/info.h"
+#include "pdo/php_pdo.h"
+#include "pdo/php_pdo_driver.h"
+#include "php_pdo_nuodb.h"
+}
+
+
 #ifdef _MSC_VER  // Visual Studio specific
 #include <stdint.h>
 #include <stdio.h>
+#include <winsock2.h>
 #include <windows.h>
 #else
 #include <sys/time.h>
@@ -47,9 +61,10 @@
 #include <cstring>
 #include <cctype>
 
-#define PHP_DEBUG 1
-#define TRUE 1
-#define FALSE 0
+//#define PHP_DEBUG 1
+//#define TRUE 1
+//#define FALSE 0
+
 
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_cpp_int.h"
