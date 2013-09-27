@@ -105,7 +105,6 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 
     status = pdo_nuodb_stmt_execute(S, &pdo_stmt->column_count, &pdo_stmt->row_count);
     if (status == 0) {
-//       RECORD_ERROR(pdo_stmt);
         PDO_DBG_RETURN(0);
     }
 

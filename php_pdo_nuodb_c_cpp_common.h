@@ -29,17 +29,6 @@
 #ifndef PHP_PDO_NUODB_C_CPP_COMMON_H
 #define PHP_PDO_NUODB_C_CPP_COMMON_H
 
-
-//#include "php.h"
-//#ifdef ZEND_ENGINE_2
-//# include "zend_exceptions.h"
-//#endif
-//#include "php_ini.h"
-//#include "ext/standard/info.h"
-//#include "pdo/php_pdo.h"
-//#include "pdo/php_pdo_driver.h"
-//#include "php_pdo_nuodb.h"
-
 /*
 ** This is a common file that will be compiled by both C and C++.
 ** The definitions here are use by both the "C/PHP/Zend" parts of this
@@ -261,7 +250,6 @@ int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno);
 unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno);
-//unsigned long pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
 const char * pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
 void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
 void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));

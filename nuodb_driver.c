@@ -293,8 +293,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   S->einfo.errcode = 0;
   S->einfo.errmsg = NULL;
   S->sql = strdup(sql);
-  //S->error_code = 0;
-  //S->error_msg = NULL;
   S->qty_input_params = 0;
   S->in_params = NULL;
   S->out_params = NULL;
@@ -461,7 +459,7 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     PDO_DBG_ENTER("nuodb_handle_rollback");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
 
-        H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    H = (pdo_nuodb_db_handle *)dbh->driver_data;
     if (pdo_nuodb_db_handle_rollback(H) == 0)
     {
         //RECORD_ERROR(dbh);
@@ -549,31 +547,23 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     /* prepare the statement */
     *nuodb_stmt = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
     PDO_DBG_INF_FMT("S=%ld", *nuodb_stmt);
-    if (*nuodb_stmt == NULL)
-    {
-        //RECORD_ERROR(dbh);
-        efree(new_sql);
+	efree(new_sql);
+
+	if (*nuodb_stmt == NULL) {
         PDO_DBG_RETURN(0);
     }
 
-    //pdo_nuodb_stmt *S = (pdo_nuodb_stmt *) pdo_stmt->driver_data;
-
-    efree(new_sql);
-
     // do we have a statement error code?
-    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
-    {
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6)) {
         PDO_DBG_RETURN(0);
     }
 
     // do we have a dbh error code?
-    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6))
-    {
+    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
         PDO_DBG_RETURN(0);
     }
 
     PDO_DBG_RETURN(1);
-
 }
 /* }}} */
 
@@ -581,8 +571,8 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
 /* called by PDO to get the last insert id */
 static char *nuodb_handle_last_id(pdo_dbh_t *dbh, const char *name, unsigned int *len TSRMLS_DC)
 {
-        int c = 0;
-        pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    int c = 0;
+    pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
     char *id_str = NULL;
     int id = pdo_nuodb_db_handle_last_id(H, name);
     if (id == 0) return NULL;
@@ -641,7 +631,6 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         PDO_DBG_ERR_FMT("unknown/unsupported attribute: %d", attr);
         break;
     }
-    //RECORD_ERROR(dbh);
     PDO_DBG_RETURN(0);
 }
 /* }}} */
@@ -682,7 +671,6 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         ZVAL_BOOL(val, H->fetch_table_names);
         return 1;
     }
-    //RECORD_ERROR(dbh);
     return 0;
 }
 /* }}} */

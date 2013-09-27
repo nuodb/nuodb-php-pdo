@@ -327,7 +327,6 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
-    //TODO add properties
     return _con;
 }
 
