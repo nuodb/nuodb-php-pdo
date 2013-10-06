@@ -901,6 +901,18 @@ void PdoNuoDbStatement::setString(size_t index, const char *value)
     return;
 }
 
+void PdoNuoDbStatement::setBytes(size_t index, const void *value, int length)
+{
+	// NOTE: caller catches exceptions.
+    if (_stmt == NULL) {
+        return;
+    }
+
+   	_stmt->setBytes(index+1, length, value);
+    return;
+}
+
+
 void PdoNuoDbStatement::setBlob(size_t index, const char *value, int len)
 {
 	// NOTE: caller catches exceptions.
@@ -1432,6 +1444,7 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
     }
     catch (NuoDB::SQLException & e)
     {
+// Workaround DB-4327 for Drupal
         if (e.getSqlcode() == -27) {
                 return 0;
         }
@@ -1619,6 +1632,36 @@ int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val)
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
     	nuodb_stmt->setString(paramno,  str_val);
+    } catch (NuoDB::SQLException & e) {
+        nuodb_stmt->setEinfoErrcode(e.getSqlcode());
+        nuodb_stmt->setEinfoErrmsg(e.getText());
+        nuodb_stmt->setEinfoFile(__FILE__);
+        nuodb_stmt->setEinfoLine(__LINE__);
+        // Workaround DB-4112
+        // pdo_stmt->setSqlstate(e.getSQLState());
+        nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+        _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
+        return 0;
+    }
+    catch (...)
+    {
+        nuodb_stmt->setEinfoErrcode(-17);
+        nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string()");
+        nuodb_stmt->setEinfoFile(__FILE__);
+        nuodb_stmt->setEinfoLine(__LINE__);
+        nuodb_stmt->setSqlstate("XX000");
+        _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
+        return 0;
+    }
+    return 1;
+}
+
+int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, int length)
+{
+
+    PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+    try {
+    	nuodb_stmt->setBytes(paramno, val, length);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());

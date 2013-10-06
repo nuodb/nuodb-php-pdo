@@ -244,6 +244,7 @@ int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
 int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
 int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
 int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
+int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, int length);
 int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno);
 char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno);
 int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno);

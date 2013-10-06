@@ -461,10 +461,10 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         nuodb_param->col_name_length = param->namelen;
                     }
 
-                    // TODO: add code to process streaming LOBs here.
+                    // TODO: add code to process streaming LOBs heres when NuoDB supports it.
 
                     if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_NULL ||
-                        Z_TYPE_P(param->parameter) == IS_NULL)
+                          Z_TYPE_P(param->parameter) == IS_NULL)
                     {
                         nuodb_param->len = 0;
                         nuodb_param->data = NULL;
@@ -473,7 +473,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                         param->name);
 
                     }
-                    else if (Z_TYPE_P(param->parameter) == IS_LONG)
+                    else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_INT)
                     {
                         nuodb_param->len = 4;
                         nuodb_param->data = (void *)Z_LVAL_P(param->parameter);
@@ -483,7 +483,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                         param->name,
                                         nuodb_param->data);
                     }
-                    else if (Z_TYPE_P(param->parameter) == IS_BOOL)
+                    else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_BOOL)
                     {
                         nuodb_param->len = 1;
                         nuodb_param->data = Z_BVAL_P(param->parameter) ? "t" : "f";
@@ -493,7 +493,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                         param->name,
                                         nuodb_param->data);
                     }
-                    else
+                    else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_STR)
                     {
                         SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
                         convert_to_string(param->parameter);
@@ -504,7 +504,41 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                         param->paramno,
                                         param->name,
                                         nuodb_param->data);
+                    }
+                    else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB)
+                    {
+                        if (Z_TYPE_P(param->parameter) == IS_RESOURCE) {
+                                 php_stream *stm;
+                                 php_stream_from_zval_no_verify(stm, &param->parameter);
+                                 if (stm) {
+                                         SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+                                         Z_TYPE_P(param->parameter) = IS_STRING;
+                                         Z_STRLEN_P(param->parameter) = php_stream_copy_to_mem(stm,
+                                                 &Z_STRVAL_P(param->parameter), PHP_STREAM_COPY_ALL, 0);
+                                 } else {
+                                     _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY105", -12, "Expected a stream resource");
+                                     //PDO_DBG_RETURN(0);
+                                     return 0;
+                                 }
+                         } else {
+                        	 // If the parameter is not a stream resource, then convert it to a string.
+                        	 SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+                        	 convert_to_string(param->parameter);
+                        	 nuodb_param->len = Z_STRLEN_P(param->parameter);
+                        	 nuodb_param->data = Z_STRVAL_P(param->parameter);
+                        	 pdo_nuodb_stmt_set_blob(S, param->paramno,  nuodb_param->data, nuodb_param->len);
+                        	 PDO_DBG_INF_FMT("Param: %d  Name: %s = %ld (length: %d) (BLOB)",
+                                        param->paramno,
+                                        param->name,
+                                        nuodb_param->data,
+                                        nuodb_param->len);
+                         }
+                    }
 
+                    else {
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Unsupported parameter type: %d", Z_TYPE_P(param->parameter));
+                        //PDO_DBG_RETURN(0);
+                        return 0;
                     }
                 }
             }
