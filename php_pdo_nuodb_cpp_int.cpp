@@ -1445,9 +1445,9 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
     catch (NuoDB::SQLException & e)
     {
 // Workaround DB-4327 for Drupal
-        if (e.getSqlcode() == -27) {
-                return 0;
-        }
+        //if (e.getSqlcode() == -27) {
+        //        return 0;
+        //}
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
         nuodb_stmt->setEinfoFile(__FILE__);
