@@ -132,6 +132,8 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
 		{-53, "58000"}
 };
 
+static int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
+
 // Workaround DB-4112
 const char *nuodb_get_sqlstate(int sqlcode) {
 	int index = abs(sqlcode) - 1;
@@ -233,7 +235,13 @@ int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int lin
 static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (H == NULL) return 0;
+    PDO_DBG_ENTER("nuodb_handle_closer");
+    PDO_DBG_INF_FMT("dbh=%p", dbh);
+
+    if (H == NULL) {
+    	PDO_DBG_RETURN(0);
+    }
+    nuodb_handle_commit(dbh TSRMLS_CC);
     pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
     pdo_nuodb_db_handle_delete(H); //delete H->db;
 	if (H->einfo.errmsg) {
@@ -242,7 +250,7 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 	}
 
     pefree(H, dbh->is_persistent);
-    return 1;
+    PDO_DBG_RETURN(1);
 }
 /* }}} */
 
@@ -490,18 +498,6 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
         strcpy(dbh->error_code, "01004");
         PDO_DBG_RETURN(0);
     }
-
-    /* start a new transaction implicitly if auto_commit is disabled and no transaction is open */
-    if (!dbh->auto_commit && !dbh->in_txn)
-    {
-        if (!nuodb_handle_begin(dbh TSRMLS_CC))
-        {
-            //RECORD_ERROR(dbh);
-            PDO_DBG_RETURN(0);
-        }
-        dbh->in_txn = 1;
-    }
-
 
     /* in order to support named params,
     we need to replace :foo by ?, and store the name we just replaced */
