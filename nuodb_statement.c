@@ -56,6 +56,8 @@
 
 #define CHAR_BUF_LEN 24
 
+/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
+
 static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 {
         pdo_nuodb_stmt_delete(S);
@@ -67,7 +69,12 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
     int result = 1;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_dtor");
-    PDO_DBG_INF_FMT("S=%ld", S);
+    PDO_DBG_INF_FMT("S=%p", S);
+
+	if (S->commit_on_close == 1) {
+		nuodb_handle_commit(pdo_stmt->dbh TSRMLS_CC);
+	}
+
     _release_PdoNuoDbStatement(S); /* release the statement */
 
         if (S->sql) {
@@ -96,13 +103,26 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 {
     int status;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
+    pdo_nuodb_db_handle * H = NULL;
+
 
     PDO_DBG_ENTER("nuodb_stmt_execute");
-    PDO_DBG_INF_FMT("S=%ld", S);
+    PDO_DBG_INF_FMT("dbh=%p S=%p sql=%s", pdo_stmt->dbh, pdo_stmt->driver_data, S->sql);
+    PDO_DBG_INF_FMT("S=%p", S);
     if (!S) {
         PDO_DBG_RETURN(0);
     }
 
+    if ((pdo_stmt->dbh->auto_commit == 0) &&
+    		(pdo_stmt->dbh->in_txn == 0))
+    {
+        H = (pdo_nuodb_db_handle *)pdo_stmt->dbh->driver_data;
+    	if ((H->in_nuodb_implicit_txn == 0) && (H->in_nuodb_explicit_txn == 0)) {
+    		H->in_nuodb_implicit_txn = 1;
+    		S->commit_on_close = 1;
+    		S->implicit_txn = 1;
+    	}
+    }
     status = pdo_nuodb_stmt_execute(S, &pdo_stmt->column_count, &pdo_stmt->row_count);
     if (status == 0) {
         PDO_DBG_RETURN(0);
@@ -118,7 +138,7 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_fetch");
-    PDO_DBG_INF_FMT("S=%ld", S);
+    PDO_DBG_INF_FMT("S=%p", S);
     if (!pdo_stmt->executed)
     {
         _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
@@ -350,7 +370,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
     int dbg_skip_trace = FALSE;
     //PDO_DBG_ENTER("nuodb_stmt_param_hook");
-    //PDO_DBG_INF_FMT("S=%ld", S);
+    //PDO_DBG_INF_FMT("S=%p, S);
 
 
     nuodb_params = param->is_param ? S->in_params : S->out_params;
@@ -555,7 +575,7 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
     PDO_DBG_ENTER("nuodb_stmt_set_attribute");
-    PDO_DBG_INF_FMT("S=%ld", S);
+    PDO_DBG_INF_FMT("S=%p", S);
 
     switch (attr)
     {

@@ -132,7 +132,7 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
 		{-53, "58000"}
 };
 
-static int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
+/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
 // Workaround DB-4112
 const char *nuodb_get_sqlstate(int sqlcode) {
@@ -241,7 +241,9 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     if (H == NULL) {
     	PDO_DBG_RETURN(0);
     }
-    nuodb_handle_commit(dbh TSRMLS_CC);
+    if (H->in_nuodb_implicit_txn == 1) {
+    	nuodb_handle_commit(dbh TSRMLS_CC);
+    }
     pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
     pdo_nuodb_db_handle_delete(H); //delete H->db;
 	if (H->einfo.errmsg) {
@@ -302,6 +304,8 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len
   S->einfo.errmsg = NULL;
   S->sql = strdup(sql);
   S->qty_input_params = 0;
+  S->implicit_txn = 0;
+  S->commit_on_close = 0;
   S->in_params = NULL;
   S->out_params = NULL;
 
@@ -379,6 +383,8 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
     PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
+
+
     res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
 
 //    if (res == -1) {
@@ -436,25 +442,37 @@ static int nuodb_handle_quoter(pdo_dbh_t * dbh, const char * unquoted, int unquo
 /* called by PDO to start a transaction */
 static int nuodb_handle_begin(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
+    pdo_nuodb_db_handle * H = NULL;
+
     PDO_DBG_ENTER("nuodb_handle_begin");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     PDO_DBG_RETURN(1);
+    H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    H->in_nuodb_implicit_txn = 0;
+    H->in_nuodb_explicit_txn = 1;
 }
 /* }}} */
 
+
+
+
 /* called by PDO to commit a transaction */
-static int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
+/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = NULL;
 
-        PDO_DBG_ENTER("nuodb_handle_commit");
+    PDO_DBG_ENTER("nuodb_handle_commit");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
     if (pdo_nuodb_db_handle_commit(H) == 0)
     {
+    	H->in_nuodb_implicit_txn = 0;
+    	H->in_nuodb_explicit_txn = 0;
         //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0);
     }
+	H->in_nuodb_implicit_txn = 0;
+	H->in_nuodb_explicit_txn = 0;
     PDO_DBG_RETURN(1);
 }
 /* }}} */
@@ -467,12 +485,17 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     PDO_DBG_ENTER("nuodb_handle_rollback");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
 
+
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
     if (pdo_nuodb_db_handle_rollback(H) == 0)
     {
+    	H->in_nuodb_implicit_txn = 0;
+    	H->in_nuodb_explicit_txn = 0;
         //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0);
     }
+	H->in_nuodb_implicit_txn = 0;
+	H->in_nuodb_explicit_txn = 0;
     PDO_DBG_RETURN(1);
 }
 /* }}} */
@@ -542,7 +565,9 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
 
     /* prepare the statement */
     *nuodb_stmt = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
-    PDO_DBG_INF_FMT("S=%ld", *nuodb_stmt);
+    PDO_DBG_INF_FMT("nuodb_alloc_prepare_stmt: dbh=%p S=%p sql=%.*s", dbh, pdo_stmt->driver_data, sql_len, sql);
+    //PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
+    //PDO_DBG_INF_FMT("S=%p", pdo_stmt->driver_data);
 	efree(new_sql);
 
 	if (*nuodb_stmt == NULL) {

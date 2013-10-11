@@ -176,6 +176,9 @@ typedef struct
     /* the last error that didn't come from the API */
     //char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
 
+    char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
+    char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
+
     /* prepend table names on column names in fetch */
     unsigned fetch_table_names:1;
 
@@ -212,6 +215,14 @@ typedef struct
 
     /* the name of the cursor (if it has one) */
     char name[32];
+
+    /* implicit txn - true when autocommit is disabled and
+     * NuoDB will create a implicit txn because the app didn't
+     * start one by calling nuodb_handle_begin. */
+    char implicit_txn;
+
+    /* for an implicit_txn, do we want to commit on close? */
+    char commit_on_close;
 
     /* whether EOF was reached for this statement */
     unsigned exhausted:1;

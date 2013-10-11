@@ -1268,6 +1268,7 @@ void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t *
     return (void *)nuodb_stmt;
 }
 
+// Should this change???  T.GATES 10/10/2013
 long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char * sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn))
 {
     PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
@@ -1276,8 +1277,25 @@ long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const c
     try
     {
         PdoNuoDbStatement * nuodb_stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, NULL, sql);
-        (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, 1);
+
+        // Not needed?  T.GATES 10/10/2013
+        //(*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, 1);
+
+        if ((H->pdo_dbh->auto_commit == 0) &&
+        		(H->pdo_dbh->in_txn == 0))
+        {
+        	if ((H->in_nuodb_implicit_txn == 0) && (H->in_nuodb_explicit_txn == 0)) {
+        		H->in_nuodb_implicit_txn = 1;
+        	}
+        }
+
         res = nuodb_stmt->execute();
+
+        if (H->in_nuodb_implicit_txn == 1) {
+        	pdo_nuodb_db_handle_commit(H);
+        	H->in_nuodb_implicit_txn = 0;
+        	H->in_nuodb_explicit_txn = 0;
+        }
     }
     catch (NuoDB::SQLException & e)
     {
