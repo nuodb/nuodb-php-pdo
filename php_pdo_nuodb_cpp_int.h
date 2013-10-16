@@ -132,13 +132,13 @@ public:
     char const * getColumnName(size_t column);
     int getSqlType(size_t column);
     char const * getString(size_t column);
-    int getInteger(size_t column);
-    bool getBoolean(size_t column);
-    int64_t getLong(size_t column);
+    void getInteger(size_t column, int **int_val);
+    bool getBoolean(size_t column, char **bool_val);
+    void getLong(size_t column, int64_t **long_val);
     //unsigned long getTimestamp(size_t column);
     char const * getTimestamp(size_t column);
-    unsigned long getDate(size_t column);
-    unsigned long getTime(size_t column);
+    void getDate(size_t column, int64_t **date_val);
+    void getTime(size_t column, int64_t **time_val);
     void getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
     void getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
     size_t getNumberOfParameters();

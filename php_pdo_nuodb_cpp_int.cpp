@@ -752,42 +752,55 @@ char const * PdoNuoDbStatement::getString(size_t column)
         return res;
     }
     res =  _rs->getString(column+1);
+    if (_rs->wasNull()) {
+    	res = NULL;
+    }
     return res;
 }
 
-int PdoNuoDbStatement::getInteger(size_t column)
+void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
 {
-        // NOTE: caller catches exceptions.
+    // NOTE: caller catches exceptions.
     if (_rs == NULL)
     {
-        return 0;
+        return;
     }
-    return _rs->getInt(column+1);
+    **int_val = _rs->getInt(column+1);
+    if (_rs->wasNull()) {
+    	*int_val = NULL;
+    }
 }
 
-bool PdoNuoDbStatement::getBoolean(size_t column)
+bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
 {
         // NOTE: caller catches exceptions.
     if (_rs == NULL)
     {
         return 0;
     }
-    return _rs->getBoolean(column+1);
+    **bool_val = _rs->getBoolean(column+1);
+    if (_rs->wasNull()) {
+    	*bool_val = NULL;
+    }
+
 }
 
-int64_t PdoNuoDbStatement::getLong(size_t column)
+void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
 {
-        // NOTE: caller catches exceptions.
+    // NOTE: caller catches exceptions.
     if (_rs == NULL)
     {
-        return 0;
+        return;
     }
-    return _rs->getLong(column+1);
+    **long_val = _rs->getLong(column+1);
+    if (_rs->wasNull()) {
+    	*long_val = NULL;
+    }
 }
 
 char const *PdoNuoDbStatement::getTimestamp(size_t column)
 {
-        // NOTE: caller catches exceptions.
+    // NOTE: caller catches exceptions.
     char const *res = NULL;
 
     if (_rs == NULL)
@@ -795,29 +808,40 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
         return res;
     }
     res =  _rs->getString(column+1);
+    if (_rs->wasNull()) {
+    	res = NULL;
+    }
     return res;
 }
 
-unsigned long PdoNuoDbStatement::getTime(size_t column)
+void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
 {
-        // NOTE: caller catches exceptions.
+    // NOTE: caller catches exceptions.
     if (_rs == NULL)
     {
-        return 0;
+        return;
     }
     NuoDB::Time *time = _rs->getTime(column+1);
-    return time->getSeconds();
+    if (_rs->wasNull()) {
+    	*time_val = NULL;
+    	return;
+    }
+    **time_val = time->getSeconds();
 }
 
-unsigned long PdoNuoDbStatement::getDate(size_t column)
+void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
 {
-        // NOTE: caller catches exceptions.
+    // NOTE: caller catches exceptions.
     if (_rs == NULL)
     {
-        return 0;
+        return;
     }
     NuoDB::Date *date = _rs->getDate(column+1);
-    return date->getSeconds();
+    if (_rs->wasNull()) {
+    	*date_val = NULL;
+    	return;
+    }
+    **date_val = date->getSeconds();
 }
 
 void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
@@ -1763,12 +1787,11 @@ int pdo_nuodb_stmt_set_clob(pdo_nuodb_stmt *S, int paramno, char *clob_val, int 
     return 1;
 }
 
-int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno)
+void pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno, int **int_val)
 {
-    int res = 0;
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
-        res = nuodb_stmt->getInteger(colno);
+        nuodb_stmt->getInteger(colno, int_val);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
@@ -1778,7 +1801,6 @@ int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno)
         // pdo_stmt->setSqlstate(e.getSQLState());
         nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
-        return 0;
     }
     catch (...)
     {
@@ -1788,17 +1810,15 @@ int pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno)
         nuodb_stmt->setEinfoLine(__LINE__);
         nuodb_stmt->setSqlstate("XX000");
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
-        return 0;
     }
-    return res;
+    return;
 }
 
-char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno)
+void pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno, char **bool_val)
 {
-    char res = 0;
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
-        res = nuodb_stmt->getBoolean(colno);
+        nuodb_stmt->getBoolean(colno, bool_val);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
@@ -1808,7 +1828,6 @@ char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno)
         // pdo_stmt->setSqlstate(e.getSQLState());
         nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
-        return 0;
     }
     catch (...)
     {
@@ -1818,17 +1837,15 @@ char pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno)
         nuodb_stmt->setEinfoLine(__LINE__);
         nuodb_stmt->setSqlstate("XX000");
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
-        return 0;
     }
-    return res;
+    return;
 }
 
-int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno)
+void pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno, int64_t **long_val)
 {
-    int64_t res = 0;
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
-        res = nuodb_stmt->getLong(colno);
+        nuodb_stmt->getLong(colno, long_val);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
@@ -1838,7 +1855,6 @@ int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno)
         // pdo_stmt->setSqlstate(e.getSQLState());
         nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
-        return 0;
     }
     catch (...)
     {
@@ -1848,9 +1864,8 @@ int64_t pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno)
         nuodb_stmt->setEinfoLine(__LINE__);
         nuodb_stmt->setSqlstate("XX000");
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
-        return 0;
     }
-    return res;
+    return;
 }
 
 const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno)
@@ -1883,12 +1898,11 @@ const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno)
     return res;
 }
 
-unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno)
+void pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno, int64_t **date_val)
 {
-    unsigned long res = 0;
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
-        res = nuodb_stmt->getDate(colno);
+        nuodb_stmt->getDate(colno, date_val);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
@@ -1908,15 +1922,14 @@ unsigned long pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno)
         nuodb_stmt->setSqlstate("XX000");
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
     }
-    return res;
+    return;
 }
 
-unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno)
+void pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno, int64_t **time_val)
 {
-    unsigned long res = 0;
     PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
     try {
-        res = nuodb_stmt->getTime(colno);
+        nuodb_stmt->getTime(colno, time_val);
     } catch (NuoDB::SQLException & e) {
         nuodb_stmt->setEinfoErrcode(e.getSqlcode());
         nuodb_stmt->setEinfoErrmsg(e.getText());
@@ -1936,7 +1949,7 @@ unsigned long pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno)
         nuodb_stmt->setSqlstate("XX000");
         _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine()/* TSRMLS_DC*/);
     }
-    return res;
+    return;
 }
 
 const char *pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno)
