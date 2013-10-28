@@ -446,7 +446,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         }
                         else
                         {
-                                _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%d'", param->name);
+                                _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%s'", param->name);
                             //PDO_DBG_RETURN(0);
                                 return 0;
                         }
