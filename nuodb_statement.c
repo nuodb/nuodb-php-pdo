@@ -181,8 +181,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
         {
-            col->maxlen = 24;
-            col->param_type = PDO_PARAM_STR;
+            col->param_type = PDO_PARAM_INT;
             break;
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
@@ -277,8 +276,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
             	*ptr = NULL;
             	*len = 0;
             } else {
-            	*ptr = (char *)emalloc(CHAR_BUF_LEN);
-            	*len = slprintf(*ptr, CHAR_BUF_LEN, "%d", val);
+            	long lval = val;
+                *len = sizeof(long);
+                *ptr = (char *)emalloc(*len);
+                memmove(*ptr, &lval, *len);
             }
             break;
         }
