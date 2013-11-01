@@ -72,14 +72,14 @@ array(2) {
   [0]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(false)
   }
   [1]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(true)
   }
@@ -91,28 +91,28 @@ array(4) {
   [0]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(false)
   }
   [1]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(true)
   }
   [2]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(false)
   }
   [3]=>
   array(2) {
     ["ID"]=>
-    string(1) "1"
+    int(1)
     ["MYBOOL"]=>
     bool(true)
   }
