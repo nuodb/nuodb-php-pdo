@@ -387,9 +387,10 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
 
     res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
 
-//    if (res == -1) {
-//       RECORD_ERROR(dbh);
-//    }
+    // do we have a dbh error code?
+    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
+        PDO_DBG_RETURN(-1);
+    }
 
     PDO_DBG_RETURN(res);
 }
