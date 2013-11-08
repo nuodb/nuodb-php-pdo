@@ -29,7 +29,6 @@ install:
   - true
 
 script:
-  - cd /home/travis/build/nuodb/nuodb-php-pdo
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
