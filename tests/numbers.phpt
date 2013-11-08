@@ -12,10 +12,10 @@ try {
   $sql1 = "drop table numbers_test cascade if exists";
   $db->query($sql1);
 
-  $sql2 = "create table numbers_test (a INTEGER, b NUMBER, c NUMERIC, d BIGINT, e SMALLINT, f DECIMAL, g DEC, h INT )";
+  $sql2 = "create table numbers_test (a INTEGER, b NUMBER, c NUMERIC, d BIGINT, e SMALLINT, f DECIMAL, g DEC, h INT, i NUMERIC(21) )";
   $db->query($sql2);
 
-  $sql3 = "insert numbers_test (a, b, c, d, e, f, g, h) values('1', '2', '3', '4', '5', '6', '7', '8')";
+  $sql3 = "insert numbers_test (a, b, c, d, e, f, g, h, i) values('1', '2', '3', '4', '5', '6', '7', '8', '9')";
   $db->query($sql3);
 
   $sql4 = "select * from numbers_test";
@@ -72,6 +72,8 @@ Array
     [6] => 7
     [H] => 8
     [7] => 8
+    [I] => 9
+    [8] => 9
 )
 Array
 (
