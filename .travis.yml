@@ -32,7 +32,7 @@ script:
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
-  - phpunit run-tests tests
+  - phpunit tests
 
 after_failure:
   - cat tests/*.log
