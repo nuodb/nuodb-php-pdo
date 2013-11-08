@@ -6,6 +6,11 @@ $db = NULL;
 ini_set('nuodb.default_user',$user);
 ini_set('nuodb.default_password',$password);
 
+$nuotestport = getenv("NUOTESTPORT");
+if (!$nuotestport) {
+  $nuotestport = "48004";
+}
+
 /* we need just the generated name, not the file itself */
 unlink($test_base = tempnam('/tmp',"php_nuodb_test"));
 
