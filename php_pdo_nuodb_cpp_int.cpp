@@ -695,6 +695,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
                 case NuoDB::NUOSQL_FLOAT:
                 case NuoDB::NUOSQL_DOUBLE:
                 case NuoDB::NUOSQL_DECIMAL:
+                case NuoDB::NUOSQL_NUMERIC:
                         return PDO_NUODB_SQLTYPE_STRING;
 
                 case NuoDB::NUOSQL_CHAR:
