@@ -1,7 +1,7 @@
 <?php /* $Id: testdb.inc 161049 2012-03-26 01:37:06Z tgates $ */
 
-$user = 'cloud';
-$password = 'user';
+$user = 'dba';
+$password = 'dba';
 $db = NULL;
 ini_set('nuodb.default_user',$user);
 ini_set('nuodb.default_password',$password);
