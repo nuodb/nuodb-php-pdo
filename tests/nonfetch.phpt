@@ -65,6 +65,7 @@ open_db();
 ?>
 --CLEAN--
 <?php
+require("testdb.inc");
 $db = open_db();
 $db->exec('DROP TABLE IF EXISTS CASCADE test');
 ?>
