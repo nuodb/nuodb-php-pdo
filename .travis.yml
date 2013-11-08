@@ -17,9 +17,6 @@ before_install:
   - uname -a
   - phpenv versions
   - cat /etc/debian_version
-  - sudo apt-get update
-  - sudo apt-get install php5-dev php5-mysql
-  - php-config
   - ls -al `php-config --extension-dir`
   - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
@@ -35,7 +32,6 @@ script:
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
-  - php -i
   - pear run-tests tests
 
 after_script:
