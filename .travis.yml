@@ -33,6 +33,7 @@ script:
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
   - pear run-tests tests
+  - cat tests/*.log
 
 after_script:
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "shutdown domain"
