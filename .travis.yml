@@ -17,15 +17,13 @@ before_install:
   - uname -a
   - phpenv versions
   - cat /etc/debian_version
+  - sudo apt-get update
   - sudo apt-get install php5-dev php5-mysql
   - ls -al `php-config --extension-dir`
-  - wget -q http://www.nuodb.com/latest/releases/nuodb-1.1.1.linux.x64.deb --output-document=/var/tmp/nuodb.deb
+  - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
-  - sleep 2
-  - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie --verbose debug --archive /var/tmp/nuodb --initialize --force &
-  - sleep 2
-  - ${NUODB_ROOT}/bin/nuodb --chorus test --password bar --dba-user dba --dba-password goalie &
-  - sleep 2
+  - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
+  - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
 
 install:
   - true
@@ -37,7 +35,8 @@ script:
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
   - php -i
-  - pear run-tests tests/*.phpt
+  - pear run-tests tests
 
 after_script:
+  - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "shutdown domain"
   - sudo dpkg -r nuodb
