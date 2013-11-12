@@ -65,7 +65,8 @@ open_db();
 ?>
 --CLEAN--
 <?php
-$db = new PDO("nuodb:database=test@localhost;schema=PDOTEST", "dba", "goalie") or die;
+require("testdb.inc");
+$db = open_db();
 $db->exec('DROP TABLE IF EXISTS CASCADE test');
 ?>
 --EXPECTF--

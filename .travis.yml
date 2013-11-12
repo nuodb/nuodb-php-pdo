@@ -5,7 +5,7 @@ php:
   - 5.4
 
 env:
-  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64 PHP_INCLUDE_DIR=/usr/include/php5
+  - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64
 
 notifications:
   recipients:
@@ -17,8 +17,6 @@ before_install:
   - uname -a
   - phpenv versions
   - cat /etc/debian_version
-  - sudo apt-get update
-  - sudo apt-get install php5-dev php5-mysql
   - ls -al `php-config --extension-dir`
   - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
@@ -29,13 +27,12 @@ install:
   - true
 
 script:
+  - export PHP_INCLUDE_DIR=$(php-config --include-dir)
   - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - sudo cp pdo_nuodb.so `php-config --extension-dir`
-  - php -i
-  - pear run-tests tests
+  - phpunit tests
 
-after_script:
-  - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "shutdown domain"
-  - sudo dpkg -r nuodb
+after_failure:
+  - cat tests/*.log
