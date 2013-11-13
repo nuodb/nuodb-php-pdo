@@ -3,10 +3,7 @@ Attempt to connect, checking various error condition/processing/messages.
 --FILE--
 <?php 
 
-$nuotestport = getenv("NUOTESTPORT");
-if (!$nuotestport) {
-  $nuotestport = "48004";
-}
+require("testdb.inc");
 
 try {  
   $url = "nuodb:database=no-such-test@localhost:" . $nuotestport . ";schema=no-such-schema";

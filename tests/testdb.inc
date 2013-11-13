@@ -1,10 +1,15 @@
 <?php /* $Id: testdb.inc 161049 2012-03-26 01:37:06Z tgates $ */
 
-$user = 'cloud';
-$password = 'user';
+$user = 'dba';
+$password = 'dba';
 $db = NULL;
 ini_set('nuodb.default_user',$user);
 ini_set('nuodb.default_password',$password);
+
+$nuotestport = getenv("NUOTESTPORT");
+if (!$nuotestport) {
+  $nuotestport = "48004";
+}
 
 /* we need just the generated name, not the file itself */
 unlink($test_base = tempnam('/tmp',"php_nuodb_test"));
