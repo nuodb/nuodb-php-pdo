@@ -1,7 +1,9 @@
 <?php /* $Id: testdb.inc 161049 2012-03-26 01:37:06Z tgates $ */
 
-$user = 'dba';
-$password = 'dba';
+$user = 'cloud';
+$password = 'user';
+$dba_user = 'dba';
+$dba_password = 'dba';
 $db = NULL;
 ini_set('nuodb.default_user',$user);
 ini_set('nuodb.default_password',$password);
@@ -26,6 +28,27 @@ function open_db()
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=PDOTEST";
   try {
     $db = new PDO($url, $user, $password) or die;
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  }
+  catch(PDOException $e) {
+    echo "FAILED: ";
+    echo $e->getMessage();
+  }
+  return $db;
+}
+
+function open_db_as_dba()
+{
+  global $db, $dba_user, $dba_password;
+
+  $nuotestport = getenv("NUOTESTPORT");
+  if (! $nuotestport) {
+      $nuotestport = "48004";
+  }
+
+  $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=PDOTEST";
+  try {
+    $db = new PDO($url, $dba_user, $dba_password) or die;
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   }
   catch(PDOException $e) {

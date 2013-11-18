@@ -10,7 +10,7 @@ require("testdb.inc");
 // autocommit mode with explicit calls to beginTransction() and commit().
 echo "autocommit enabled test with explicit calls to beginTransction() and commit().\n";
 try {  
-  $db = open_db();
+  $db = open_db_as_dba();
 
   // autocommit should be on by default			       
   if (1 !== ($tmp = $db->getAttribute(PDO::ATTR_AUTOCOMMIT)))
@@ -40,7 +40,7 @@ $db = NULL;
 // issue "There is no active transaction" error message.
 echo "autocommit enabled test with explicit call to commit().\n";
 try {  
-  $db = open_db();
+  $db = open_db_as_dba();
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 
@@ -63,7 +63,7 @@ $db = NULL;
 // issue "There is no active transaction" error message.
 echo "autocommit enabled test with explicit call to rollback().\n";
 try {  
-  $db = open_db();
+  $db = open_db_as_dba();
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 
