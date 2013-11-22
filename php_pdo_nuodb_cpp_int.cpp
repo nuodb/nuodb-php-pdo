@@ -1480,6 +1480,22 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
 
     // TODO: check that (!stmt->executed) here?
 
+    if (S->qty_input_params != 0)
+    {
+    	pdo_stmt_t *pdo_stmt = nuodb_stmt->getPdoStmt();
+    	if ((pdo_stmt->bound_param_map == NULL) ||
+    		(S->qty_input_params != pdo_stmt->bound_params->nNumOfElements))
+    	{
+    		nuodb_stmt->setEinfoErrcode(-12);
+    		nuodb_stmt->setEinfoErrmsg("number of bound variables does not match number of tokens");
+    		nuodb_stmt->setEinfoFile(__FILE__);
+    		nuodb_stmt->setEinfoLine(__LINE__);
+    		nuodb_stmt->setSqlstate("HY093");
+    		_pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
+    		return 0;
+    	}
+    }
+
     try
     {
         affected_rows = nuodb_stmt->execute();
