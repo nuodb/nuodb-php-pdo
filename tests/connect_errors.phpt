@@ -11,8 +11,11 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[08000] [-10] can\'t find broker for database "(null)"';
-  if (strcmp($expected_message, $caught_message)) {
+  // we can get a different exception message depending on how
+  // the NuoDB processes were started.  All we need to do is 
+  // is confirm that an exception message occurs.
+  $expected_message = 'SQLSTATE[08000]';
+  if (strncmp($expected_message, $caught_message, 15)) {
      echo "FAILED: " . $caught_message . "\n";
   }
   $db = NULL;
