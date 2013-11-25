@@ -6,6 +6,19 @@ Attempt to connect, checking various error condition/processing/messages.
 require("testdb.inc");
 
 try {  
+  $url = "nuodb:dbname=test@localhost:" . $nuotestport;
+  $db = new PDO($url, "dba", "goalie", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = NULL;
+} catch(PDOException $e) {  
+  $caught_message = $e->getMessage();
+  $expected_message = 'SQLSTATE[08000] [-10] can\'t find broker for database "(null)"';
+  if (strcmp($expected_message, $caught_message)) {
+     echo "FAILED: " . $caught_message . "\n";
+  }
+  $db = NULL;
+}
+
+try {  
   $url = "nuodb:database=no-such-test@localhost:" . $nuotestport . ";schema=no-such-schema";
   $db = new PDO($url, "dba", "goalie", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
