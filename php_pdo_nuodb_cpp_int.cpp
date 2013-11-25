@@ -294,14 +294,10 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
     _opts = new SqlOptionArray;
     _opts->count = 4;
     _opts->array = _opt_arr;
-    _opt_arr[0].option = (char const *) strdup(options->array[0].option);
-    _opt_arr[0].extra = (void *) strdup((const char *)options->array[0].extra);
-    _opt_arr[1].option = (char const *) strdup(options->array[1].option);
-    _opt_arr[1].extra = (void *) strdup((const char *)options->array[1].extra);
-    _opt_arr[2].option = (char const *) strdup(options->array[2].option);
-    _opt_arr[2].extra = (void *) strdup((const char *)options->array[2].extra);
-    _opt_arr[3].option = (char const *) strdup(options->array[3].option);
-    _opt_arr[3].extra = (void *) strdup((const char *)options->array[3].extra);
+    for (int i=0; i<_opts->count; i++) {
+    	_opt_arr[i].option = (char const *) (options->array[i].option ? strdup(options->array[i].option) : NULL );
+    	_opt_arr[i].extra = (void *) (options->array[i].extra ? strdup((const char *)options->array[i].extra) : NULL);
+    }
 }
 
 NuoDB::Connection * PdoNuoDbHandle::createConnection()
