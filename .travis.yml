@@ -29,10 +29,13 @@ install:
 
 script:
   - export PHP_INCLUDE_DIR=$(php-config --include-dir)
-  - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  - phpize --clean
+  - phpize
+  - configure --with-pdo-nuodb
+  - make clean
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - sudo cp pdo_nuodb.so `php-config --extension-dir`
+  - sudo cp modules/pdo_nuodb.so `php-config --extension-dir`
   - phpunit tests
 
 after_failure:
