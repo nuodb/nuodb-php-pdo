@@ -19,7 +19,7 @@ if test "$PHP_PDO_NUODB" != "no"; then
   if test "$PHP_PDO_NUODB" = "yes"; then
     NUODB_INCDIR=/opt/nuodb/include
     NUODB_LIBDIR=/opt/nuodb/lib64
-    NUODB_LIBDIR_FLAG=
+    NUODB_LIBDIR_FLAG=-L$NUODB_LIBDIR
   else
     NUODB_INCDIR=$PHP_PDO_NUODB/include
     NUODB_LIBDIR=$PHP_PDO_NUODB/lib64
@@ -34,6 +34,6 @@ if test "$PHP_PDO_NUODB" != "no"; then
   PHP_SUBST(PDO_NUODB_SHARED_LIBADD)
   PHP_ADD_LIBRARY(stdc++, 1, PDO_NUODB_SHARED_LIBADD)
   PHP_ADD_EXTENSION_DEP(pdo_nuodb, pdo)
-  PHP_NEW_EXTENSION(pdo_nuodb, pdo_nuodb.c nuodb_driver.c nuodb_statement.c php_pdo_nuodb_cpp_int.cpp, $ext_shared,,-I$pdo_inc_path -I/opt/nuodb/include)
+  PHP_NEW_EXTENSION(pdo_nuodb, pdo_nuodb.c nuodb_driver.c nuodb_statement.c php_pdo_nuodb_cpp_int.cpp, $ext_shared,,-I$pdo_inc_path -I$NUODB_INCDIR)
 
 fi
