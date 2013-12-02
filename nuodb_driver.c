@@ -770,10 +770,70 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
 
     options[0].option = "database";
     options[0].extra = (void *) vars[0].optval;
+    if (options[0].extra == NULL) {
+    	H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+    	H->einfo.file = __FILE__;
+    	H->einfo.line = __LINE__;
+        _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'database' parameter");
+    	if (H->einfo.errmsg) {
+    		pefree(H->einfo.errmsg, dbh->is_persistent);
+    		H->einfo.errmsg = NULL;
+    	}
+        pefree(dbh->driver_data, dbh->is_persistent);
+        dbh->driver_data = NULL;
+        for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
+        {
+            if (vars[i].freeme)
+            {
+                efree(vars[i].optval);
+            }
+        }
+        PDO_DBG_RETURN(0);
+    }
     options[1].option = "user";
     options[1].extra = (void *) dbh->username;
+    if (options[1].extra == NULL) {
+    	H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+    	H->einfo.file = __FILE__;
+    	H->einfo.line = __LINE__;
+        _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'user' parameter");
+    	if (H->einfo.errmsg) {
+    		pefree(H->einfo.errmsg, dbh->is_persistent);
+    		H->einfo.errmsg = NULL;
+    	}
+        pefree(dbh->driver_data, dbh->is_persistent);
+        dbh->driver_data = NULL;
+        for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
+        {
+            if (vars[i].freeme)
+            {
+                efree(vars[i].optval);
+            }
+        }
+        PDO_DBG_RETURN(0);
+    }
     options[2].option = "password";
     options[2].extra = (void *) dbh->password;
+    if (options[2].extra == NULL) {
+    	H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+    	H->einfo.file = __FILE__;
+    	H->einfo.line = __LINE__;
+        _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'password' parameter");
+    	if (H->einfo.errmsg) {
+    		pefree(H->einfo.errmsg, dbh->is_persistent);
+    		H->einfo.errmsg = NULL;
+    	}
+        pefree(dbh->driver_data, dbh->is_persistent);
+        dbh->driver_data = NULL;
+        for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
+        {
+            if (vars[i].freeme)
+            {
+                efree(vars[i].optval);
+            }
+        }
+        PDO_DBG_RETURN(0);
+    }
     options[3].option = "schema";
     options[3].extra = (vars[1].optval == NULL) ? "USER" : vars[1].optval;
 
