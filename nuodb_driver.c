@@ -162,7 +162,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 	}
 
 	einfo->errcode = error_code;
-	einfo->file = file;
+	einfo->file = (char *)file;
 	einfo->line = line;
 	if (einfo->errmsg) {
 		pefree(einfo->errmsg, dbh->is_persistent);
