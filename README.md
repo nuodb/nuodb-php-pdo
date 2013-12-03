@@ -12,28 +12,34 @@ n.b. NuoDB installed
 
 ## Build & Install on Unix ##
 
+```bash
 phpize --clean
 phpize
 configure --with-pdo-nuodb=/opt/nuodb
 make clean
 make
 make install
+```
 
 
 ## Build on Windows ##
 
 
+```cmd
 phpize --clean
 phpize
 configure --with-pdo-nuodb="C:\Program Files\NuoDB"
 nmake clean
 nmake
+```
 
 ## Windows Install Example with PHP installed in C:\php ##
 
+```cmd
 php -i | findstr extension_dir
 del /S /Q C:\php\php_pdo_nuodb.*
 copy Release_TS\php_pdo_nuodb.* C:\php
+```
 
 
 
