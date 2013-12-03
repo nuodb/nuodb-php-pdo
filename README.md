@@ -20,7 +20,7 @@ phpize
 configure --with-pdo-nuodb=/opt/nuodb
 make clean
 make
-make install
+sudo make install
 ```
 
 
@@ -47,12 +47,13 @@ copy Release_TS\php_pdo_nuodb.* C:\php
 
 ## RUNNING TESTS ##
 
-Prerequisites for running the unit tests include having a running chorus; a
-minimal chorus can be started using these commands:
+Prerequisites for running the unit tests include having a running database at test@localhost.  The privileged credentials must be the username/password: "dba/dba".  The non-privileged credentials must be username/password: "cloud/user". The database can be started using these commands on Unix:
 
 ```bash
-java -jar nuoagent.jar --broker --domain test --password test &
-./nuodb --chorus flights --password planes --dba-user dba --dba-password dba &
+java -jar /opt/nuodb/jar/nuoagent.jar --broker --domain test --password bird --bin-dir /opt/nuodb/bin &
+nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /tmp/nuodb_test_data waitForRunning true initialize true"
+nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
+echo "create user cloud password 'user';" | /opt/nuodb/bin/nuosql test@localhost --user dba --password dba
 ```
 
 Run the following commands to run the tests:
