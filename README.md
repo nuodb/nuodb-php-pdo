@@ -7,8 +7,10 @@
 In order to build the driver you must have PHP plus developer tools installed.
 This may be done from source or using package managers.
 
-n.b. PHP version 5.3 or 5.4 is required. 
-n.b. NuoDB installed
+PHP version 5.3 or 5.4 is required. 
+
+NuoDB installed
+
 
 ## Build & Install on Unix ##
 
