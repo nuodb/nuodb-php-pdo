@@ -29,5 +29,5 @@ $db = NULL;
 echo "\ndone\n";
 ?>
 --EXPECT--
-SQLSTATE[58000]: <<Unknown error>>: -5 illegal null in field PHONE in table ADDRESSES
+SQLSTATE[HY093]: Invalid parameter number: -12 number of bound variables does not match number of tokens
 done
