@@ -1,0 +1,20 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_WITH("pdo-nuodb", "NuoDB support for PDO", "no");
+
+if (PHP_PDO_NUODB != "no") 
+{
+  PHP_PGI = "no";
+  PHP_PGO = "yes";
+  if (CHECK_LIB("NuoRemote_vc9.lib", "pdo_nuodb", PHP_PDO_NUODB + "\\lib32")
+      && CHECK_HEADER_ADD_INCLUDE('NuoDB.h', 'CFLAGS_PDO_NUODB', PHP_PDO_NUODB + "\\include")
+      && CHECK_HEADER_ADD_INCLUDE('stdint.h', 'CFLAGS_PDO_NUODB', "include_extras\\VC9")) 
+  {
+    EXTENSION("pdo_nuodb", "pdo_nuodb.c nuodb_driver.c nuodb_statement.c php_pdo_nuodb_cpp_int.cpp");
+    ADD_EXTENSION_DEP('pdo_nuodb', 'pdo');
+  } else {
+    WARNING("pdo_nuodb support can't be enabled, headers or libraries are missing (SDK)")
+    PHP_PDO_NUODB = "no"
+  }
+}
