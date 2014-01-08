@@ -17,6 +17,7 @@ before_install:
   - uname -a
   - phpenv versions
   - cat /etc/debian_version
+  - sudo apt-get install valgrind
   - ls -al `php-config --extension-dir`
   - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
@@ -29,6 +30,8 @@ install:
 
 script:
   - export PHP_INCLUDE_DIR=$(php-config --include-dir)
+  - export TEST_PHP_EXECUTABLE=$(php-config --php-binary)
+  - export REPORT_EXIT_STATUS=1
   - phpize --clean
   - phpize
   - ./configure --with-pdo-nuodb
@@ -36,7 +39,7 @@ script:
   - make
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - make install
-  - phpunit tests
+  - php run-test.php -m tests/*.phpt
 
 after_failure:
   - cat tests/*.log
