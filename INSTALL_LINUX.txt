@@ -48,6 +48,7 @@ The NuoDB PHP PDO Driver is located in your NuoDB installation directory.  You m
   INSTALL_LINUX.txt  <-- this file
   php-5.3.NTS  <-- contains NuoDB PHP PDO Driver for PHP version 5.3, Non Thread Safe
   php-5.4.NTS  <-- contains NuoDB PHP PDO Driver for PHP version 5.4, Non Thread Safe
+  php-5.5.NTS  <-- contains NuoDB PHP PDO Driver for PHP version 5.5, Non Thread Safe
   sample       <-- contains an example program.
 
 Note: If your PHP information does not match the above PHP Version number and Thread Safety, you can obtain source code for the NuoDB PHP PDO Driver on GitHub which you can use to build your own NuoDB PHP PDO Driver that matches your particular version/thread safety of your PHP install.
