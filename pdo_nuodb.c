@@ -109,9 +109,8 @@ ZEND_GET_MODULE(pdo_nuodb)
 */
 /* Remove comments and fill if you need to have entries in php.ini */
 PHP_INI_BEGIN()
-//  STD_PHP_INI_ENTRY("pdo_nuodb.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_pdo_nuodb_globals, pdo_nuodb_globals)
-//  STD_PHP_INI_ENTRY("pdo_nuodb.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, enable_log, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+  STD_PHP_INI_ENTRY("pdo_nuodb.log_level",      "1", PHP_INI_ALL, OnUpdateLong, log_level, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 PHP_INI_END()
 
@@ -122,9 +121,8 @@ PHP_INI_END()
 /* Uncomment this function if you have INI entries */
 static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals)
 {
-  pdo_nuodb_globals->global_value = 0;
-  pdo_nuodb_globals->global_string = NULL;
   pdo_nuodb_globals->enable_log = 0;
+  pdo_nuodb_globals->log_level = 1;
   pdo_nuodb_globals->logfile_path = NULL;
 }
 

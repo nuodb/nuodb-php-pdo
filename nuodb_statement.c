@@ -407,11 +407,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
     nuo_params * nuodb_params = NULL;
     nuo_param * nuodb_param = NULL;
 
-    int dbg_skip_trace = FALSE;
-    //PDO_DBG_ENTER("nuodb_stmt_param_hook");
-    //PDO_DBG_INF_FMT("S=%p, S);
-
-
     nuodb_params = param->is_param ? S->in_params : S->out_params;
     if (param->is_param)
     {

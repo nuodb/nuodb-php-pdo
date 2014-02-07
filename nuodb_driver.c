@@ -71,7 +71,16 @@ char const * const NUODB_OPT_PASSWORD = "password";
 char const * const NUODB_OPT_SCHEMA = "schema";
 char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
-FILE *nuodb_log_fp = NULL;
+FILE *nuodb_log_fp = NULL;  
+long nuodb_log_level = 1;  // The level of logging "detail" that the user wants to see in the log.
+                           // The higher level numbers have more detail.
+                           // The higher level numbers include lesser levels.
+                           //
+                           //   1 - errors/exceptions
+                           //   2 - SQL statements
+                           //   3 - API
+                           //   4 - Functions
+                           //   5 - Everything
 
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC);
 
@@ -148,9 +157,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 	pdo_nuodb_error_info *einfo;
 	pdo_nuodb_stmt *S = NULL;
 
-	PDO_DBG_ENTER("_record_error");
-	PDO_DBG_INF_FMT("file=%s line=%d", file, line);
-	PDO_DBG_INF_FMT("sql_state=%s  error_code=%d  error_message=%s", sql_state, error_code, error_message);
+	PDO_DBG_LEVEL_FMT(1, "_record_error: sql_state=%s  error_code=%d  error_message=%s", sql_state, error_code, error_message);
 	if (stmt) {
 		S = (pdo_nuodb_stmt*)stmt->driver_data;
 		PDO_DBG_INF_FMT("sql=%s", S->sql);
@@ -511,7 +518,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
 
     PDO_DBG_ENTER("nuodb_alloc_prepare_stmt");
     PDO_DBG_INF_FMT("dbh=%p", dbh);
-    PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
+    PDO_DBG_LEVEL_FMT(2, "sql=%.*s", sql_len, sql);
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
     *nuodb_stmt = NULL;
@@ -757,6 +764,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
 
     if (PDO_NUODB_G(enable_log) != 0) {
       nuodb_log_fp = fopen(PDO_NUODB_G(logfile_path),"a");
+      nuodb_log_level = PDO_NUODB_G(log_level);
     }
 
     PDO_DBG_ENTER("pdo_nuodb_handle_factory");

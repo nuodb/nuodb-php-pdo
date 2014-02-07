@@ -77,27 +77,29 @@ int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
 #ifdef __cplusplus
 extern "C" {
 #endif
-void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg);
-void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...);
+void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg);
+void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...);
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len);
 void pdo_nuodb_func_leave(int lineno, const char *file);
 #ifdef __cplusplus
 }
 #endif
 
-#if PHP_DEBUG && !defined(PHP_WIN32)
+//#if PHP_DEBUG && !defined(PHP_WIN32)
 #define PDO_DBG_ENABLED 1
 
-#define PDO_DBG_INF(msg) do { if (dbg_skip_trace == FALSE) pdo_nuodb_log(__LINE__, __FILE__, "info", (msg)); } while (0)
-#define PDO_DBG_ERR(msg) do { if (dbg_skip_trace == FALSE) pdo_nuodb_log(__LINE__, __FILE__, "error", (msg)); } while (0)
-#define PDO_DBG_INF_FMT(...) do { if (dbg_skip_trace == FALSE) pdo_nuodb_log_va(__LINE__, __FILE__, "info", __VA_ARGS__); } while (0)
-#define PDO_DBG_ERR_FMT(...) do { if (dbg_skip_trace == FALSE) pdo_nuodb_log_va(__LINE__, __FILE__, "error", __VA_ARGS__); } while (0)
-#define PDO_DBG_ENTER(func_name) int dbg_skip_trace = TRUE; dbg_skip_trace = !pdo_nuodb_func_enter(__LINE__, __FILE__, func_name, strlen(func_name));
+#ifdef PDO_DBG_ENABLED
+#define PDO_DBG_LEVEL(loglevel, msg) do { pdo_nuodb_log(__LINE__, __FILE__, (loglevel), (msg)); } while (0)
+#define PDO_DBG_INF(msg) do { pdo_nuodb_log(__LINE__, __FILE__, 5, (msg)); } while (0)
+#define PDO_DBG_ERR(msg) do { pdo_nuodb_log(__LINE__, __FILE__, 1, (msg)); } while (0)
+#define PDO_DBG_LEVEL_FMT(loglevel, ...) do { pdo_nuodb_log_va(__LINE__, __FILE__, (loglevel), __VA_ARGS__); } while (0)
+#define PDO_DBG_INF_FMT(...) do { pdo_nuodb_log_va(__LINE__, __FILE__, 5, __VA_ARGS__); } while (0)
+#define PDO_DBG_ERR_FMT(...) do { pdo_nuodb_log_va(__LINE__, __FILE__, 1, __VA_ARGS__); } while (0)
+#define PDO_DBG_ENTER(func_name) pdo_nuodb_func_enter(__LINE__, __FILE__, func_name, strlen(func_name));
 #define PDO_DBG_RETURN(value)	do { pdo_nuodb_func_leave(__LINE__, __FILE__); return (value); } while (0)
 #define PDO_DBG_VOID_RETURN	do { pdo_nuodb_func_leave(__LINE__, __FILE__); return; } while (0)
 
 #else
-#define PDO_DBG_ENABLED 0
 
 static inline void PDO_DBG_INF(char *msg) {}
 static inline void PDO_DBG_ERR(char *msg) {}

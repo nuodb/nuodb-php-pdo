@@ -1030,6 +1030,7 @@ int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
 /* Logging */
 
 extern FILE *nuodb_log_fp;
+extern long nuodb_log_level;
 
 void get_timestamp(char *time_buffer)
 {
@@ -1065,24 +1066,26 @@ void get_timestamp(char *time_buffer)
   }
 }
 
-void pdo_nuodb_log(int lineno, const char *file, const char *log_level, const char *log_msg)
+void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
 {
   char buf[64] = "";
   if (nuodb_log_fp == NULL) return;
+  if (log_level > nuodb_log_level) return;
   get_timestamp(buf);
-  fprintf(nuodb_log_fp, "%s : %s : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
+  fprintf(nuodb_log_fp, "%s : %ld : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
   fflush(nuodb_log_fp);
 }
 
-void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char *format, ...)
+void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...)
 {
   char buf[64] = "";
   va_list args;
 
   if (nuodb_log_fp == NULL) return;
+  if (log_level > nuodb_log_level) return;
   va_start(args, format);
   get_timestamp(buf);
-  fprintf(nuodb_log_fp, "%s : %s : %s(%d) : ", buf, log_level, file, lineno);
+  fprintf(nuodb_log_fp, "%s : %ld : %s(%d) : ", buf, log_level, file, lineno);
   vfprintf(nuodb_log_fp, format, args);
   va_end(args);
   fputs("\n", nuodb_log_fp);
@@ -1092,8 +1095,9 @@ void pdo_nuodb_log_va(int lineno, const char *file, const char *log_level, char 
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
   char buf[64] = "";
   if (nuodb_log_fp == NULL) return FALSE;
+  if (nuodb_log_level < 4) return FALSE;
   get_timestamp(buf);
-  fprintf(nuodb_log_fp, "%s : info : %s(%d) : ENTER FUNCTION : %s\n", buf, file, lineno, func_name);
+  fprintf(nuodb_log_fp, "%s : 4 : %s(%d) : ENTER FUNCTION : %s\n", buf, file, lineno, func_name);
   fflush(nuodb_log_fp);
   return TRUE;
 }
@@ -1101,8 +1105,9 @@ int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, in
 void pdo_nuodb_func_leave(int lineno, const char *file) {
   char buf[64] = "";
   if (nuodb_log_fp == NULL) return;
+  if (nuodb_log_level < 4) return;
   get_timestamp(buf);
-  fprintf(nuodb_log_fp, "%s : info : %s(%d) : LEAVE FUNCTION\n", buf, file, lineno);
+  fprintf(nuodb_log_fp, "%s : 4 : %s(%d) : LEAVE FUNCTION\n", buf, file, lineno);
   fflush(nuodb_log_fp);
   return;
 }
