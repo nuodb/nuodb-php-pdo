@@ -62,5 +62,26 @@ Run the following commands to run the tests:
 pear run-tests tests/*.phpt
 ```
 
+## LOGGING ##
+
+You can optionally enable and control logging with the following PHP configuration variables:
+
+  pdo_nuodb.enable_log
+  pdo_nuodb.log_level
+  pdo_nuodb.logfile_path
+
+pdo_nuodb.enable_log defaults to zero (0).  To enable logging, set pdo_nuodb_name_log=1.
+
+pdo_nuodb.log_level defaults to one (1).  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
+
+  1 - errors/exceptions only
+  2 - SQL statements
+  3 - API
+  4 - Functions
+  5 - Everything
+
+pdo_nuodb.logfile_path defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
+
+
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/eebba2b3f495d19d760a0b42e0ce67fd "githalytics.com")](http://githalytics.com/nuodb/nuodb-php-pdo)
