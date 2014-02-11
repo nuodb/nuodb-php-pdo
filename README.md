@@ -70,7 +70,7 @@ You can optionally enable and control logging with the following PHP configurati
   pdo_nuodb.log_level
   pdo_nuodb.logfile_path
 
-pdo_nuodb.enable_log defaults to zero (0).  To enable logging, set pdo_nuodb_name_log=1.
+pdo_nuodb.enable_log defaults to zero (0).  To enable logging, set pdo_nuodb.enable_log=1.
 
 pdo_nuodb.log_level defaults to one (1).  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
 
