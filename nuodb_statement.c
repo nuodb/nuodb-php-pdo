@@ -553,13 +553,12 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         convert_to_string(param->parameter);
                         nuodb_param->len = Z_STRLEN_P(param->parameter);
                         nuodb_param->data = Z_STRVAL_P(param->parameter);
-                        pdo_nuodb_stmt_set_string(S, param->paramno,  nuodb_param->data);
-                        // Test for DB-3954
-                        //pdo_nuodb_stmt_set_bytes(S, param->paramno,  (const void *)nuodb_param->data, nuodb_param->len);
-                        PDO_DBG_INF_FMT("Param: %d  Name: %s = %s (STRING)",
+                        PDO_DBG_INF_FMT("Param: %d  Name: %s = %s (Bytes: %d)",
                                         param->paramno,
                                         param->name,
-                                        nuodb_param->data);
+                                        nuodb_param->data,
+					nuodb_param->len);
+                        pdo_nuodb_stmt_set_bytes(S, param->paramno,  (const void *)nuodb_param->data, nuodb_param->len);
                     }
                     else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB)
                     {

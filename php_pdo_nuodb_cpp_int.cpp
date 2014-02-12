@@ -1737,7 +1737,7 @@ int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, in
     catch (...)
     {
         nuodb_stmt->setEinfoErrcode(-17);
-        nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string()");
+        nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_bytes()");
         nuodb_stmt->setEinfoFile(__FILE__);
         nuodb_stmt->setEinfoLine(__LINE__);
         nuodb_stmt->setSqlstate("XX000");

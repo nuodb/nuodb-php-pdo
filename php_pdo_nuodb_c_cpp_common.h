@@ -137,7 +137,7 @@ typedef struct
     short scale; // scale factor
     short col_name_length; // length of column name
     char  col_name[32];
-    short len; // length of data buffer
+    int len; // length of data buffer
     char *data; // address of data buffer
 } nuo_param; // XSQLVAR
 
