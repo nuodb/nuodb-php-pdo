@@ -3,6 +3,7 @@ language: php
 php:
   - 5.3
   - 5.4
+  - 5.5
 
 env:
   - NUODB_ROOT=/opt/nuodb NUODB_INCLUDE_DIR=/opt/nuodb/include NUODB_LIB_DIR=/opt/nuodb/lib64
@@ -19,7 +20,7 @@ before_install:
   - cat /etc/debian_version
   - sudo apt-get install valgrind
   - ls -al `php-config --extension-dir`
-  - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.linux.x64.deb --output-document=/var/tmp/nuodb.deb
+  - wget -q http://www.nuodb.com/latest/releases/nuodb-2.0.2.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
@@ -42,4 +43,4 @@ script:
   - php run-test.php -m tests/*.phpt
 
 after_failure:
-  - cat tests/*.log
+  - cat tests/*.out
