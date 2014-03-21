@@ -679,7 +679,7 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
         return 1;
 
     case PDO_ATTR_CLIENT_VERSION:
-        ZVAL_STRING(val,"NuoDB 1.0.1",1);
+        ZVAL_STRING(val,"NuoDB 2.0.4",1);
         return 1;
 
     case PDO_ATTR_SERVER_VERSION:
