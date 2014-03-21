@@ -1244,14 +1244,10 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H)
 const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H)
 {
     PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
-    char *default_version = "2.0"; // Workaround DB-962.
-    const char *rval = NULL;
+    const char *rval = "unknown";
     try
     {
         rval = db->getNuoDBProductVersion();
-        if (strcmp(rval, "%%PRODUCT_VERSION%%") == 0) { // DB-2559 -- Workaround DB-962
-            rval = default_version;
-        }
     }
     catch (NuoDB::SQLException & e)
     {
