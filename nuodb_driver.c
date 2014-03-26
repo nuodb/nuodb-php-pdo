@@ -71,16 +71,6 @@ char const * const NUODB_OPT_PASSWORD = "password";
 char const * const NUODB_OPT_SCHEMA = "schema";
 char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
-FILE *nuodb_log_fp = NULL;  
-long nuodb_log_level = 1;  // The level of logging "detail" that the user wants to see in the log.
-                           // The higher level numbers have more detail.
-                           // The higher level numbers include lesser levels.
-                           //
-                           //   1 - errors/exceptions
-                           //   2 - SQL statements
-                           //   3 - API
-                           //   4 - Functions
-                           //   5 - Everything
 
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC);
 
@@ -762,11 +752,6 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     SqlOptionArray optionsArray;
     char *errMessage = NULL;
 
-    if (PDO_NUODB_G(enable_log) != 0) {
-      nuodb_log_fp = fopen(PDO_NUODB_G(logfile_path),"a");
-      nuodb_log_level = PDO_NUODB_G(log_level);
-    }
-
     PDO_DBG_ENTER("pdo_nuodb_handle_factory");
     dbh->driver_data = pecalloc(1, sizeof(*H), dbh->is_persistent);
     H = (pdo_nuodb_db_handle *) dbh->driver_data;
@@ -880,3 +865,86 @@ pdo_driver_t pdo_nuodb_driver =   /* {{{ */
     pdo_nuodb_handle_factory
 };
 /* }}} */
+
+
+/* Logging */
+
+void get_timestamp(char *time_buffer)
+{
+  char fmt[64];
+
+  struct timeval  tv;
+  struct tm       *tm;
+
+#ifdef WIN32
+  __time64_t long_time;
+#endif
+
+  if (PDO_NUODB_G(log_fp) == NULL) return;
+
+#ifdef WIN32
+        _time64( &long_time );           // Get time as 64-bit integer.
+                                     // Convert to local time.
+   tm = _localtime64( &long_time ); // C4996
+        // Note: _localtime64 deprecated; consider _localetime64_s
+
+#else
+  gettimeofday(&tv, NULL);
+  tm = localtime(&tv.tv_sec);
+#endif
+  if(tm != NULL)
+  {
+       strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
+#ifdef WIN32
+       _snprintf(time_buffer, 64, fmt, tv.tv_usec);
+#else
+       snprintf(time_buffer, 64, fmt, tv.tv_usec);
+#endif
+  }
+}
+
+void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
+{
+  char buf[64] = "";
+  if (PDO_NUODB_G(log_fp) == NULL) return;
+  if (log_level > PDO_NUODB_G(log_level)) return;
+  get_timestamp(buf);
+  fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
+  fflush(PDO_NUODB_G(log_fp));
+}
+
+void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...)
+{
+  char buf[64] = "";
+  va_list args;
+
+  if (PDO_NUODB_G(log_fp) == NULL) return;
+  if (log_level > PDO_NUODB_G(log_level)) return;
+  va_start(args, format);
+  get_timestamp(buf);
+  fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : ", buf, log_level, file, lineno);
+  vfprintf(PDO_NUODB_G(log_fp), format, args);
+  va_end(args);
+  fputs("\n", PDO_NUODB_G(log_fp));
+  fflush(PDO_NUODB_G(log_fp));
+}
+
+int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
+  char buf[64] = "";
+  if (PDO_NUODB_G(log_fp) == NULL) return FALSE;
+  if (PDO_NUODB_G(log_level) < 4) return FALSE;
+  get_timestamp(buf);
+  fprintf(PDO_NUODB_G(log_fp), "%s : 4 : %s(%d) : ENTER FUNCTION : %s\n", buf, file, lineno, func_name);
+  fflush(PDO_NUODB_G(log_fp));
+  return TRUE;
+}
+
+void pdo_nuodb_func_leave(int lineno, const char *file) {
+  char buf[64] = "";
+  if (PDO_NUODB_G(log_fp) == NULL) return;
+  if (PDO_NUODB_G(log_level) < 4) return;
+  get_timestamp(buf);
+  fprintf(PDO_NUODB_G(log_fp), "%s : 4 : %s(%d) : LEAVE FUNCTION\n", buf, file, lineno);
+  fflush(PDO_NUODB_G(log_fp));
+  return;
+}

@@ -118,9 +118,20 @@ PHP_INI_END()
 
 /* {{{ php_pdo_nuodb_init_globals
 */
-/* Uncomment this function if you have INI entries */
+/*
+** The log_level is the level of logging "detail" that the user wants 
+** to see in the log.  The higher level numbers have more detail.
+** The higher level numbers include lesser levels.
+**
+**  1 - errors/exceptions
+**  2 - SQL statements
+**  3 - API
+**  4 - Functions
+**  5 - Everything
+*/
 static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals)
 {
+  pdo_nuodb_globals->log_fp = NULL;
   pdo_nuodb_globals->enable_log = 0;
   pdo_nuodb_globals->log_level = 1;
   pdo_nuodb_globals->logfile_path = NULL;
@@ -136,6 +147,10 @@ PHP_MINIT_FUNCTION(pdo_nuodb)
     
     /* If you have INI entries, uncomment these lines */
     REGISTER_INI_ENTRIES();
+
+    if (PDO_NUODB_G(enable_log) != 0) {
+      PDO_NUODB_G(log_fp) = fopen(PDO_NUODB_G(logfile_path),"a");
+    }
    
     php_pdo_register_driver(&pdo_nuodb_driver);
     return SUCCESS;
@@ -146,6 +161,8 @@ PHP_MINIT_FUNCTION(pdo_nuodb)
 */
 PHP_MSHUTDOWN_FUNCTION(pdo_nuodb)
 {
+    fclose(PDO_NUODB_G(log_fp));
+  
     /* uncomment this line if you have INI entries */
     UNREGISTER_INI_ENTRIES();
 

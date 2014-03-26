@@ -57,6 +57,7 @@ Declare any global variables you may need between the BEGIN
 and END macros here:
 */
 ZEND_BEGIN_MODULE_GLOBALS(pdo_nuodb)
+FILE *log_fp;
 long enable_log;
 long log_level;
 char *logfile_path;
