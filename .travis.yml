@@ -30,6 +30,7 @@ install:
   - true
 
 script:
+  - php -i
   - export PHP_INCLUDE_DIR=$(php-config --include-dir)
   - export TEST_PHP_EXECUTABLE=$(php-config --php-binary)
   - export REPORT_EXIT_STATUS=1
