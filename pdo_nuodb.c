@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#ifdef _MSC_VER  // Visual Studio specific 
+#ifdef _MSC_VER  // Visual Studio specific
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -119,7 +119,7 @@ PHP_INI_END()
 /* {{{ php_pdo_nuodb_init_globals
 */
 /*
-** The log_level is the level of logging "detail" that the user wants 
+** The log_level is the level of logging "detail" that the user wants
 ** to see in the log.  The higher level numbers have more detail.
 ** The higher level numbers include lesser levels.
 **
@@ -144,14 +144,14 @@ static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals
 PHP_MINIT_FUNCTION(pdo_nuodb)
 {
     ZEND_INIT_MODULE_GLOBALS(pdo_nuodb, php_pdo_nuodb_init_globals, NULL);
-    
+
     /* If you have INI entries, uncomment these lines */
     REGISTER_INI_ENTRIES();
 
     if (PDO_NUODB_G(enable_log) != 0) {
       PDO_NUODB_G(log_fp) = fopen(PDO_NUODB_G(logfile_path),"a");
     }
-   
+
     php_pdo_register_driver(&pdo_nuodb_driver);
     return SUCCESS;
 }
@@ -161,8 +161,9 @@ PHP_MINIT_FUNCTION(pdo_nuodb)
 */
 PHP_MSHUTDOWN_FUNCTION(pdo_nuodb)
 {
-    fclose(PDO_NUODB_G(log_fp));
-  
+    FILE *fp = PDO_NUODB_G(log_fp);
+    if (fp != NULL) fclose(PDO_NUODB_G(log_fp));
+
     /* uncomment this line if you have INI entries */
     UNREGISTER_INI_ENTRIES();
 
@@ -200,7 +201,7 @@ PHP_MINFO_FUNCTION(pdo_nuodb)
 
     /* Remove comments if you have entries in php.ini */
     DISPLAY_INI_ENTRIES();
-    
+
 }
 /* }}} */
 
