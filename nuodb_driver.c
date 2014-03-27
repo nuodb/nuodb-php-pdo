@@ -880,6 +880,7 @@ void get_timestamp(char *time_buffer)
   __time64_t long_time;
 #endif
 
+  TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return;
 
 #ifdef WIN32
@@ -906,6 +907,8 @@ void get_timestamp(char *time_buffer)
 void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
 {
   char buf[64] = "";
+
+  TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return;
   if (log_level > PDO_NUODB_G(log_level)) return;
   get_timestamp(buf);
@@ -918,6 +921,7 @@ void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format
   char buf[64] = "";
   va_list args;
 
+  TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return;
   if (log_level > PDO_NUODB_G(log_level)) return;
   va_start(args, format);
@@ -931,6 +935,8 @@ void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format
 
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len) {
   char buf[64] = "";
+
+  TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return FALSE;
   if (PDO_NUODB_G(log_level) < 4) return FALSE;
   get_timestamp(buf);
@@ -941,6 +947,8 @@ int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, in
 
 void pdo_nuodb_func_leave(int lineno, const char *file) {
   char buf[64] = "";
+
+  TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return;
   if (PDO_NUODB_G(log_level) < 4) return;
   get_timestamp(buf);
