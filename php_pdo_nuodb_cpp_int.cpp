@@ -295,8 +295,8 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
     _opts->count = 4;
     _opts->array = _opt_arr;
     for (int i=0; i<_opts->count; i++) {
-    	_opt_arr[i].option = (char const *) (options->array[i].option ? strdup(options->array[i].option) : NULL );
-    	_opt_arr[i].extra = (void *) (options->array[i].extra ? strdup((const char *)options->array[i].extra) : NULL);
+        _opt_arr[i].option = (char const *) (options->array[i].option ? strdup(options->array[i].option) : NULL );
+        _opt_arr[i].extra = (void *) (options->array[i].extra ? strdup((const char *)options->array[i].extra) : NULL);
     }
 }
 
@@ -750,7 +750,7 @@ char const * PdoNuoDbStatement::getString(size_t column)
     }
     res =  _rs->getString(column+1);
     if (_rs->wasNull()) {
-    	res = NULL;
+        res = NULL;
     }
     return res;
 }
@@ -764,7 +764,7 @@ void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
     }
     **int_val = _rs->getInt(column+1);
     if (_rs->wasNull()) {
-    	*int_val = NULL;
+        *int_val = NULL;
     }
 }
 
@@ -777,7 +777,7 @@ bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
     }
     **bool_val = _rs->getBoolean(column+1);
     if (_rs->wasNull()) {
-    	*bool_val = NULL;
+        *bool_val = NULL;
     }
 
 }
@@ -791,7 +791,7 @@ void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
     }
     **long_val = _rs->getLong(column+1);
     if (_rs->wasNull()) {
-    	*long_val = NULL;
+        *long_val = NULL;
     }
 }
 
@@ -806,7 +806,7 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
     }
     res =  _rs->getString(column+1);
     if (_rs->wasNull()) {
-    	res = NULL;
+        res = NULL;
     }
     return res;
 }
@@ -820,8 +820,8 @@ void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
     }
     NuoDB::Time *time = _rs->getTime(column+1);
     if (_rs->wasNull()) {
-    	*time_val = NULL;
-    	return;
+        *time_val = NULL;
+        return;
     }
     **time_val = time->getSeconds();
 }
@@ -835,8 +835,8 @@ void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
     }
     NuoDB::Date *date = _rs->getDate(column+1);
     if (_rs->wasNull()) {
-    	*date_val = NULL;
-    	return;
+        *date_val = NULL;
+        return;
     }
     **date_val = date->getSeconds();
 }
@@ -1394,18 +1394,18 @@ int pdo_nuodb_stmt_execute(pdo_nuodb_stmt * S, int *column_count, long *row_coun
 
     if (S->qty_input_params != 0)
     {
-    	pdo_stmt_t *pdo_stmt = nuodb_stmt->getPdoStmt();
-    	if ((pdo_stmt->bound_param_map == NULL) ||
-    		(S->qty_input_params != pdo_stmt->bound_params->nNumOfElements))
-    	{
-    		nuodb_stmt->setEinfoErrcode(-12);
-    		nuodb_stmt->setEinfoErrmsg("number of bound variables does not match number of tokens");
-    		nuodb_stmt->setEinfoFile(__FILE__);
-    		nuodb_stmt->setEinfoLine(__LINE__);
-    		nuodb_stmt->setSqlstate("HY093");
-    		_pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
-    		return 0;
-    	}
+        pdo_stmt_t *pdo_stmt = nuodb_stmt->getPdoStmt();
+        if ((pdo_stmt->bound_param_map == NULL) ||
+                (S->qty_input_params != pdo_stmt->bound_params->nNumOfElements))
+        {
+                nuodb_stmt->setEinfoErrcode(-12);
+                nuodb_stmt->setEinfoErrmsg("number of bound variables does not match number of tokens");
+                nuodb_stmt->setEinfoFile(__FILE__);
+                nuodb_stmt->setEinfoLine(__LINE__);
+                nuodb_stmt->setSqlstate("HY093");
+                _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine() /*TSRMLS_DC*/);
+                return 0;
+        }
     }
 
     try
