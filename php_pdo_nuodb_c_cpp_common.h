@@ -79,8 +79,8 @@ extern "C" {
 #endif
 void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg);
 void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...);
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len);
-void pdo_nuodb_func_leave(int lineno, const char *file);
+int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh);
+void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh);
 #ifdef __cplusplus
 }
 #endif
@@ -95,9 +95,9 @@ void pdo_nuodb_func_leave(int lineno, const char *file);
 #define PDO_DBG_LEVEL_FMT(loglevel, ...) do { pdo_nuodb_log_va(__LINE__, __FILE__, (loglevel), __VA_ARGS__); } while (0)
 #define PDO_DBG_INF_FMT(...) do { pdo_nuodb_log_va(__LINE__, __FILE__, 5, __VA_ARGS__); } while (0)
 #define PDO_DBG_ERR_FMT(...) do { pdo_nuodb_log_va(__LINE__, __FILE__, 1, __VA_ARGS__); } while (0)
-#define PDO_DBG_ENTER(func_name) pdo_nuodb_func_enter(__LINE__, __FILE__, func_name, strlen(func_name));
-#define PDO_DBG_RETURN(value)	do { pdo_nuodb_func_leave(__LINE__, __FILE__); return (value); } while (0)
-#define PDO_DBG_VOID_RETURN	do { pdo_nuodb_func_leave(__LINE__, __FILE__); return; } while (0)
+#define PDO_DBG_ENTER(func_name, dbh) pdo_nuodb_func_enter(__LINE__, __FILE__, func_name, strlen(func_name), dbh);
+#define PDO_DBG_RETURN(value, dbh)	do { pdo_nuodb_func_leave(__LINE__, __FILE__, dbh); return (value); } while (0)
+#define PDO_DBG_VOID_RETURN(dbh)	do { pdo_nuodb_func_leave(__LINE__, __FILE__, dbh); return; } while (0)
 
 #else
 
@@ -105,17 +105,17 @@ static inline void PDO_DBG_INF(char *msg) {}
 static inline void PDO_DBG_ERR(char *msg) {}
 static inline void PDO_DBG_INF_FMT(char *format, ...) {}
 static inline void PDO_DBG_ERR_FMT(char *format, ...) {}
-static inline void PDO_DBG_ENTER(const char *func_name) {}
-#define PDO_DBG_RETURN(value)	return (value)
-#define PDO_DBG_VOID_RETURN		return;
+static inline void PDO_DBG_ENTER(const char *func_name, void *dbh) {}
+#define PDO_DBG_RETURN(value, dbh)	return (value)
+#define PDO_DBG_VOID_RETURN(dbh)		return;
 
 #endif
 
 typedef struct {
-	char *file;
-	int line;
-	int errcode;
-	char *errmsg;
+        char *file;
+        int line;
+        int errcode;
+        char *errmsg;
 } pdo_nuodb_error_info;
 
 typedef struct SqlOption_t

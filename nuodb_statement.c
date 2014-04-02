@@ -68,7 +68,7 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 {
     int result = 1;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
-    PDO_DBG_ENTER("nuodb_stmt_dtor");
+    PDO_DBG_ENTER("nuodb_stmt_dtor", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", pdo_stmt->dbh, S);
 
         if (S->commit_on_close == 1) {
@@ -94,7 +94,7 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
     }
 
     efree(S);
-    PDO_DBG_RETURN(result);
+    PDO_DBG_RETURN(result, pdo_stmt->dbh);
 }
 /* }}} */
 
@@ -106,10 +106,10 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
     pdo_nuodb_db_handle * H = NULL;
 
 
-    PDO_DBG_ENTER("nuodb_stmt_execute");
+    PDO_DBG_ENTER("nuodb_stmt_execute", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p S=%p sql=%s", pdo_stmt->dbh, pdo_stmt->driver_data, S->sql);
     if (!S) {
-        PDO_DBG_RETURN(0);
+        PDO_DBG_RETURN(0, pdo_stmt->dbh);
     }
 
     if ((pdo_stmt->dbh->auto_commit == 0) &&
@@ -124,10 +124,10 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
     }
     status = pdo_nuodb_stmt_execute(S, &pdo_stmt->column_count, &pdo_stmt->row_count);
     if (status == 0) {
-        PDO_DBG_RETURN(0);
+        PDO_DBG_RETURN(0, pdo_stmt->dbh);
     }
 
-    PDO_DBG_RETURN(1);
+    PDO_DBG_RETURN(1, pdo_stmt->dbh);
 }
 /* }}} */
 
@@ -136,14 +136,14 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
                             enum pdo_fetch_orientation ori, long offset TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
-    PDO_DBG_ENTER("nuodb_stmt_fetch");
+    PDO_DBG_ENTER("nuodb_stmt_fetch", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", pdo_stmt->dbh, S);
     if (!pdo_stmt->executed)
     {
         _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
-        PDO_DBG_RETURN(0);
+        PDO_DBG_RETURN(0, pdo_stmt->dbh);
     }
-    PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &pdo_stmt->row_count));
+    PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &pdo_stmt->row_count), pdo_stmt->dbh);
 }
 /* }}} */
 
@@ -521,7 +521,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                     {
                         nuodb_param->len = 0;
                         nuodb_param->data = NULL;
-                        PDO_DBG_INF_FMT("Param: %d  Name: %s = NULL",
+                        PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = NULL",
+                                        stmt->dbh,
                                         param->paramno,
                                         param->name);
 
@@ -531,7 +532,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         nuodb_param->len = 4;
                         nuodb_param->data = (void *)Z_LVAL_P(param->parameter);
                         pdo_nuodb_stmt_set_integer(S, param->paramno,  (long)nuodb_param->data);
-                        PDO_DBG_INF_FMT("Param: %d  Name: %s = %ld (LONG)",
+                        PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (LONG)",
+                                        stmt->dbh,
                                         param->paramno,
                                         param->name,
                                         nuodb_param->data);
@@ -541,7 +543,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         nuodb_param->len = 1;
                         nuodb_param->data = Z_BVAL_P(param->parameter) ? "t" : "f";
                             pdo_nuodb_stmt_set_boolean(S, param->paramno,  nuodb_param->data[0]);
-                        PDO_DBG_INF_FMT("Param: %d  Name: %s = %s (BOOL)",
+                        PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %s (BOOL)",
+                                        stmt->dbh,
                                         param->paramno,
                                         param->name,
                                         nuodb_param->data);
@@ -552,7 +555,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         convert_to_string(param->parameter);
                         nuodb_param->len = Z_STRLEN_P(param->parameter);
                         nuodb_param->data = Z_STRVAL_P(param->parameter);
-                        PDO_DBG_INF_FMT("Param: %d  Name: %s = %s (Bytes: %d)",
+                        PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %s (Bytes: %d)",
+                                        stmt->dbh,
                                         param->paramno,
                                         param->name,
                                         nuodb_param->data,
@@ -581,7 +585,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                  nuodb_param->len = Z_STRLEN_P(param->parameter);
                                  nuodb_param->data = Z_STRVAL_P(param->parameter);
                                  pdo_nuodb_stmt_set_blob(S, param->paramno,  nuodb_param->data, nuodb_param->len);
-                                 PDO_DBG_INF_FMT("Param: %d  Name: %s = %ld (length: %d) (BLOB)",
+                                 PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (length: %d) (BLOB)",
+                                        stmt->dbh,
                                         param->paramno,
                                         param->name,
                                         nuodb_param->data,
@@ -608,20 +613,20 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
-    PDO_DBG_ENTER("nuodb_stmt_set_attribute");
+    PDO_DBG_ENTER("nuodb_stmt_set_attribute", stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", stmt->dbh, S);
 
     switch (attr)
     {
     default:
-        PDO_DBG_ERR_FMT("unknown/unsupported attribute: %d", attr);
-        PDO_DBG_RETURN(0);
+        PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", stmt->dbh, attr);
+        PDO_DBG_RETURN(0, stmt->dbh);
     case PDO_ATTR_CURSOR_NAME:
         convert_to_string(val);
         strlcpy(S->name, Z_STRVAL_P(val), sizeof(S->name));
         break;
     }
-    PDO_DBG_RETURN(1);
+    PDO_DBG_RETURN(1, stmt->dbh);
 }
 /* }}} */
 

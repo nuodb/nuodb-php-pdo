@@ -359,25 +359,25 @@ void PdoNuoDbHandle::closeConnection()
 void PdoNuoDbHandle::commit()
 {
         // NOTE: caller catches exceptions.
-    PDO_DBG_ENTER("PdoNuoDbHandle::commit");
+    PDO_DBG_ENTER("PdoNuoDbHandle::commit", _pdo_dbh);
     if (_con == NULL)
     {
-        PDO_DBG_VOID_RETURN;
+        PDO_DBG_VOID_RETURN(_pdo_dbh);
     }
     _con->commit();
-    PDO_DBG_VOID_RETURN;
+    PDO_DBG_VOID_RETURN(_pdo_dbh);
 }
 
 void PdoNuoDbHandle::rollback()
 {
         // NOTE: caller catches exceptions.
-    PDO_DBG_ENTER("PdoNuoDbHandle::rollback");
+    PDO_DBG_ENTER("PdoNuoDbHandle::rollback", _pdo_dbh);
     if (_con == NULL)
     {
-        PDO_DBG_VOID_RETURN;
+        PDO_DBG_VOID_RETURN(_pdo_dbh);
     }
     _con->rollback();
-    PDO_DBG_VOID_RETURN;
+    PDO_DBG_VOID_RETURN(_pdo_dbh);
 }
 
 int PdoNuoDbHandle::getLastId(const char *name)
@@ -567,11 +567,11 @@ void PdoNuoDbStatement::setSqlstate(const char *sqlState) {
 
 int PdoNuoDbStatement::execute()
 {
-        // NOTE: caller catches exceptions.
-    PDO_DBG_ENTER("PdoNuoDbHandle::execute");
+    // NOTE: caller catches exceptions.
+    PDO_DBG_ENTER("PdoNuoDbHandle::execute", getNuoDbHandle()->getPdoDbh());
     if (_stmt == NULL)
     {
-        PDO_DBG_RETURN(0);
+        PDO_DBG_RETURN(0, getNuoDbHandle()->getPdoDbh());
     }
 
     int update_count = 0;
@@ -581,12 +581,12 @@ int PdoNuoDbStatement::execute()
     bool result = _stmt->execute();
     pdo_nuodb_timer_end(&timer);
     int elapsed = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
-    PDO_DBG_INF_FMT("Elapsed time=%d (microseconds) : SQL=%s", elapsed, this->_sql);
+    PDO_DBG_INF_FMT(": dbh=%p : Elapsed time=%d (microseconds) : SQL=%s", getNuoDbHandle()->getPdoDbh(), elapsed, this->_sql);
     if (result == TRUE) {  // true means there was no UPDATE or INSERT
        _rs = _stmt->getResultSet();
     } else {
        update_count = _stmt->getUpdateCount();
-       PDO_DBG_INF_FMT("Update Count=%d", update_count);
+       PDO_DBG_INF_FMT(": dbh=%p : Update Count=%d", getNuoDbHandle()->getPdoDbh(), update_count);
        if (update_count != 0)
        {
          NuoDB::ResultSet *_rs_gen_keys = NULL;
@@ -602,7 +602,7 @@ int PdoNuoDbStatement::execute()
        }
     }
 
-    PDO_DBG_RETURN(update_count);
+    PDO_DBG_RETURN(update_count, getNuoDbHandle()->getPdoDbh());
 }
 
 bool PdoNuoDbStatement::hasResultSet()
@@ -668,9 +668,9 @@ int PdoNuoDbStatement::getSqlType(size_t column)
 {
         NuoDB::ResultSetMetaData * md = NULL;
         int sqlType = 0;
-    PDO_DBG_ENTER("PdoNuoDbStatement::getSqlType");
+        PDO_DBG_ENTER("PdoNuoDbStatement::getSqlType", getNuoDbHandle()->getPdoDbh());
     if (_rs == NULL) {
-        PDO_DBG_RETURN(0);
+        PDO_DBG_RETURN(0, getNuoDbHandle()->getPdoDbh());
     }
     try {
         md = _rs->getMetaData();
@@ -715,7 +715,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
                         return PDO_NUODB_SQLTYPE_CLOB;
 
                 default: {
-                        PDO_DBG_ERR_FMT("unknown/unsupported type: %d", sqlType);
+                    PDO_DBG_ERR_FMT(": dbh=%p : unknown/unsupported type: %d", getNuoDbHandle()->getPdoDbh(), sqlType);
                         break;
                 }
         }
@@ -736,7 +736,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
         setSqlstate("XX000");
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine() /*TSRMLS_DC*/);
     }
-    PDO_DBG_RETURN(0);
+    PDO_DBG_RETURN(0, getNuoDbHandle()->getPdoDbh());
 }
 
 char const * PdoNuoDbStatement::getString(size_t column)
