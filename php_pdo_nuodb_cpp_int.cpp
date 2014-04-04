@@ -678,6 +678,8 @@ int PdoNuoDbStatement::getSqlType(size_t column)
 
         switch (sqlType)
         {
+                case NuoDB::NUOSQL_NULL:
+                    return PDO_NUODB_SQLTYPE_NULL;
                 case NuoDB::NUOSQL_BOOLEAN:
                         return PDO_NUODB_SQLTYPE_BOOLEAN;
                 case NuoDB::NUOSQL_INTEGER:

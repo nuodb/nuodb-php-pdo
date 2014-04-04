@@ -173,6 +173,11 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
     switch (sqlTypeNumber)
     {
+        case PDO_NUODB_SQLTYPE_NULL:
+        {
+            col->param_type = PDO_PARAM_NULL;
+            break;
+        }
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
             col->param_type = PDO_PARAM_BOOL;
@@ -251,10 +256,26 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     *ptr = NULL;
     switch (sqlTypeNumber)
     {
+        // PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
+        // a NULL value in the result set.  Attempts to obtain any
+        // value should be a NULL value.
+        case PDO_NUODB_SQLTYPE_NULL:
+        {
+            int str_len;
+            const char * str = pdo_nuodb_stmt_get_string(S, colno);
+            if (str == NULL)
+            {
+                *ptr = NULL;
+                *len = 0;
+                break;
+            }
+            _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "Unexpected value for SQLTYPE NULL: str=%s", str);
+            return 0;
+        }
         case PDO_NUODB_SQLTYPE_BOOLEAN:
         {
-                char val = 0;
-                char *pVal = &val;
+            char val = 0;
+            char *pVal = &val;
             pdo_nuodb_stmt_get_boolean(S, colno, &pVal);
             if (pVal == NULL) {
                 *ptr = NULL;

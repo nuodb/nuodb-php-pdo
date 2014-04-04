@@ -48,6 +48,7 @@
 #define PDO_NUODB_SQLTYPE_ARRAY     9  // Not Yet Supported by this driver.
 #define PDO_NUODB_SQLTYPE_BLOB     10
 #define PDO_NUODB_SQLTYPE_CLOB     11
+#define PDO_NUODB_SQLTYPE_NULL     12
 
 #ifdef __cplusplus
 extern "C" {
