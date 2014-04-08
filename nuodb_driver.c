@@ -760,7 +760,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
         H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
-        _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'database' parameter");
+        _record_error_formatted(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'database' parameter. DSN=\"%s\"", dbh->data_source);
         if (H->einfo.errmsg) {
                 pefree(H->einfo.errmsg, dbh->is_persistent);
                 H->einfo.errmsg = NULL;

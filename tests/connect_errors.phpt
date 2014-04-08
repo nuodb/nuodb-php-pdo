@@ -53,7 +53,7 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter";
+  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter. DSN=\"\"";
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
@@ -71,12 +71,8 @@ try {
   // we can get a different exception message depending on how
   // the NuoDB processes were started.  All we need to do is 
   // is confirm that an exception message occurs.
-//  $expected_message = 'SQLSTATE[08000]';
-//  if (strncmp($expected_message, $caught_message, 15)) {
-//     echo "FAILED: " . $caught_message . "\n";
-//  }
-  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter";
-  if (strcmp($expected_message, $caught_message)) {
+  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter. DSN=\"dbname=";
+  if (strncmp($expected_message, $caught_message, strlen($expected_message))) {
      echo "FAILED: " . $caught_message . "\n";
   }
   $db = NULL;
@@ -186,7 +182,7 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter";
+  $expected_message = "SQLSTATE[HY000] [-10] DSN is missing 'database' parameter. DSN=\"foo=bar;baz=bad\"";
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
