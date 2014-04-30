@@ -71,47 +71,6 @@ extern "C" {
 
 /* describes a column -- stolen from <path-to-php-sdk>/include/ext/pdo/php_pdo_driver.h */
 
-#ifdef NONE
-enum pdo_param_type {
-        PDO_PARAM_NULL,
-
-        /* int as in long (the php native int type).
-         * If you mark a column as an int, PDO expects get_col to return
-         * a pointer to a long */
-        PDO_PARAM_INT,
-
-        /* get_col ptr should point to start of the string buffer */
-        PDO_PARAM_STR,
-
-        /* get_col: when len is 0 ptr should point to a php_stream *,
-         * otherwise it should behave like a string. Indicate a NULL field
-         * value by setting the ptr to NULL */
-        PDO_PARAM_LOB,
-
-        /* get_col: will expect the ptr to point to a new PDOStatement object handle,
-         * but this isn't wired up yet */
-        PDO_PARAM_STMT, /* hierarchical result set */
-
-        /* get_col ptr should point to a zend_bool */
-        PDO_PARAM_BOOL,
-
-        /* get_col ptr should point to a zval*
-           and the driver is responsible for adding correct type information to get_column_meta()
-         */
-        PDO_PARAM_ZVAL
-};
-
-struct pdo_column_data {
-        char *name;
-        int namelen;
-        unsigned long maxlen;
-        enum pdo_param_type param_type;
-        unsigned long precision;
-
-        /* don't touch this unless your name is dbdo */
-        void *dbdo_data;
-};
-#endif
 
 PdoNuoDbGeneratedKeys::PdoNuoDbGeneratedKeys()
     : _qty(0), _keys(NULL)

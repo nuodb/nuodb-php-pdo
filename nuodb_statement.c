@@ -550,7 +550,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                     }
                     else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_INT)
                     {
-                        nuodb_param->len = 4;
+                        nuodb_param->len = sizeof(int);
                         nuodb_param->data = (void *)Z_LVAL_P(param->parameter);
                         pdo_nuodb_stmt_set_integer(S, param->paramno,  (long)nuodb_param->data);
                         PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (LONG)",

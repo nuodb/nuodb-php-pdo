@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_int.h"
 
-// Workaround DB-4112
+// Workaround DB-4112 (see below)
 struct sqlcode_to_sqlstate_t {
         int sqlcode;
         char *sqlstate;
@@ -71,10 +71,12 @@ char const * const NUODB_OPT_PASSWORD = "password";
 char const * const NUODB_OPT_SCHEMA = "schema";
 char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
-
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC);
 
-// Workaround DB-4112
+// Workaround DB-4112.  NuoDB C++ exceptions do not currently
+// return a string for the SqlState.  Until that gets fix, we will
+// simply map the sqlcode returned by NuoDB to an apporiate
+// SqlState string.
 static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
                 {-1, "42000"},
                 {-2, "0A000"},
@@ -124,14 +126,14 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
                 {-46, "58000"},
                 {-47, "58000"},
                 {-48, "HY008"},
-            {-49, "58000"},
-            {-50, "58000"},
+                {-49, "58000"},
+                {-50, "58000"},
                 {-51, "58000"},
                 {-52, "58000"},
                 {-53, "58000"}
 };
 
-/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
+int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
 // Workaround DB-4112
 const char *nuodb_get_sqlstate(int sqlcode) {
@@ -151,11 +153,11 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
                 S = (pdo_nuodb_stmt*)stmt->driver_data;
                 pdo_err = &stmt->error_code;
                 einfo   = &S->einfo;
-                PDO_DBG_LEVEL_FMT(1, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s  sql=%s", dbh, sql_state, error_code, error_message, S->sql);
+                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s  sql=%s", dbh, sql_state, error_code, error_message, S->sql);
         } else {
                 pdo_err = &dbh->error_code;
                 einfo   = &H->einfo;
-                PDO_DBG_LEVEL_FMT(1, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s", dbh, sql_state, error_code, error_message);
+                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s", dbh, sql_state, error_code, error_message);
         }
 
         einfo->errcode = error_code;
@@ -177,7 +179,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 
         if (!dbh->methods) {
                 TSRMLS_FETCH();
-                PDO_DBG_LEVEL_FMT(1, "dbh=%p : _record_error: Throwing exception", dbh);
+                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: Throwing exception", dbh);
                 zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
                                 *pdo_err, einfo->errcode, einfo->errmsg);
         }
@@ -189,7 +191,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
 int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...)
 {
   va_list arg;
-  char 	*error_message;
+  char *error_message;
   int ret = 1;
 
   va_start(arg, format);
@@ -233,7 +235,7 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
     PDO_DBG_ENTER("nuodb_handle_closer", dbh);
-    PDO_DBG_LEVEL_FMT(2, "dbh=%p : close db handle", dbh);
+    PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : close db handle", dbh);
 
     if (H == NULL) {
         PDO_DBG_RETURN(0, dbh);
@@ -452,7 +454,7 @@ static int nuodb_handle_begin(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 
 
 /* called by PDO to commit a transaction */
-/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
+int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = NULL;
 
@@ -501,7 +503,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     long l, pindex = -1;
 
     PDO_DBG_ENTER("nuodb_alloc_prepare_stmt", dbh);
-    PDO_DBG_LEVEL_FMT(2, "dbh=%p : sql=%.*s", dbh, sql_len, sql);
+    PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : sql=%.*s", dbh, sql_len, sql);
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
     *nuodb_stmt = NULL;
@@ -557,10 +559,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     /* prepare the statement */
     *nuodb_stmt = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
     PDO_DBG_INF_FMT("dbh=%p : nuodb_alloc_prepare_stmt: S=%p sql=%.*s", dbh, pdo_stmt->driver_data, sql_len, sql);
-    //PDO_DBG_INF_FMT("sql=%.*s", sql_len, sql);
-    //PDO_DBG_INF_FMT("S=%p", pdo_stmt->driver_data);
         efree(new_sql);
-
         if (*nuodb_stmt == NULL) {
             PDO_DBG_RETURN(0, dbh);
     }
@@ -826,7 +825,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     optionsArray.count = 4;
     optionsArray.array = options;
 
-    PDO_DBG_LEVEL_FMT(2, "dbh=%p : pdo_nuodb_handle_factory : database=%s user=%s schema=%s",
+    PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : pdo_nuodb_handle_factory : database=%s user=%s schema=%s",
                       dbh, options[0].extra, options[1].extra, options[3].extra);
 
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
@@ -931,9 +930,9 @@ int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, in
 
   TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return FALSE;
-  if (PDO_NUODB_G(log_level) < 4) return FALSE;
+  if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) return FALSE;
   get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : 4 : %s(%d) : dbh=%p : ENTER FUNCTION : %s\n", buf, file, lineno, dbh, func_name);
+  fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : ENTER FUNCTION : %s\n", buf,  PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh, func_name);
   fflush(PDO_NUODB_G(log_fp));
   return TRUE;
 }
@@ -943,9 +942,9 @@ void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh) {
 
   TSRMLS_FETCH();
   if (PDO_NUODB_G(log_fp) == NULL) return;
-  if (PDO_NUODB_G(log_level) < 4) return;
+  if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) return;
   get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : 4 : %s(%d) : dbh=%p : LEAVE FUNCTION\n", buf, file, lineno, dbh);
+  fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : LEAVE FUNCTION\n", buf, PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh);
   fflush(PDO_NUODB_G(log_fp));
   return;
 }

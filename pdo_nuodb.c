@@ -121,19 +121,19 @@ PHP_INI_END()
 /*
 ** The log_level is the level of logging "detail" that the user wants
 ** to see in the log.  The higher level numbers have more detail.
-** The higher level numbers include lesser levels.
+** The higher level numbers include lesser levels:
 **
-**  1 - errors/exceptions
-**  2 - SQL statements
-**  3 - API
-**  4 - Functions
-**  5 - Everything
+**   PDO_NUODB_LOG_ERRORS        1     errors/exceptions
+**   PDO_NUODB_LOG_SQL           2     SQL statements
+**   PDO_NUODB_LOG_API           3     API
+**   PDO_NUODB_LOG_FUNCTIONS     4     Functions
+**   PDO_NUODB_LOG_EVERYTHING    5     Everything
 */
 static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals)
 {
   pdo_nuodb_globals->log_fp = NULL;
   pdo_nuodb_globals->enable_log = 0;
-  pdo_nuodb_globals->log_level = 1;
+  pdo_nuodb_globals->log_level = PDO_NUODB_LOG_ERRORS;
   pdo_nuodb_globals->logfile_path = NULL;
 }
 
