@@ -64,23 +64,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct pdo_nuodb_timer_t {
-    int startTimeInMicroSec;
-    int endTimeInMicroSec;
-    int stopped;
+    struct pdo_nuodb_timer_t {
+        int startTimeInMicroSec;
+        int endTimeInMicroSec;
+        int stopped;
 #ifdef WIN32
-    LARGE_INTEGER frequency; /* ticks per second */
-    LARGE_INTEGER startCount;
-    LARGE_INTEGER endCount;
+        LARGE_INTEGER frequency; /* ticks per second */
+        LARGE_INTEGER startCount;
+        LARGE_INTEGER endCount;
 #else
-    struct timeval startCount;
-    struct timeval endCount;
+        struct timeval startCount;
+        struct timeval endCount;
 #endif
-};
-void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
-void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
-void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer);
-int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
+    };
+    void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
+    void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
+    void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer);
+    int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
 #ifdef __cplusplus
 }
 #endif
@@ -89,10 +89,10 @@ int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
 #ifdef __cplusplus
 extern "C" {
 #endif
-void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg);
-void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...);
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh);
-void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh);
+    void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg);
+    void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...);
+    int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh);
+    void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh);
 #ifdef __cplusplus
 }
 #endif
@@ -123,10 +123,10 @@ static inline void PDO_DBG_ENTER(const char *func_name, void *dbh) {}
 #endif
 
 typedef struct {
-        char *file;
-        int line;
-        int errcode;
-        char *errmsg;
+    char *file;
+    int line;
+    int errcode;
+    char *errmsg;
 } pdo_nuodb_error_info;
 
 typedef struct SqlOption_t
@@ -166,118 +166,118 @@ extern "C" {
 #endif
 
 /* Workaround DB-4112 */
-const char *nuodb_get_sqlstate(int sqlcode);
+    const char *nuodb_get_sqlstate(int sqlcode);
 
-void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
+    void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
 /*void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const
  * * file, long line, const char *sql_state, int nuodb_error_code,
  * const char *format, ...); */
-int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/);
-int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message);
-int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...);
+    int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/);
+    int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message);
+    int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...);
 
 
-typedef struct
-{
-    /* the connection handle */
-    void *db; /* opaque for PdoNuoDbHandle * db; */
+    typedef struct
+    {
+        /* the connection handle */
+        void *db; /* opaque for PdoNuoDbHandle * db; */
 
-    /* PHP PDO parent pdo_dbh_t handle */
-    pdo_dbh_t *pdo_dbh;
+        /* PHP PDO parent pdo_dbh_t handle */
+        pdo_dbh_t *pdo_dbh;
 
-    /* NuoDB error information */
-    pdo_nuodb_error_info einfo;
+        /* NuoDB error information */
+        pdo_nuodb_error_info einfo;
 
-    /* the last error that didn't come from the API */
-    /*char const * last_app_error;  // TODO: this needs to go away in
-     * favor of 'einfo' */
+        /* the last error that didn't come from the API */
+        /*char const * last_app_error;  // TODO: this needs to go away in
+         * favor of 'einfo' */
 
-    char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
-    char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
+        char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
+        char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
 
-    /* prepend table names on column names in fetch */
-    unsigned fetch_table_names:1;
+        /* prepend table names on column names in fetch */
+        unsigned fetch_table_names:1;
 
-} pdo_nuodb_db_handle;
+    } pdo_nuodb_db_handle;
 
-int pdo_nuodb_db_handle_errno(pdo_nuodb_db_handle *H);
-const char *pdo_nuodb_db_handle_errmsg(pdo_nuodb_db_handle *H);
-pdo_error_type * pdo_nuodb_db_handle_sqlstate(pdo_nuodb_db_handle *H);
-int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H);
-int pdo_nuodb_db_handle_rollback(pdo_nuodb_db_handle *H);
-int pdo_nuodb_db_handle_close_connection(pdo_nuodb_db_handle *H);
-int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
-int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
-void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t * stmt, const char *sql) ;
-long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
-int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage);
-int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name);
-const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H);
-const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_errno(pdo_nuodb_db_handle *H);
+    const char *pdo_nuodb_db_handle_errmsg(pdo_nuodb_db_handle *H);
+    pdo_error_type * pdo_nuodb_db_handle_sqlstate(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_commit(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_rollback(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_close_connection(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_delete(pdo_nuodb_db_handle *H);
+    int pdo_nuodb_db_handle_set_auto_commit(pdo_nuodb_db_handle *H, unsigned int auto_commit);
+    void *pdo_nuodb_db_handle_create_statement(pdo_nuodb_db_handle * H, pdo_stmt_t * stmt, const char *sql) ;
+    long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char *sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn));
+    int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *optionsArray, char **errMessage);
+    int pdo_nuodb_db_handle_last_id(pdo_nuodb_db_handle *H, const char *name);
+    const char *pdo_nuodb_db_handle_get_nuodb_product_name(pdo_nuodb_db_handle *H);
+    const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H);
 
-typedef struct
-{
-    /* the link that owns this statement */
-    void *H; /* opaque for pdo_nuodb_db_handle *H; */
+    typedef struct
+    {
+        /* the link that owns this statement */
+        void *H; /* opaque for pdo_nuodb_db_handle *H; */
 
-    /* the statement handle */
-    void *stmt; /* opaque for PdoNuoDbStatement *stmt; */
+        /* the statement handle */
+        void *stmt; /* opaque for PdoNuoDbStatement *stmt; */
 
-    /* NuoDB error information */
-    pdo_nuodb_error_info einfo;
+        /* NuoDB error information */
+        pdo_nuodb_error_info einfo;
 
-    /* copy of the sql statement */
-    char *sql;
+        /* copy of the sql statement */
+        char *sql;
 
-    /* the name of the cursor (if it has one) */
-    char name[32];
+        /* the name of the cursor (if it has one) */
+        char name[32];
 
-    /* implicit txn - true when autocommit is disabled and
-     * NuoDB will create a implicit txn because the app didn't
-     * start one by calling nuodb_handle_begin. */
-    char implicit_txn;
+        /* implicit txn - true when autocommit is disabled and
+         * NuoDB will create a implicit txn because the app didn't
+         * start one by calling nuodb_handle_begin. */
+        char implicit_txn;
 
-    /* for an implicit_txn, do we want to commit on close? */
-    char commit_on_close;
+        /* for an implicit_txn, do we want to commit on close? */
+        char commit_on_close;
 
-    /* whether EOF was reached for this statement */
-    unsigned exhausted:1;
+        /* whether EOF was reached for this statement */
+        unsigned exhausted:1;
 
-    /* successful execute opens a cursor */
-    unsigned cursor_open:1;
+        /* successful execute opens a cursor */
+        unsigned cursor_open:1;
 
-    unsigned _reserved:22;
+        unsigned _reserved:22;
 
-    unsigned qty_input_params;
-    /* the input params */
-    nuo_params * in_params;
+        unsigned qty_input_params;
+        /* the input params */
+        nuo_params * in_params;
 
-    /* the output params */
-    nuo_params * out_params;
+        /* the output params */
+        nuo_params * out_params;
 
-} pdo_nuodb_stmt;
+    } pdo_nuodb_stmt;
 
-int pdo_nuodb_stmt_errno(pdo_nuodb_stmt *S);
-const char *pdo_nuodb_stmt_errmsg(pdo_nuodb_stmt *S);
-pdo_error_type *pdo_nuodb_stmt_sqlstate(pdo_nuodb_stmt *S);
-int pdo_nuodb_stmt_delete(pdo_nuodb_stmt *S);
-int pdo_nuodb_stmt_execute(pdo_nuodb_stmt *S, int *column_count, long *row_count);
-int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt *S, long *row_count);
-char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno);
-int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
-int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
-int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
-int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
-int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, int length);
-void pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno, int **int_val);
-void pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno, char **bool_val);
-void pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno, int64_t **long_val);
-const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
-void pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno, int64_t **date_val);
-void pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno, int64_t **time_val);
-const char * pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
-void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
-void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
+    int pdo_nuodb_stmt_errno(pdo_nuodb_stmt *S);
+    const char *pdo_nuodb_stmt_errmsg(pdo_nuodb_stmt *S);
+    pdo_error_type *pdo_nuodb_stmt_sqlstate(pdo_nuodb_stmt *S);
+    int pdo_nuodb_stmt_delete(pdo_nuodb_stmt *S);
+    int pdo_nuodb_stmt_execute(pdo_nuodb_stmt *S, int *column_count, long *row_count);
+    int pdo_nuodb_stmt_fetch(pdo_nuodb_stmt *S, long *row_count);
+    char const *pdo_nuodb_stmt_get_column_name(pdo_nuodb_stmt * S, int colno);
+    int pdo_nuodb_stmt_get_sql_type(pdo_nuodb_stmt * S, int colno);
+    int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
+    int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
+    int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
+    int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, int length);
+    void pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno, int **int_val);
+    void pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno, char **bool_val);
+    void pdo_nuodb_stmt_get_long(pdo_nuodb_stmt *S, int colno, int64_t **long_val);
+    const char *pdo_nuodb_stmt_get_string(pdo_nuodb_stmt *S, int colno);
+    void pdo_nuodb_stmt_get_date(pdo_nuodb_stmt *S, int colno, int64_t **date_val);
+    void pdo_nuodb_stmt_get_time(pdo_nuodb_stmt *S, int colno, int64_t **time_val);
+    const char * pdo_nuodb_stmt_get_timestamp(pdo_nuodb_stmt *S, int colno);
+    void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
+    void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
 
 #ifdef __cplusplus
 } /* end of extern "C" { */

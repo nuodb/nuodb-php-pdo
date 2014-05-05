@@ -47,10 +47,10 @@ struct PdoNuoDbGeneratedKeyElement
 
 class PdoNuoDbGeneratedKeys
 {
-  private:
+private:
     int _qty;
     PdoNuoDbGeneratedKeyElement *_keys;
-  public:
+public:
     PdoNuoDbGeneratedKeys();
     ~PdoNuoDbGeneratedKeys();
     void setKeys(NuoDB::ResultSet *rs);
