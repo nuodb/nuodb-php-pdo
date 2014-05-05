@@ -69,30 +69,45 @@ PdoNuoDbGeneratedKeys::PdoNuoDbGeneratedKeys()
     /* empty */
 }
 
+
 PdoNuoDbGeneratedKeys::~PdoNuoDbGeneratedKeys()
 {
-    if (_keys == NULL) return;
-    for (int i=0; i < _qty; i++)
-        if (_keys[i].columnName != NULL)
+    if (_keys == NULL) {
+        return;
+    }
+
+    for (int i=0; i < _qty; i++) {
+        if (_keys[i].columnName != NULL) {
             delete _keys[i].columnName;
+        }
+    }
     delete [] _keys;
 }
+
 
 void PdoNuoDbGeneratedKeys::setKeys(NuoDB::ResultSet *rs)
 {
     NuoDB::ResultSetMetaData *rsmd = NULL;
-    if (rs == NULL) return;
+
+    if (rs == NULL) {
+        return;
+    }
+
     try {
         rsmd = rs->getMetaData();
-        if (rsmd == NULL) return;
+        if (rsmd == NULL) {
+            return;
+        }
         int col_cnt = rsmd->getColumnCount();
-        if (col_cnt < 1) return;
+        if (col_cnt < 1) {
+            return;
+        }
         _qty = col_cnt;
         _keys = new PdoNuoDbGeneratedKeyElement [col_cnt];
         rs->next();
+
         const char *col_name;
-        for (int i=1; i <= col_cnt; i++)
-        {
+        for (int i=1; i <= col_cnt; i++) {
             col_name = rsmd->getColumnName(i);
             _keys[i-1].columnName = strdup(col_name);
             _keys[i-1].columnIndex = i;
@@ -102,6 +117,7 @@ void PdoNuoDbGeneratedKeys::setKeys(NuoDB::ResultSet *rs)
         return;
     }
 }
+
 
 int PdoNuoDbGeneratedKeys::getIdValue()
 {
@@ -116,6 +132,7 @@ int PdoNuoDbGeneratedKeys::getIdValue()
     return _keys[0].columnKeyValue;
 }
 
+
 int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 {
     /*
@@ -125,12 +142,15 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
     ** seqName is a column name.
     */
 
-    for (int i=0; i<_qty; i++)
-        if (!strcmp(_keys[i].columnName, seqName))
+    for (int i=0; i<_qty; i++) {
+        if (!strcmp(_keys[i].columnName, seqName)) {
             return _keys[i].columnKeyValue;
+        }
+    }
 
     return 0;
 }
+
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
     : _pdo_dbh(pdo_dbh), _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
@@ -139,30 +159,40 @@ PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
     einfo.errmsg = NULL;
     einfo.file = NULL;
     einfo.line = 0;
+
     strcpy(sqlstate, PDO_ERR_NONE);
-    for (int i=0; i<4; i++)
-    {
+    for (int i=0; i<4; i++) {
         _opt_arr[i].option = NULL;
         _opt_arr[i].extra = NULL;
     }
     setOptions(options);
 }
 
+
 PdoNuoDbHandle::~PdoNuoDbHandle()
 {
-    if (_last_keys != NULL) delete _last_keys;
-    if (einfo.errmsg) free(einfo.errmsg);
+    if (_last_keys != NULL) {
+        delete _last_keys;
+    }
+
+    if (einfo.errmsg) {
+        free(einfo.errmsg);
+    }
+
     closeConnection();
     deleteOptions();
 }
+
 
 _pdo_dbh_t *PdoNuoDbHandle::getPdoDbh() {
     return _pdo_dbh;
 }
 
+
 int PdoNuoDbHandle::getEinfoLine() {
     return einfo.line;
 }
+
 
 const char *PdoNuoDbHandle::getEinfoFile() {
     return einfo.file;
@@ -172,53 +202,62 @@ int PdoNuoDbHandle::getEinfoErrcode() {
     return einfo.errcode;
 }
 
+
 const char *PdoNuoDbHandle::getEinfoErrmsg() {
     return einfo.errmsg;
 }
+
 
 pdo_error_type *PdoNuoDbHandle::getSqlstate() {
     return &sqlstate;
 }
 
+
 void PdoNuoDbHandle::setEinfoLine(int line) {
     einfo.line = line;
 }
 
+
 void PdoNuoDbHandle::setEinfoFile(const char *file) {
-    if (einfo.file)
+    if (einfo.file) {
         free(einfo.file);
+    }
+
     einfo.file = strdup(file);
 }
+
 
 void PdoNuoDbHandle::setEinfoErrcode(int errcode) {
     einfo.errcode = errcode;
 }
 
+
 void PdoNuoDbHandle::setEinfoErrmsg(const char *errmsg) {
-    if (einfo.errmsg)
+    if (einfo.errmsg) {
         free(einfo.errmsg);
+    }
+
     einfo.errmsg = strdup(errmsg);
 }
+
 
 void PdoNuoDbHandle::setSqlstate(const char *sqlState) {
     strncpy(this->sqlstate, sqlState, 6);
 }
 
+
 void PdoNuoDbHandle::deleteOptions()
 {
-    if (_opts == NULL)
-    {
+    if (_opts == NULL) {
         return;
     }
     for (int i=0; i<4; i++)
     {
-        if (_opt_arr[i].option != NULL)
-        {
+        if (_opt_arr[i].option != NULL) {
             free((void *)_opt_arr[i].option);
             _opt_arr[i].option = NULL;
         }
-        if (_opt_arr[i].extra != NULL)
-        {
+        if (_opt_arr[i].extra != NULL) {
             free((void *)_opt_arr[i].extra);
             _opt_arr[i].extra = NULL;
         }
@@ -227,15 +266,19 @@ void PdoNuoDbHandle::deleteOptions()
     _opts = NULL;
 }
 
+
 void PdoNuoDbHandle::setLastStatement(PdoNuoDbStatement *lastStatement)
 {
     _last_stmt = lastStatement;
 }
 
+
 void PdoNuoDbHandle::setLastKeys(PdoNuoDbGeneratedKeys *lastKeys)
 {
-    if (_last_keys != NULL)
+    if (_last_keys != NULL) {
         delete _last_keys;
+    }
+
     _last_keys = lastKeys;
 }
 
@@ -251,6 +294,7 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
         _opt_arr[i].extra = (void *) (options->array[i].extra ? strdup((const char *)options->array[i].extra) : NULL);
     }
 }
+
 
 NuoDB::Connection * PdoNuoDbHandle::createConnection()
 {
@@ -268,32 +312,36 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
     return _con;
 }
 
+
 NuoDB::Connection * PdoNuoDbHandle::getConnection()
 {
     return _con;
 }
 
+
 PdoNuoDbStatement * PdoNuoDbHandle::createStatement(pdo_stmt_t * pdo_stmt, char const * sql)
 {
     /* NOTE: caller catches exceptions. */
     PdoNuoDbStatement * nuodb_stmt = NULL;
-    if (sql == NULL)
-    {
+
+    if (sql == NULL) {
         return NULL;
     }
+
     nuodb_stmt = new PdoNuoDbStatement(this, pdo_stmt);
     nuodb_stmt->createStatement(sql);
     setLastStatement(nuodb_stmt);
     return nuodb_stmt;
 }
 
+
 void PdoNuoDbHandle::closeConnection()
 {
     /* NOTE: caller catches exceptions. */
-    if (_con == NULL)
-    {
+    if (_con == NULL) {
         return;
     }
+
     _con->close();
     _con = NULL;
 }
@@ -302,8 +350,7 @@ void PdoNuoDbHandle::commit()
 {
     /* NOTE: caller catches exceptions. */
     PDO_DBG_ENTER("PdoNuoDbHandle::commit", _pdo_dbh);
-    if (_con == NULL)
-    {
+    if (_con == NULL) {
         PDO_DBG_VOID_RETURN(_pdo_dbh);
     }
     _con->commit();
@@ -314,8 +361,7 @@ void PdoNuoDbHandle::rollback()
 {
     /* NOTE: caller catches exceptions. */
     PDO_DBG_ENTER("PdoNuoDbHandle::rollback", _pdo_dbh);
-    if (_con == NULL)
-    {
+    if (_con == NULL) {
         PDO_DBG_VOID_RETURN(_pdo_dbh);
     }
     _con->rollback();
@@ -331,12 +377,14 @@ int PdoNuoDbHandle::getLastId(const char *name)
         setEinfoFile(__FILE__);
         setEinfoLine(__LINE__);
         setSqlstate("P0001");
-        _pdo_nuodb_error(_pdo_dbh, NULL, getEinfoFile(), getEinfoLine() /*TSRMLS_DC*/);
+        _pdo_nuodb_error(_pdo_dbh, NULL, getEinfoFile(),
+                         getEinfoLine() /*TSRMLS_DC*/);
         return 0;
     }
 
-    if (name == NULL) return _last_keys->getIdValue();
-
+    if (name == NULL) {
+        return _last_keys->getIdValue();
+    }
 
     /*
     ** We would normally do the following:
@@ -353,8 +401,8 @@ int PdoNuoDbHandle::getLastId(const char *name)
     setSqlstate("XX000");
     _pdo_nuodb_error(getPdoDbh(), NULL, getEinfoFile(), getEinfoLine()/* TSRMLS_DC*/);
     return 0;
-
 }
+
 
 void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
 {
@@ -363,21 +411,32 @@ void PdoNuoDbHandle::setAutoCommit(bool autoCommit)
     return;
 }
 
+
 const char *PdoNuoDbHandle::getNuoDBProductName()
 {
     /* NOTE: caller catches exceptions. */
     NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
-    if (dbmd == NULL) return NULL;
+
+    if (dbmd == NULL) {
+        return NULL;
+    }
+
     return dbmd->getDatabaseProductName();
 }
+
 
 const char *PdoNuoDbHandle::getNuoDBProductVersion()
 {
     /* NOTE: caller catches exceptions. */
     NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
-    if (dbmd == NULL) return NULL;
+
+    if (dbmd == NULL) {
+        return NULL;
+    }
+
     return dbmd->getDatabaseProductVersion();
 }
+
 
 PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt) : _nuodbh(dbh), _pdo_stmt(pdo_stmt), _sql(NULL), _stmt(NULL), _rs(NULL)
 {
@@ -386,6 +445,7 @@ PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt)
         pdo_nuodb_stmt *S = (pdo_nuodb_stmt *) pdo_stmt->driver_data;
         S->stmt = this;
     }
+
     einfo.errcode = 0;
     einfo.errmsg = NULL;
     einfo.file = NULL;
@@ -393,40 +453,44 @@ PdoNuoDbStatement::PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt)
     strcpy(sqlstate, PDO_ERR_NONE);
 }
 
+
 PdoNuoDbStatement::~PdoNuoDbStatement()
 {
     /* NOTE: caller catches exceptions. */
-    if (einfo.errmsg) free(einfo.errmsg);
+    if (einfo.errmsg) {
+        free(einfo.errmsg);
+    }
+
     _nuodbh->setLastStatement(NULL);
-    if (_sql != NULL)
-    {
+
+    if (_sql != NULL) {
         free((void *)_sql);
     }
     _sql = NULL;
-    if (_rs != NULL)
-    {
+
+    if (_rs != NULL) {
         _rs->close();
     }
     _rs = NULL;
-    if (_stmt != NULL)
-    {
+
+    if (_stmt != NULL) {
         _stmt->close();
     }
     _stmt = NULL;
 }
 
+
 NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
 {
     /* NOTE: caller catches exceptions. */
-    if (sql == NULL)
-    {
+    if (sql == NULL) {
         return NULL;
     }
     _sql = strdup(sql);
+
     NuoDB::Connection * _con = NULL;
     _con = _nuodbh->getConnection();
-    if (_con == NULL)
-    {
+    if (_con == NULL) {
         return NULL;
     }
 
@@ -460,9 +524,11 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
     return _stmt;
 }
 
+
 PdoNuoDbHandle * PdoNuoDbStatement::getNuoDbHandle() {
     return _nuodbh;
 }
+
 
 pdo_stmt_t *PdoNuoDbStatement::getPdoStmt() {
     return _pdo_stmt;
@@ -473,21 +539,26 @@ int PdoNuoDbStatement::getEinfoLine() {
     return einfo.line;
 }
 
+
 const char *PdoNuoDbStatement::getEinfoFile() {
     return einfo.file;
 }
+
 
 int PdoNuoDbStatement::getEinfoErrcode() {
     return einfo.errcode;
 }
 
+
 const char *PdoNuoDbStatement::getEinfoErrmsg() {
     return einfo.errmsg;
 }
 
+
 pdo_error_type *PdoNuoDbStatement::getSqlstate() {
     return &sqlstate;
 }
+
 
 void PdoNuoDbStatement::setEinfoLine(int line) {
     einfo.line = line;
@@ -499,13 +570,16 @@ void PdoNuoDbStatement::setEinfoFile(const char *file) {
     einfo.file = strdup(file);
 }
 
+
 void PdoNuoDbStatement::setEinfoErrcode(int errcode) {
     einfo.errcode = errcode;
 }
 
+
 void PdoNuoDbStatement::setEinfoErrmsg(const char *errmsg) {
-    if (einfo.errmsg)
+    if (einfo.errmsg) {
         free(einfo.errmsg);
+    }
     einfo.errmsg = strdup(errmsg);
 }
 
@@ -515,20 +589,23 @@ void PdoNuoDbStatement::setSqlstate(const char *sqlState) {
 
 int PdoNuoDbStatement::execute()
 {
+    int update_count = 0;
+    struct pdo_nuodb_timer_t timer;
+    bool result = FALSE;
+    int elapsed = 0;
+
+
     /* NOTE: caller catches exceptions. */
     PDO_DBG_ENTER("PdoNuoDbHandle::execute", getNuoDbHandle()->getPdoDbh());
-    if (_stmt == NULL)
-    {
+    if (_stmt == NULL) {
         PDO_DBG_RETURN(0, getNuoDbHandle()->getPdoDbh());
     }
 
-    int update_count = 0;
-    struct pdo_nuodb_timer_t timer;
     pdo_nuodb_timer_init(&timer);
     pdo_nuodb_timer_start(&timer);
-    bool result = _stmt->execute();
+    result = _stmt->execute();
     pdo_nuodb_timer_end(&timer);
-    int elapsed = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
+    elapsed = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
     PDO_DBG_INF_FMT(": dbh=%p : Elapsed time=%d (microseconds) : SQL=%s", getNuoDbHandle()->getPdoDbh(), elapsed, this->_sql);
     if (result == TRUE) {  /* true means there was no UPDATE or INSERT */
         _rs = _stmt->getResultSet();
