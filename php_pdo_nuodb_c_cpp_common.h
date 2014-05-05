@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,8 @@
 #define PDO_NUODB_SQLTYPE_DATE      6
 #define PDO_NUODB_SQLTYPE_TIME      7
 #define PDO_NUODB_SQLTYPE_TIMESTAMP 8
-#define PDO_NUODB_SQLTYPE_ARRAY     9  // Not Yet Supported by this driver.
+#define PDO_NUODB_SQLTYPE_ARRAY     9  /* Not Yet Supported by this
+                                        * driver. */
 #define PDO_NUODB_SQLTYPE_BLOB     10
 #define PDO_NUODB_SQLTYPE_CLOB     11
 #define PDO_NUODB_SQLTYPE_NULL     12
@@ -68,7 +69,7 @@ struct pdo_nuodb_timer_t {
     int endTimeInMicroSec;
     int stopped;
 #ifdef WIN32
-    LARGE_INTEGER frequency; // ticks per second
+    LARGE_INTEGER frequency; /* ticks per second */
     LARGE_INTEGER startCount;
     LARGE_INTEGER endCount;
 #else
@@ -96,7 +97,7 @@ void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh);
 }
 #endif
 
-//#if PHP_DEBUG && !defined(PHP_WIN32)
+/*#if PHP_DEBUG && !defined(PHP_WIN32) */
 #define PDO_DBG_ENABLED 1
 
 #ifdef PDO_DBG_ENABLED
@@ -143,20 +144,20 @@ typedef struct SqlOptionArray_t
 
 typedef struct
 {
-    short sqltype;  // datatype
-    short scale; // scale factor
-    short col_name_length; // length of column name
+    short sqltype;  /* datatype */
+    short scale; /* scale factor */
+    short col_name_length; /* length of column name */
     char  col_name[32];
-    int len; // length of data buffer
-    char *data; // address of data buffer
-} nuo_param; // XSQLVAR
+    int len; /* length of data buffer */
+    char *data; /* address of data buffer */
+} nuo_param;
 
 typedef struct
 {
-    short num_params;  // number of actual params (sqld)
-    short num_alloc;  // number of allocated params (sqln)
-    nuo_param params[1]; // address of first param
-} nuo_params; //XSQLDA
+    short num_params;  /* number of actual params (sqld) */
+    short num_alloc;  /* number of allocated params (sqln) */
+    nuo_param params[1]; /* address of first param */
+} nuo_params;
 
 #define NUO_PARAMS_LENGTH(n)   (sizeof(nuo_params) + (n-1) * sizeof(nuo_param))
 
@@ -164,11 +165,13 @@ typedef struct
 extern "C" {
 #endif
 
-// Workaround DB-4112
+/* Workaround DB-4112 */
 const char *nuodb_get_sqlstate(int sqlcode);
 
 void nuodb_throw_zend_exception(const char *sql_state, int code, const char *format, ...);
-//void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const * file, long line, const char *sql_state, int nuodb_error_code, const char *format, ...);
+/*void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const
+ * * file, long line, const char *sql_state, int nuodb_error_code,
+ * const char *format, ...); */
 int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/);
 int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message);
 int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...);
@@ -177,7 +180,7 @@ int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, 
 typedef struct
 {
     /* the connection handle */
-    void *db; // opaque for PdoNuoDbHandle * db;
+    void *db; /* opaque for PdoNuoDbHandle * db; */
 
     /* PHP PDO parent pdo_dbh_t handle */
     pdo_dbh_t *pdo_dbh;
@@ -186,7 +189,8 @@ typedef struct
     pdo_nuodb_error_info einfo;
 
     /* the last error that didn't come from the API */
-    //char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
+    /*char const * last_app_error;  // TODO: this needs to go away in
+     * favor of 'einfo' */
 
     char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
     char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
@@ -214,10 +218,10 @@ const char *pdo_nuodb_db_handle_get_nuodb_product_version(pdo_nuodb_db_handle *H
 typedef struct
 {
     /* the link that owns this statement */
-    void *H; // opaque for pdo_nuodb_db_handle *H;
+    void *H; /* opaque for pdo_nuodb_db_handle *H; */
 
     /* the statement handle */
-    void *stmt; // opaque for PdoNuoDbStatement *stmt;
+    void *stmt; /* opaque for PdoNuoDbStatement *stmt; */
 
     /* NuoDB error information */
     pdo_nuodb_error_info einfo;
@@ -243,9 +247,6 @@ typedef struct
     unsigned cursor_open:1;
 
     unsigned _reserved:22;
-
-    //int error_code;  // TODO: this needs to go away in favor of 'einfo'
-    //char *error_msg;  // pointer to error_msg.  NULL if no error.  // TODO: this needs to go away in favor of 'einfo'
 
     unsigned qty_input_params;
     /* the input params */
@@ -279,7 +280,7 @@ void pdo_nuodb_stmt_get_blob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned
 void pdo_nuodb_stmt_get_clob(pdo_nuodb_stmt *S, int colno, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
 
 #ifdef __cplusplus
-} // end of extern "C" {
+} /* end of extern "C" { */
 #endif
 
-#endif	/* PHP_PDO_NUODB_C_CPP_COMMON_H */
+#endif  /* PHP_PDO_NUODB_C_CPP_COMMON_H */

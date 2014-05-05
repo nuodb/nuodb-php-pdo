@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,4 +43,4 @@ enum
     PDO_NUODB_ATTR_TIMESTAMP_FORMAT,
 };
 
-#endif	/* PHP_PDO_NUODB_INT_H */
+#endif  /* PHP_PDO_NUODB_INT_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#ifdef _MSC_VER  // Visual Studio specific
+#ifdef _MSC_VER  /* Visual Studio specific */
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -256,9 +256,11 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     *ptr = NULL;
     switch (sqlTypeNumber)
     {
-        // PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
-        // a NULL value in the result set.  Attempts to obtain any
-        // value should be a NULL value.
+        /*
+        ** PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
+        ** a NULL value in the result set.  Attempts to obtain any
+        ** value should be a NULL value.
+        */
         case PDO_NUODB_SQLTYPE_NULL:
         {
             int str_len;
@@ -403,13 +405,13 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
     }
 
-    // do we have a statement error code?
+    /* do we have a statement error code? */
     if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
     {
         return 0;
     }
 
-    // do we have a dbh error code?
+    /* do we have a dbh error code? */
     if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, 6))
     {
         return 0;
@@ -437,7 +439,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             case PDO_PARAM_EVT_EXEC_POST:
             case PDO_PARAM_EVT_FETCH_PRE:
             case PDO_PARAM_EVT_FETCH_POST:
-                //PDO_DBG_RETURN(1);
                 return 1;
 
             case PDO_PARAM_EVT_NORMALIZE:
@@ -463,7 +464,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         else
                         {
                                 _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%s'", param->name);
-                            //PDO_DBG_RETURN(0);
                                 return 0;
                         }
                     }
@@ -471,7 +471,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
                 if (nuodb_params == NULL) {
                         _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Error processing parameters");
-                    //PDO_DBG_RETURN(0);
                         return 0;
                 }
 
@@ -504,7 +503,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             {
                 int num_input_params = 0;
                 if (!stmt->bound_param_map) {
-                    //PDO_DBG_RETURN(0);
                         return 0;
                 }
 
@@ -512,20 +510,17 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                 {
                     if (param->paramno >= (long) S->qty_input_params) {
                         _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
-                        //PDO_DBG_RETURN(0);
                         return 0;
                     }
 
                     if (nuodb_params == NULL) {
                         _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "nuodb_params is NULL");
-                        //PDO_DBG_RETURN(0);
                         return 0;
                     }
 
                     nuodb_param = &nuodb_params->params[param->paramno];
                     if (nuodb_param == NULL) {
                         _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Error locating parameters");
-                        //PDO_DBG_RETURN(0);
                         return 0;
                     }
 
@@ -535,7 +530,8 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         nuodb_param->col_name_length = param->namelen;
                     }
 
-                    // TODO: add code to process streaming LOBs heres when NuoDB supports it.
+                    /* TODO: add code to process streaming LOBs here
+                     * when NuoDB supports it. */
 
                     if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_NULL ||
                           Z_TYPE_P(param->parameter) == IS_NULL)
@@ -596,11 +592,12 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                                                  &Z_STRVAL_P(param->parameter), PHP_STREAM_COPY_ALL, 0);
                                  } else {
                                      _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY105", -12, "Expected a stream resource");
-                                     //PDO_DBG_RETURN(0);
                                      return 0;
                                  }
                          } else {
-                                 // If the parameter is not a stream resource, then convert it to a string.
+                            /* If the parameter is not a stream
+                                 resource, then convert it to a
+                                 string. */
                                  SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
                                  convert_to_string(param->parameter);
                                  nuodb_param->len = Z_STRLEN_P(param->parameter);
@@ -617,7 +614,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 
                     else {
                         _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Unsupported parameter type: %d", Z_TYPE_P(param->parameter));
-                        //PDO_DBG_RETURN(0);
                         return 0;
                     }
                 }
@@ -625,7 +621,6 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             break;
         }
     }
-    //PDO_DBG_RETURN(1);
     return 1;
 }
 /* }}} */

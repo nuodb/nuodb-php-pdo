@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#ifdef _MSC_VER  // Visual Studio specific
+#ifdef _MSC_VER  /* Visual Studio specific */
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -195,7 +195,8 @@ PHP_RSHUTDOWN_FUNCTION(pdo_nuodb)
 PHP_MINFO_FUNCTION(pdo_nuodb)
 {
     php_info_print_table_start();
-    // TODO: we should display version of the driver and version of NuoDB
+    /* TODO: we should display version of the driver and version of
+       NuoDB */
     php_info_print_table_header(2, "PDO Driver for NuoDB", "enabled");
     php_info_print_table_end();
 

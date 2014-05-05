@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,8 +67,10 @@ private:
     SqlOption _opt_arr[4];
     pdo_nuodb_error_info einfo; /* NuoDB error information */
     pdo_error_type sqlstate;
-    PdoNuoDbStatement * _last_stmt; // will be NULL if the last statement was closed.
-    PdoNuoDbGeneratedKeys *_last_keys;  // pointer to array of generated keys.
+    PdoNuoDbStatement * _last_stmt; /* will be NULL if the last
+                                       statement was closed. */
+    PdoNuoDbGeneratedKeys *_last_keys;  /* pointer to array of
+                                           generated keys. */
     void deleteOptions();
 public:
     PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options);
@@ -135,7 +137,6 @@ public:
     void getInteger(size_t column, int **int_val);
     bool getBoolean(size_t column, char **bool_val);
     void getLong(size_t column, int64_t **long_val);
-    //unsigned long getTimestamp(size_t column);
     char const * getTimestamp(size_t column);
     void getDate(size_t column, int64_t **date_val);
     void getTime(size_t column, int64_t **time_val);
