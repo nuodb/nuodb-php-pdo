@@ -677,7 +677,7 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
             const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
             const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
             if ((server_name == NULL) || (server_version == NULL)) return 1;
-            info = emalloc(strlen(server_name) + strlen(server_version) + 4);
+            info = emalloc(strlen(server_name) + strlen(server_version) + 2);
             sprintf(info, "%s %s", server_name, server_version);
             ZVAL_STRING(val, info, 1);
             efree(info);

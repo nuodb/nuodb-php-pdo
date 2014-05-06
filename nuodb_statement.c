@@ -58,10 +58,12 @@
 
 /*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
+
 static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 {
     pdo_nuodb_stmt_delete(S);
 }
+
 
 /* called by PDO to clean up a statement handle */
 /* static */ int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
@@ -98,13 +100,13 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 }
 /* }}} */
 
+
 /* called by PDO to execute a prepared query */
 static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 {
     int status;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     pdo_nuodb_db_handle * H = NULL;
-
 
     PDO_DBG_ENTER("nuodb_stmt_execute", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p S=%p sql=%s", pdo_stmt->dbh, pdo_stmt->driver_data, S->sql);
@@ -131,6 +133,7 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
+
 /* called by PDO to fetch the next row from a statement */
 static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
                             enum pdo_fetch_orientation ori, long offset TSRMLS_DC)
@@ -138,6 +141,7 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_fetch", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", pdo_stmt->dbh, S);
+
     if (!pdo_stmt->executed)
     {
         _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
@@ -146,6 +150,7 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
     PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &pdo_stmt->row_count), pdo_stmt->dbh);
 }
 /* }}} */
+
 
 /* called by PDO to retrieve information about the fields being returned */
 static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{{ */
@@ -161,8 +166,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
     col->maxlen = 0;
 
     column_name = pdo_nuodb_stmt_get_column_name(S, colno);
-    if (column_name == NULL)
-    {
+    if (column_name == NULL) {
         return 0;
     }
     colname_len = strlen(column_name);
@@ -240,6 +244,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
 }
 /* }}} */
 
+
 static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
                               unsigned long * len, int * caller_frees TSRMLS_DC)
 {
@@ -252,8 +257,12 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
 
     *len = 0;
     *caller_frees = 1;
-    if (*ptr != NULL) efree(*ptr);
+
+    if (*ptr != NULL) {
+        efree(*ptr);
+    }
     *ptr = NULL;
+
     switch (sqlTypeNumber)
     {
         /*
@@ -374,8 +383,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         {
             int str_len;
             const char * str = pdo_nuodb_stmt_get_timestamp(S, colno);
-            if (str == NULL)
-            {
+            if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
@@ -406,20 +414,19 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     }
 
     /* do we have a statement error code? */
-    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN))
-    {
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         return 0;
     }
 
     /* do we have a dbh error code? */
-    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN))
-    {
+    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         return 0;
     }
 
     return 1;
 }
 /* }}} */
+
 
 static int
 nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /* {{{ */
@@ -445,8 +452,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                 /* decode name from :pdo1, :pdo2 into 0, 1 etc. */
                 if (param->name)
                 {
-                    if (!strncmp(param->name, ":pdo", 4))
-                    {
+                    if (!strncmp(param->name, ":pdo", 4)) {
                         param->paramno = atoi(param->name + 4);
                     }
                     else
@@ -457,8 +463,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                             SUCCESS == zend_hash_find(stmt->bound_param_map,
                                                       param->name,
                                                       param->namelen + 1,
-                                                      (void**)&nameptr))
-                        {
+                                                      (void**)&nameptr)) {
                             param->paramno = atoi(nameptr + 4) - 1;
                         }
                         else
@@ -625,6 +630,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 }
 /* }}} */
 
+
 static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
@@ -646,6 +652,7 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 }
 /* }}} */
 
+
 static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
@@ -655,12 +662,9 @@ static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
         default:
             return 0;
         case PDO_ATTR_CURSOR_NAME:
-            if (*S->name)
-            {
+            if (*S->name) {
                 ZVAL_STRING(val,S->name,1);
-            }
-            else
-            {
+            } else {
                 ZVAL_NULL(val);
             }
             break;
@@ -669,12 +673,12 @@ static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 }
 /* }}} */
 
+
 static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
-    if ((*S->name || S->cursor_open))
-    {
+    if ((*S->name || S->cursor_open)) {
         _release_PdoNuoDbStatement(S);
     }
     *S->name = 0;
