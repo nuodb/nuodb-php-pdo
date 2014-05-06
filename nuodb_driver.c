@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#ifdef _MSC_VER  // Visual Studio specific
+#ifdef _MSC_VER  /* Visual Studio specific */
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,10 +57,10 @@
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_int.h"
 
-// Workaround DB-4112 (see below)
+/* Workaround DB-4112 (see below) */
 struct sqlcode_to_sqlstate_t {
-        int sqlcode;
-        char *sqlstate;
+    int sqlcode;
+    char *sqlstate;
 };
 
 ZEND_DECLARE_MODULE_GLOBALS(pdo_nuodb)
@@ -73,161 +73,166 @@ char const * const NUODB_OPT_IDENTIFIERS = "identifiers";
 
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, long, PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC);
 
-// Workaround DB-4112.  NuoDB C++ exceptions do not currently
-// return a string for the SqlState.  Until that gets fix, we will
-// simply map the sqlcode returned by NuoDB to an apporiate
-// SqlState string.
+/*
+** Workaround DB-4112.  NuoDB C++ exceptions do not currently
+** return a string for the SqlState.  Until that gets fix, we will
+** simply map the sqlcode returned by NuoDB to an apporiate
+** SqlState string.
+*/
 static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
-                {-1, "42000"},
-                {-2, "0A000"},
-                {-3, "58000"},
-                {-4, "42000"},
-                {-5, "58000"},
-                {-6, "08000"},
-                {-7, "08000"},
-                {-8, "22000"},
-                {-9, "22000"},
-                {-10, "08000"},
-                {-11, "42000"},
-                {-12, "58000"},
-                {-13, "58000"},
-                {-14, "58000"},
-                {-15, "58000"},
-                {-16, "58000"},
-                {-17, "58000"},
-                {-18, "58000"},
-                {-19, "22000"},
-                {-20, "22000"},
-                {-21, "22000"},
-                {-22, "58000"},
-                {-23, "58000"},
-                {-24, "40002"},
-                {-25, "42000"},
-                {-26, "58000"},
-                {-27, "23000"},
-                {-28, "58000"},
-                {-29, "40001"},
-                {-30, "58000"},
-                {-31, "58000"},
-                {-32, "58000"},
-                {-33, "0X000"}, // filler -- does not exist in nuodb
-                {-34, "0X000"}, // filler -- does not exist in nuodb
-                {-35, "0x000"}, // filler -- does not exist in nuodb
-                {-36, "58000"},
-                {-37, "58000"},
-                {-38, "58000"},
-                {-39, "58000"},
-                {-40, "58000"},
-                {-41, "58000"},
-                {-42, "01000"},
-                {-43, "0A000"},
-                {-44, "58000"},
-                {-45, "23001"},
-                {-46, "58000"},
-                {-47, "58000"},
-                {-48, "HY008"},
-                {-49, "58000"},
-                {-50, "58000"},
-                {-51, "58000"},
-                {-52, "58000"},
-                {-53, "58000"}
+    {-1, "42000"},
+    {-2, "0A000"},
+    {-3, "58000"},
+    {-4, "42000"},
+    {-5, "58000"},
+    {-6, "08000"},
+    {-7, "08000"},
+    {-8, "22000"},
+    {-9, "22000"},
+    {-10, "08000"},
+    {-11, "42000"},
+    {-12, "58000"},
+    {-13, "58000"},
+    {-14, "58000"},
+    {-15, "58000"},
+    {-16, "58000"},
+    {-17, "58000"},
+    {-18, "58000"},
+    {-19, "22000"},
+    {-20, "22000"},
+    {-21, "22000"},
+    {-22, "58000"},
+    {-23, "58000"},
+    {-24, "40002"},
+    {-25, "42000"},
+    {-26, "58000"},
+    {-27, "23000"},
+    {-28, "58000"},
+    {-29, "40001"},
+    {-30, "58000"},
+    {-31, "58000"},
+    {-32, "58000"},
+    {-33, "0X000"}, /* filler -- does not exist in nuodb */
+    {-34, "0X000"}, /* filler -- does not exist in nuodb */
+    {-35, "0x000"}, /* filler -- does not exist in nuodb */
+    {-36, "58000"},
+    {-37, "58000"},
+    {-38, "58000"},
+    {-39, "58000"},
+    {-40, "58000"},
+    {-41, "58000"},
+    {-42, "01000"},
+    {-43, "0A000"},
+    {-44, "58000"},
+    {-45, "23001"},
+    {-46, "58000"},
+    {-47, "58000"},
+    {-48, "HY008"},
+    {-49, "58000"},
+    {-50, "58000"},
+    {-51, "58000"},
+    {-52, "58000"},
+    {-53, "58000"}
 };
 
 int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
-// Workaround DB-4112
+
+/* Workaround DB-4112 */
 const char *nuodb_get_sqlstate(int sqlcode) {
-        int index = abs(sqlcode) - 1;
-        if ((sqlcode > -1) || (sqlcode < -53)) return NULL;
-        return sqlcode_to_sqlstate[index].sqlstate;
+    int index = abs(sqlcode) - 1;
+    if ((sqlcode > -1) || (sqlcode < -53)) {
+        return NULL;
+    }
+    return sqlcode_to_sqlstate[index].sqlstate;
 }
+
 
 int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message)
 {
-        pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
-        pdo_error_type *pdo_err;
-        pdo_nuodb_error_info *einfo;
-        pdo_nuodb_stmt *S = NULL;
+    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    pdo_error_type *pdo_err;
+    pdo_nuodb_error_info *einfo;
+    pdo_nuodb_stmt *S = NULL;
 
-        if (stmt) {
-                S = (pdo_nuodb_stmt*)stmt->driver_data;
-                pdo_err = &stmt->error_code;
-                einfo   = &S->einfo;
-                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s  sql=%s", dbh, sql_state, error_code, error_message, S->sql);
-        } else {
-                pdo_err = &dbh->error_code;
-                einfo   = &H->einfo;
-                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s", dbh, sql_state, error_code, error_message);
-        }
+    if (stmt) {
+        S = (pdo_nuodb_stmt*)stmt->driver_data;
+        pdo_err = &stmt->error_code;
+        einfo   = &S->einfo;
+        PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s  sql=%s", dbh, sql_state, error_code, error_message, S->sql);
+    } else {
+        pdo_err = &dbh->error_code;
+        einfo   = &H->einfo;
+        PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: sql_state=%s  error_code=%d  error_message=%s", dbh, sql_state, error_code, error_message);
+    }
 
-        einfo->errcode = error_code;
-        einfo->file = (char *)file;
-        einfo->line = line;
-        if (einfo->errmsg) {
-                pefree(einfo->errmsg, dbh->is_persistent);
-                einfo->errmsg = NULL;
-        }
+    einfo->errcode = error_code;
+    einfo->file = (char *)file;
+    einfo->line = line;
+    if (einfo->errmsg) {
+        pefree(einfo->errmsg, dbh->is_persistent);
+        einfo->errmsg = NULL;
+    }
 
-        if (!einfo->errcode) { /* no error */
-                strcpy(*pdo_err, PDO_ERR_NONE);
-                PDO_DBG_RETURN(0, dbh);
-        }
+    if (!einfo->errcode) { /* no error */
+        strcpy(*pdo_err, PDO_ERR_NONE);
+        PDO_DBG_RETURN(0, dbh);
+    }
 
-        einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
-        strncpy(*pdo_err, sql_state, 6);
+    einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
+    strncpy(*pdo_err, sql_state, 6);
 
-
-        if (!dbh->methods) {
-                TSRMLS_FETCH();
-                PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: Throwing exception", dbh);
-                zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
+    if (!dbh->methods) {
+        TSRMLS_FETCH();
+        PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_ERRORS, "dbh=%p : _record_error: Throwing exception", dbh);
+        zend_throw_exception_ex(php_pdo_get_exception(), einfo->errcode TSRMLS_CC, "SQLSTATE[%s] [%d] %s",
                                 *pdo_err, einfo->errcode, einfo->errmsg);
-        }
+    }
 
-        PDO_DBG_RETURN(einfo->errcode, dbh);
-
+    PDO_DBG_RETURN(einfo->errcode, dbh);
 }
+
 
 int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...)
 {
-  va_list arg;
-  char *error_message;
-  int ret = 1;
+    va_list arg;
+    char *error_message;
+    int ret = 1;
 
-  va_start(arg, format);
-  vspprintf(&error_message, 0, format, arg);
-  va_end(arg);
+    va_start(arg, format);
+    vspprintf(&error_message, 0, format, arg);
+    va_end(arg);
 
-  ret = _record_error(dbh, stmt, file, line, sql_state, error_code, strdup(error_message));
-  efree((char *)error_message);
-  return ret;
+    ret = _record_error(dbh, stmt, file, line, sql_state, error_code, strdup(error_message));
+    efree((char *)error_message);
+    return ret;
 }
+
 
 int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/)
 {
-        int ret = 1;
-        pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
-        pdo_nuodb_stmt *S = NULL;
-        const char *sql_state = NULL;
-        int error_code = 0;
-        const char *error_message = NULL;
+    int ret = 1;
+    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    pdo_nuodb_stmt *S = NULL;
+    const char *sql_state = NULL;
+    int error_code = 0;
+    const char *error_message = NULL;
 
-        PDO_DBG_ENTER("_pdo_nuodb_error", dbh);
-        if (stmt) {
-                S = (pdo_nuodb_stmt*)stmt->driver_data;
-                sql_state = *(pdo_nuodb_stmt_sqlstate(S));
-                error_code = pdo_nuodb_stmt_errno(S);
-                error_message = pdo_nuodb_stmt_errmsg(S);
-        } else {
-                sql_state = *(pdo_nuodb_db_handle_sqlstate(H));
-                error_code =  pdo_nuodb_db_handle_errno(H);
-                error_message = pdo_nuodb_db_handle_errmsg(H);
-        }
-        ret = _record_error(dbh, stmt, file, line, sql_state,  error_code, error_message);
+    PDO_DBG_ENTER("_pdo_nuodb_error", dbh);
+    if (stmt) {
+        S = (pdo_nuodb_stmt*)stmt->driver_data;
+        sql_state = *(pdo_nuodb_stmt_sqlstate(S));
+        error_code = pdo_nuodb_stmt_errno(S);
+        error_message = pdo_nuodb_stmt_errmsg(S);
+    } else {
+        sql_state = *(pdo_nuodb_db_handle_sqlstate(H));
+        error_code =  pdo_nuodb_db_handle_errno(H);
+        error_message = pdo_nuodb_db_handle_errmsg(H);
+    }
+    ret = _record_error(dbh, stmt, file, line, sql_state,  error_code, error_message);
 
-        PDO_DBG_RETURN(ret, dbh);
+    PDO_DBG_RETURN(ret, dbh);
 }
-
 
 
 /* called by PDO to close a db handle */
@@ -243,132 +248,133 @@ static int nuodb_handle_closer(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     if (H->in_nuodb_implicit_txn == 1) {
         nuodb_handle_commit(dbh TSRMLS_CC);
     }
-    pdo_nuodb_db_handle_close_connection(H); //H->db->closeConnection();
-    pdo_nuodb_db_handle_delete(H); //delete H->db;
-        if (H->einfo.errmsg) {
-                pefree(H->einfo.errmsg, dbh->is_persistent);
-                H->einfo.errmsg = NULL;
-        }
+    pdo_nuodb_db_handle_close_connection(H);
+    pdo_nuodb_db_handle_delete(H);
+    if (H->einfo.errmsg) {
+        pefree(H->einfo.errmsg, dbh->is_persistent);
+        H->einfo.errmsg = NULL;
+    }
 
     pefree(H, dbh->is_persistent);
     PDO_DBG_RETURN(1, dbh);
 }
 /* }}} */
 
+
 /* called by PDO to prepare an SQL query */
 static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql, long sql_len, /* {{{ */
                                  pdo_stmt_t * stmt, zval * driver_options TSRMLS_DC)
 {
-  int ret = 0;
-  pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-  pdo_nuodb_stmt * S = NULL;
-  PdoNuoDbStatement * nuodb_stmt;
-  int map_size = 0;
-  int count_input_params = 0;
-  int index = 0;
-  char rewritten = 0;
-  HashPosition pos;
-  int keytype;
-  char *strindex;
-  int strindexlen;
-  long intindex = -1;
-  long max_index = 0;
-  char *nsql = NULL;
-  int nsql_len = 0;
-  char *pData;
+    int ret = 0;
+    pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
+    pdo_nuodb_stmt * S = NULL;
+    PdoNuoDbStatement * nuodb_stmt;
+    int map_size = 0;
+    int count_input_params = 0;
+    int index = 0;
+    char rewritten = 0;
+    HashPosition pos;
+    int keytype;
+    char *strindex;
+    int strindexlen;
+    long intindex = -1;
+    long max_index = 0;
+    char *nsql = NULL;
+    int nsql_len = 0;
+    char *pData;
 
-  PDO_DBG_ENTER("nuodb_handle_preparer", dbh);
-  PDO_DBG_INF_FMT("dbh=%p  sql=%.*s", dbh, sql_len, sql);
+    PDO_DBG_ENTER("nuodb_handle_preparer", dbh);
+    PDO_DBG_INF_FMT("dbh=%p  sql=%.*s", dbh, sql_len, sql);
 
-  stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
-  stmt->named_rewrite_template = ":pdo%d";
-  ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
-  if (ret == 1) /* the SQL query was re-written */
-  {
-    rewritten = 1;
-    sql = nsql;
-    sql_len = nsql_len;
-  }
-  else if (ret == -1) /* could not understand it! */
-  {
-    strcpy(dbh->error_code, stmt->error_code);
-    PDO_DBG_RETURN(0, dbh);
-  }
-
-  S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
-  S->H = H;
-  S->stmt = NULL;
-  S->einfo.errcode = 0;
-  S->einfo.errmsg = NULL;
-  S->sql = strdup(sql);
-  S->qty_input_params = 0;
-  S->implicit_txn = 0;
-  S->commit_on_close = 0;
-  S->in_params = NULL;
-  S->out_params = NULL;
-
-  stmt->driver_data = S;
-  stmt->methods = &nuodb_stmt_methods;
-
-  map_size = 0;
-  if (stmt->bound_param_map)
-  {
-    map_size = zend_hash_num_elements(stmt->bound_param_map);
-    if ((map_size > 0) && (S->in_params == NULL))
+    stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
+    stmt->named_rewrite_template = ":pdo%d";
+    ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
+    if (ret == 1) /* the SQL query was re-written */
     {
-      index = 0;
-      S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(map_size));
-      S->in_params->num_alloc = S->in_params->num_params = map_size;
-      for (index = 0; index < map_size; index++)
-      {
-        // zend_hash_index_find(stmt->bound_param_map, index, (void **)&pData);
-        S->in_params->params[index].col_name[0] = '\0';
-        S->in_params->params[index].col_name_length = 0;
-        S->in_params->params[index].len = 0;
-        S->in_params->params[index].data = NULL;
-      }
+        rewritten = 1;
+        sql = nsql;
+        sql_len = nsql_len;
     }
-  }
-
-  if (stmt->bound_param_map != NULL) /* find the largest int key */
-  {
-    zend_hash_internal_pointer_reset_ex(stmt->bound_param_map, &pos);
-    while (HASH_KEY_NON_EXISTANT != (keytype = zend_hash_get_current_key_ex(
-             stmt->bound_param_map, &strindex, &strindexlen, &intindex, 0, &pos)))
+    else if (ret == -1) /* could not understand it! */
     {
-      if (HASH_KEY_IS_LONG == keytype) {
-        if (intindex > max_index) {
-          max_index = intindex;
+        strcpy(dbh->error_code, stmt->error_code);
+        PDO_DBG_RETURN(0, dbh);
+    }
+
+    S = (pdo_nuodb_stmt *) ecalloc(1, sizeof(*S));
+    S->H = H;
+    S->stmt = NULL;
+    S->einfo.errcode = 0;
+    S->einfo.errmsg = NULL;
+    S->sql = strdup(sql);
+    S->qty_input_params = 0;
+    S->implicit_txn = 0;
+    S->commit_on_close = 0;
+    S->in_params = NULL;
+    S->out_params = NULL;
+
+    stmt->driver_data = S;
+    stmt->methods = &nuodb_stmt_methods;
+
+    map_size = 0;
+    if (stmt->bound_param_map)
+    {
+        map_size = zend_hash_num_elements(stmt->bound_param_map);
+        if ((map_size > 0) && (S->in_params == NULL))
+        {
+            index = 0;
+            S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(map_size));
+            S->in_params->num_alloc = S->in_params->num_params = map_size;
+            for (index = 0; index < map_size; index++)
+            {
+                S->in_params->params[index].col_name[0] = '\0';
+                S->in_params->params[index].col_name_length = 0;
+                S->in_params->params[index].len = 0;
+                S->in_params->params[index].data = NULL;
+            }
         }
-      }
-      zend_hash_move_forward_ex(stmt->bound_param_map, &pos);
     }
-    S->qty_input_params = max_index + 1;
-  }
 
-  /* allocate and prepare statement */
-  if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &nuodb_stmt TSRMLS_CC)) {
-          // There was an error preparing the statement
-          if (rewritten == 1) efree((void *)sql);
-          PDO_DBG_RETURN(0, dbh);
-  }
-  S->stmt = nuodb_stmt;
-  index = 0;
-  stmt->driver_data = S;
-  stmt->methods = &nuodb_stmt_methods;
-  stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
-  if (rewritten == 1) efree((void *)sql);
-  PDO_DBG_RETURN(1, dbh);
+    if (stmt->bound_param_map != NULL) /* find the largest int key */
+    {
+        zend_hash_internal_pointer_reset_ex(stmt->bound_param_map, &pos);
+        while (HASH_KEY_NON_EXISTANT != (keytype = zend_hash_get_current_key_ex(
+                                             stmt->bound_param_map, &strindex, &strindexlen, &intindex, 0, &pos)))
+        {
+            if (HASH_KEY_IS_LONG == keytype) {
+                if (intindex > max_index) {
+                    max_index = intindex;
+                }
+            }
+            zend_hash_move_forward_ex(stmt->bound_param_map, &pos);
+        }
+        S->qty_input_params = max_index + 1;
+    }
+
+    /* allocate and prepare statement */
+    if (!nuodb_alloc_prepare_stmt(dbh, stmt, sql, sql_len, &nuodb_stmt TSRMLS_CC)) {
+        /* There was an error preparing the statement */
+        if (rewritten == 1) efree((void *)sql);
+        PDO_DBG_RETURN(0, dbh);
+    }
+    S->stmt = nuodb_stmt;
+    index = 0;
+    stmt->driver_data = S;
+    stmt->methods = &nuodb_stmt_methods;
+    stmt->supports_placeholders = PDO_PLACEHOLDER_POSITIONAL;
+    if (rewritten == 1) efree((void *)sql);
+    PDO_DBG_RETURN(1, dbh);
 }
 /* }}} */
 
 
 static void pdo_dbh_t_set_in_txn(void *dbh_opaque, unsigned in_txn) /* {{{ */
 {
-        pdo_dbh_t *dbh = (pdo_dbh_t *)dbh_opaque;
-        dbh->in_txn = in_txn;
+    pdo_dbh_t *dbh = (pdo_dbh_t *)dbh_opaque;
+    dbh->in_txn = in_txn;
 }
 /* }}} */
+
 
 /* called by PDO to execute a statement that doesn't produce a result set */
 static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TSRMLS_DC) /* {{{ */
@@ -381,10 +387,9 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
 
-
     res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
 
-    // do we have a dbh error code?
+    /* do we have a dbh error code? */
     if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
         PDO_DBG_RETURN(-1, dbh);
     }
@@ -392,6 +397,7 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
     PDO_DBG_RETURN(res, dbh);
 }
 /* }}} */
+
 
 /* called by the PDO SQL parser to add quotes to values that are copied into SQL */
 static int nuodb_handle_quoter(pdo_dbh_t * dbh, const char * unquoted, int unquotedlen, /* {{{ */
@@ -420,8 +426,7 @@ static int nuodb_handle_quoter(pdo_dbh_t * dbh, const char * unquoted, int unquo
     *c++ = '\'';
 
     /* foreach (chunk that ends in a quote) */
-    for (l = unquoted; (r = strchr(l,'\'')); l = r+1)
-    {
+    for (l = unquoted; (r = strchr(l,'\'')); l = r+1) {
         strncpy(c, l, r-l+1);
         c += (r-l+1);
         /* add the second quote */
@@ -437,6 +442,7 @@ static int nuodb_handle_quoter(pdo_dbh_t * dbh, const char * unquoted, int unquo
 }
 /* }}} */
 
+
 /* called by PDO to start a transaction */
 static int nuodb_handle_begin(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
@@ -451,8 +457,6 @@ static int nuodb_handle_begin(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 /* }}} */
 
 
-
-
 /* called by PDO to commit a transaction */
 int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 {
@@ -460,18 +464,17 @@ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
 
     PDO_DBG_ENTER("nuodb_handle_commit", dbh);
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (pdo_nuodb_db_handle_commit(H) == 0)
-    {
+    if (pdo_nuodb_db_handle_commit(H) == 0) {
         H->in_nuodb_implicit_txn = 0;
         H->in_nuodb_explicit_txn = 0;
-        //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0, dbh);
     }
-        H->in_nuodb_implicit_txn = 0;
-        H->in_nuodb_explicit_txn = 0;
-        PDO_DBG_RETURN(1, dbh);
+    H->in_nuodb_implicit_txn = 0;
+    H->in_nuodb_explicit_txn = 0;
+    PDO_DBG_RETURN(1, dbh);
 }
 /* }}} */
+
 
 /* called by PDO to rollback a transaction */
 static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
@@ -481,18 +484,17 @@ static int nuodb_handle_rollback(pdo_dbh_t * dbh TSRMLS_DC) /* {{{ */
     PDO_DBG_ENTER("nuodb_handle_rollback", dbh);
 
     H = (pdo_nuodb_db_handle *)dbh->driver_data;
-    if (pdo_nuodb_db_handle_rollback(H) == 0)
-    {
+    if (pdo_nuodb_db_handle_rollback(H) == 0) {
         H->in_nuodb_implicit_txn = 0;
         H->in_nuodb_explicit_txn = 0;
-        //RECORD_ERROR(dbh);
         PDO_DBG_RETURN(0, dbh);
     }
-        H->in_nuodb_implicit_txn = 0;
-        H->in_nuodb_explicit_txn = 0;
-        PDO_DBG_RETURN(1, dbh);
+    H->in_nuodb_implicit_txn = 0;
+    H->in_nuodb_explicit_txn = 0;
+    PDO_DBG_RETURN(1, dbh);
 }
 /* }}} */
+
 
 /* used by prepare and exec to allocate a statement handle and prepare the SQL */
 static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, const char * sql, long sql_len, /* {{{ */
@@ -516,7 +518,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     }
 
     /* in order to support named params,
-    we need to replace :foo by ?, and store the name we just replaced */
+       we need to replace :foo by ?, and store the name we just replaced */
     new_sql = c = (char *) emalloc(sql_len+1);
 
     for (l = in_quote = in_param = 0; l <= sql_len; ++l)
@@ -527,14 +529,14 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
             {
                 switch (sql[l])
                 {
-                case ':':
-                    in_param = 1;
-                    ppname = pname;
-                    *ppname++ = sql[l];
-                case '?':
-                    *c++ = '?';
-                    ++pindex;
-                    continue;
+                    case ':':
+                        in_param = 1;
+                        ppname = pname;
+                        *ppname++ = sql[l];
+                    case '?':
+                        *c++ = '?';
+                        ++pindex;
+                        continue;
                 }
             }
             else
@@ -559,17 +561,17 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     /* prepare the statement */
     *nuodb_stmt = pdo_nuodb_db_handle_create_statement(H, pdo_stmt, new_sql);
     PDO_DBG_INF_FMT("dbh=%p : nuodb_alloc_prepare_stmt: S=%p sql=%.*s", dbh, pdo_stmt->driver_data, sql_len, sql);
-        efree(new_sql);
-        if (*nuodb_stmt == NULL) {
-            PDO_DBG_RETURN(0, dbh);
+    efree(new_sql);
+    if (*nuodb_stmt == NULL) {
+        PDO_DBG_RETURN(0, dbh);
     }
 
-    // do we have a statement error code?
+    /* do we have a statement error code? */
     if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6)) {
         PDO_DBG_RETURN(0, dbh);
     }
 
-    // do we have a dbh error code?
+    /* do we have a dbh error code? */
     if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
         PDO_DBG_RETURN(0, dbh);
     }
@@ -586,7 +588,10 @@ static char *nuodb_handle_last_id(pdo_dbh_t *dbh, const char *name, unsigned int
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
     char *id_str = NULL;
     int id = pdo_nuodb_db_handle_last_id(H, name);
-    if (id == 0) return NULL;
+
+    if (id == 0) {
+        return NULL;
+    }
     *len = snprintf(NULL, 0, "%lu", id);
     id_str = (char *) emalloc((*len)+1);
     c = snprintf(id_str, (*len)+1, "%lu", id);
@@ -603,48 +608,49 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
 
     switch (attr)
     {
-    case PDO_ATTR_AUTOCOMMIT:
-        convert_to_boolean(val);
+        case PDO_ATTR_AUTOCOMMIT:
+            convert_to_boolean(val);
 
-        /* ignore if the new value equals the old one */
-        if (dbh->auto_commit ^ Z_BVAL_P(val))
-        {
-            if (dbh->in_txn)
+            /* ignore if the new value equals the old one */
+            if (dbh->auto_commit ^ Z_BVAL_P(val))
             {
-                if (Z_BVAL_P(val))
+                if (dbh->in_txn)
                 {
-                    /* turning on auto_commit with an open transaction is illegal, because
-                    we won't know what to do with it */
+                    if (Z_BVAL_P(val))
+                    {
+                        /* turning on auto_commit with an open transaction is illegal, because
+                           we won't know what to do with it */
                         _record_error_formatted(dbh, NULL, __FILE__, __LINE__, "HY011", -17, "Cannot enable auto-commit while a transaction is already open");
                         PDO_DBG_RETURN(0, dbh);
-                }
-                else
-                {
-                    /* close the transaction */
-                    if (!nuodb_handle_commit(dbh TSRMLS_CC))
-                    {
-                        break;
                     }
-                    dbh->in_txn = 0;
+                    else
+                    {
+                        /* close the transaction */
+                        if (!nuodb_handle_commit(dbh TSRMLS_CC))
+                        {
+                            break;
+                        }
+                        dbh->in_txn = 0;
+                    }
                 }
+                dbh->auto_commit = Z_BVAL_P(val);
+                pdo_nuodb_db_handle_set_auto_commit(H, dbh->auto_commit);
+
             }
-            dbh->auto_commit = Z_BVAL_P(val);
-            pdo_nuodb_db_handle_set_auto_commit(H, dbh->auto_commit);
+            PDO_DBG_RETURN(1, dbh);
 
-        }
-        PDO_DBG_RETURN(1, dbh);
-
-    case PDO_ATTR_FETCH_TABLE_NAMES:
-        convert_to_boolean(val);
-        H->fetch_table_names = Z_BVAL_P(val);
-        PDO_DBG_RETURN(1, dbh);
-    default:
-        PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", dbh, attr);
-        break;
+        case PDO_ATTR_FETCH_TABLE_NAMES:
+            convert_to_boolean(val);
+            H->fetch_table_names = Z_BVAL_P(val);
+            PDO_DBG_RETURN(1, dbh);
+        default:
+            PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", dbh, attr);
+            break;
     }
     PDO_DBG_RETURN(0, dbh);
 }
 /* }}} */
+
 
 /* called by PDO to get a driver-specific dbh attribute */
 static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSRMLS_DC) /* {{{ */
@@ -653,59 +659,62 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr, zval * val TSR
 
     switch (attr)
     {
-    case PDO_ATTR_AUTOCOMMIT:
-        ZVAL_LONG(val,dbh->auto_commit);
-        return 1;
+        case PDO_ATTR_AUTOCOMMIT:
+            ZVAL_LONG(val,dbh->auto_commit);
+            return 1;
 
-    case PDO_ATTR_CONNECTION_STATUS:
-        return 1;
+        case PDO_ATTR_CONNECTION_STATUS:
+            return 1;
 
-    case PDO_ATTR_CLIENT_VERSION:
-        ZVAL_STRING(val,"NuoDB 2.0.4",1);
-        return 1;
+        case PDO_ATTR_CLIENT_VERSION:
+            ZVAL_STRING(val,"NuoDB 2.0.4",1);
+            return 1;
 
-    case PDO_ATTR_SERVER_VERSION:
-    case PDO_ATTR_SERVER_INFO:
-    {
-        char *info = NULL;
-        const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
-        const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
-        if ((server_name == NULL) || (server_version == NULL)) return 1;
-        info = emalloc(strlen(server_name) + strlen(server_version) + 4);
-        sprintf(info, "%s %s", server_name, server_version);
-        ZVAL_STRING(val, info, 1);
-        efree(info);
-        return 1;
-    }
+        case PDO_ATTR_SERVER_VERSION:
+        case PDO_ATTR_SERVER_INFO:
+        {
+            char *info = NULL;
+            const char *server_name = pdo_nuodb_db_handle_get_nuodb_product_name(H);
+            const char *server_version = pdo_nuodb_db_handle_get_nuodb_product_version(H);
+            if ((server_name == NULL) || (server_version == NULL)) return 1;
+            info = emalloc(strlen(server_name) + strlen(server_version) + 4);
+            sprintf(info, "%s %s", server_name, server_version);
+            ZVAL_STRING(val, info, 1);
+            efree(info);
+            return 1;
+        }
 
-    case PDO_ATTR_FETCH_TABLE_NAMES:
-        ZVAL_BOOL(val, H->fetch_table_names);
-        return 1;
+        case PDO_ATTR_FETCH_TABLE_NAMES:
+            ZVAL_BOOL(val, H->fetch_table_names);
+            return 1;
     }
     return 0;
 }
 /* }}} */
 
+
 /* called by PDO to retrieve driver-specific information about an error that has occurred */
 static int pdo_nuodb_fetch_error_func(pdo_dbh_t * dbh, pdo_stmt_t * stmt, zval * info TSRMLS_DC) /* {{{ */
 {
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
-        pdo_nuodb_error_info *einfo = &H->einfo;
-        PDO_DBG_ENTER("pdo_nuodb_fetch_error_func", dbh);
-        PDO_DBG_INF_FMT("dbh=%p stmt=%p", dbh, stmt);
-        if (stmt) {
-                pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)stmt->driver_data;
-                einfo = &S->einfo;
-        } else {
-                einfo = &H->einfo;
-        }
-        if (einfo->errcode) {
-                add_next_index_long(info, einfo->errcode);
-                add_next_index_string(info, einfo->errmsg, 1);
-        }
-        PDO_DBG_RETURN(1, dbh);
+    pdo_nuodb_error_info *einfo = &H->einfo;
+    PDO_DBG_ENTER("pdo_nuodb_fetch_error_func", dbh);
+    PDO_DBG_INF_FMT("dbh=%p stmt=%p", dbh, stmt);
+
+    if (stmt) {
+        pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)stmt->driver_data;
+        einfo = &S->einfo;
+    } else {
+        einfo = &H->einfo;
+    }
+    if (einfo->errcode) {
+        add_next_index_long(info, einfo->errcode);
+        add_next_index_string(info, einfo->errmsg, 1);
+    }
+    PDO_DBG_RETURN(1, dbh);
 }
 /* }}} */
+
 
 static struct pdo_dbh_methods nuodb_methods =   /* {{{ */
 {
@@ -729,14 +738,14 @@ static struct pdo_dbh_methods nuodb_methods =   /* {{{ */
 static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRMLS_DC) /* {{{ */
 {
     struct pdo_data_src_parser vars[] =
-    {
-        { NUODB_OPT_DATABASE, NULL, 0 }, /* "database" */
-        { NUODB_OPT_SCHEMA,  NULL,	0 }  /* "schema" */
-    };
+        {
+            { NUODB_OPT_DATABASE, NULL, 0 }, /* "database" */
+            { NUODB_OPT_SCHEMA,  NULL,  0 }  /* "schema" */
+        };
 
     pdo_nuodb_db_handle * H = NULL;
     int i;
-    int	ret = 0;
+    int ret = 0;
     int status;
     short buf_len = 256;
     short dpb_len;
@@ -748,28 +757,27 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     dbh->driver_data = pecalloc(1, sizeof(*H), dbh->is_persistent);
     H = (pdo_nuodb_db_handle *) dbh->driver_data;
     H->pdo_dbh = dbh;
-        H->einfo.errcode = 0;
-        H->einfo.errmsg = NULL;
+    H->einfo.errcode = 0;
+    H->einfo.errmsg = NULL;
 
     php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, 2);
 
     options[0].option = "database";
     options[0].extra = (void *) vars[0].optval;
     if (options[0].extra == NULL) {
-        H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error_formatted(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'database' parameter. DSN=\"%s\"", dbh->data_source);
         if (H->einfo.errmsg) {
-                pefree(H->einfo.errmsg, dbh->is_persistent);
-                H->einfo.errmsg = NULL;
+            pefree(H->einfo.errmsg, dbh->is_persistent);
+            H->einfo.errmsg = NULL;
         }
         pefree(dbh->driver_data, dbh->is_persistent);
         dbh->driver_data = NULL;
         for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
         {
-            if (vars[i].freeme)
-            {
+            if (vars[i].freeme) {
                 efree(vars[i].optval);
             }
         }
@@ -778,20 +786,19 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[1].option = "user";
     options[1].extra = (void *) dbh->username;
     if (options[1].extra == NULL) {
-        H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'user' parameter");
         if (H->einfo.errmsg) {
-                pefree(H->einfo.errmsg, dbh->is_persistent);
-                H->einfo.errmsg = NULL;
+            pefree(H->einfo.errmsg, dbh->is_persistent);
+            H->einfo.errmsg = NULL;
         }
         pefree(dbh->driver_data, dbh->is_persistent);
         dbh->driver_data = NULL;
         for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
         {
-            if (vars[i].freeme)
-            {
+            if (vars[i].freeme) {
                 efree(vars[i].optval);
             }
         }
@@ -800,20 +807,19 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[2].option = "password";
     options[2].extra = (void *) dbh->password;
     if (options[2].extra == NULL) {
-        H->einfo.errcode = -10;  // NuoDB SqlCode.CONNECTION_ERROR
+        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'password' parameter");
         if (H->einfo.errmsg) {
-                pefree(H->einfo.errmsg, dbh->is_persistent);
-                H->einfo.errmsg = NULL;
+            pefree(H->einfo.errmsg, dbh->is_persistent);
+            H->einfo.errmsg = NULL;
         }
         pefree(dbh->driver_data, dbh->is_persistent);
         dbh->driver_data = NULL;
         for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
         {
-            if (vars[i].freeme)
-            {
+            if (vars[i].freeme) {
                 efree(vars[i].optval);
             }
         }
@@ -834,9 +840,27 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     }
 
     dbh->methods = &nuodb_methods;
-    dbh->native_case = PDO_CASE_UPPER;  // TODO: the value should reflect how the database returns the names of the columns in result sets. If the name matches the case that was used in the query, set it to PDO_CASE_NATURAL (this is actually the default). If the column names are always returned in upper case, set it to PDO_CASE_UPPER. If the column names are always returned in lower case, set it to PDO_CASE_LOWER. The value you set is used to determine if PDO should perform case folding when the user sets the PDO_ATTR_CASE attribute.  Maybe switch to PDO_CASE_NATURAL when DB-1239 is fixed.
-    dbh->alloc_own_columns = 1;  // if true, the driver requires that memory be allocated explicitly for the columns that are returned
-    dbh->auto_commit = 1;  // NuoDB always starts in Auto Commit mode.
+
+    dbh->alloc_own_columns = 1;  /* if true, the driver requires that
+                                  * memory be allocated explicitly for
+                                  * the columns that are returned */
+
+    /*
+    ** TODO: the value should reflect how the database returns
+    ** the names of the columns in result sets. If the name matches
+    ** the case that was used in the query, set it to PDO_CASE_NATURAL
+    ** (this is actually the default). If the column names are
+    ** always returned in upper case, set it to PDO_CASE_UPPER. If the
+    ** column names are always returned in lower case, set it to
+    ** PDO_CASE_LOWER. The value you set is used to determine if PDO
+    ** should perform case folding when the user sets the
+    ** PDO_ATTR_CASE attribute.  Maybe switch to PDO_CASE_NATURAL when
+    ** DB-1239 is fixed.
+    */
+    dbh->native_case = PDO_CASE_UPPER;
+
+    dbh->auto_commit = 1;  /* NuoDB always starts in Auto Commit
+                            * mode. */
 
     for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
     {
@@ -863,88 +887,122 @@ pdo_driver_t pdo_nuodb_driver =   /* {{{ */
 
 void get_timestamp(char *time_buffer)
 {
-  char fmt[64];
+    char fmt[64];
 
-  struct timeval  tv;
-  struct tm       *tm;
+    struct timeval  tv;
+    struct tm       *tm;
 
 #ifdef WIN32
-  __time64_t long_time;
+    __time64_t long_time;
 #endif
 
-  TSRMLS_FETCH();
-  if (PDO_NUODB_G(log_fp) == NULL) return;
+    TSRMLS_FETCH();
+    if (PDO_NUODB_G(log_fp) == NULL) {
+        return;
+    }
 
 #ifdef WIN32
-        _time64( &long_time );           // Get time as 64-bit integer.
-                                     // Convert to local time.
-   tm = _localtime64( &long_time ); // C4996
-        // Note: _localtime64 deprecated; consider _localetime64_s
+    _time64( &long_time ); /* Get time as 64-bit integer. */
+
+    /* Convert to local time. */
+    tm = _localtime64( &long_time ); /* C4996 */
+    /* Note: _localtime64 deprecated; consider _localetime64_s */
 
 #else
-  gettimeofday(&tv, NULL);
-  tm = localtime(&tv.tv_sec);
+    gettimeofday(&tv, NULL);
+    tm = localtime(&tv.tv_sec);
 #endif
-  if(tm != NULL)
-  {
-       strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
+    if(tm != NULL)
+    {
+        strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
 #ifdef WIN32
-       _snprintf(time_buffer, 64, fmt, tv.tv_usec);
+        _snprintf(time_buffer, 64, fmt, tv.tv_usec);
 #else
-       snprintf(time_buffer, 64, fmt, tv.tv_usec);
+        snprintf(time_buffer, 64, fmt, tv.tv_usec);
 #endif
-  }
+    }
 }
+
 
 void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
 {
-  char buf[64] = "";
+    char buf[64] = "";
 
-  TSRMLS_FETCH();
-  if (PDO_NUODB_G(log_fp) == NULL) return;
-  if (log_level > PDO_NUODB_G(log_level)) return;
-  get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
-  fflush(PDO_NUODB_G(log_fp));
+    TSRMLS_FETCH();
+
+    if (PDO_NUODB_G(log_fp) == NULL) {
+        return;
+    }
+
+    if (log_level > PDO_NUODB_G(log_level)) {
+        return;
+    }
+
+    get_timestamp(buf);
+    fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : %s\n", buf, log_level, file, lineno, log_msg);
+    fflush(PDO_NUODB_G(log_fp));
 }
+
 
 void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...)
 {
-  char buf[64] = "";
-  va_list args;
+    char buf[64] = "";
+    va_list args;
 
-  TSRMLS_FETCH();
-  if (PDO_NUODB_G(log_fp) == NULL) return;
-  if (log_level > PDO_NUODB_G(log_level)) return;
-  va_start(args, format);
-  get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : ", buf, log_level, file, lineno);
-  vfprintf(PDO_NUODB_G(log_fp), format, args);
-  va_end(args);
-  fputs("\n", PDO_NUODB_G(log_fp));
-  fflush(PDO_NUODB_G(log_fp));
+    TSRMLS_FETCH();
+
+    if (PDO_NUODB_G(log_fp) == NULL) {
+        return;
+    }
+
+    if (log_level > PDO_NUODB_G(log_level)) {
+        return;
+    }
+
+    va_start(args, format);
+    get_timestamp(buf);
+    fprintf(PDO_NUODB_G(log_fp), "%s : %ld : %s(%d) : ", buf, log_level, file, lineno);
+    vfprintf(PDO_NUODB_G(log_fp), format, args);
+    va_end(args);
+    fputs("\n", PDO_NUODB_G(log_fp));
+    fflush(PDO_NUODB_G(log_fp));
 }
 
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh) {
-  char buf[64] = "";
 
-  TSRMLS_FETCH();
-  if (PDO_NUODB_G(log_fp) == NULL) return FALSE;
-  if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) return FALSE;
-  get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : ENTER FUNCTION : %s\n", buf,  PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh, func_name);
-  fflush(PDO_NUODB_G(log_fp));
-  return TRUE;
+int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh) {
+    char buf[64] = "";
+
+    TSRMLS_FETCH();
+
+    if (PDO_NUODB_G(log_fp) == NULL) {
+        return FALSE;
+    }
+
+    if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) {
+        return FALSE;
+    }
+
+    get_timestamp(buf);
+    fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : ENTER FUNCTION : %s\n", buf,  PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh, func_name);
+    fflush(PDO_NUODB_G(log_fp));
+    return TRUE;
 }
 
 void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh) {
-  char buf[64] = "";
+    char buf[64] = "";
 
-  TSRMLS_FETCH();
-  if (PDO_NUODB_G(log_fp) == NULL) return;
-  if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) return;
-  get_timestamp(buf);
-  fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : LEAVE FUNCTION\n", buf, PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh);
-  fflush(PDO_NUODB_G(log_fp));
-  return;
+    TSRMLS_FETCH();
+
+    if (PDO_NUODB_G(log_fp) == NULL) {
+        return;
+    }
+
+    if (PDO_NUODB_G(log_level) < PDO_NUODB_LOG_FUNCTIONS) {
+        return;
+    }
+
+    get_timestamp(buf);
+    fprintf(PDO_NUODB_G(log_fp), "%s : %d : %s(%d) : dbh=%p : LEAVE FUNCTION\n", buf, PDO_NUODB_LOG_FUNCTIONS, file, lineno, dbh);
+    fflush(PDO_NUODB_G(log_fp));
+    return;
 }

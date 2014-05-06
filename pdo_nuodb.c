@@ -57,15 +57,17 @@ ZEND_DECLARE_MODULE_GLOBALS(pdo_nuodb)
 /* True global resources - no need for thread safety here */
 static int le_pdo_nuodb;
 
+
 /* {{{ pdo_nuodb_functions[]
  *
  * Every user visible function must have an entry in pdo_nuodb_functions[].
  */
 const zend_function_entry pdo_nuodb_functions[] =
 {
-    PHP_FE_END	/* Must be the last line in pdo_nuodb_functions[] */
+    PHP_FE_END  /* Must be the last line in pdo_nuodb_functions[] */
 };
 /* }}} */
+
 
 /* {{{ pdo_nuodb_deps
  */
@@ -77,6 +79,7 @@ static const zend_module_dep pdo_nuodb_deps[] =
 };
 #endif
 /* }}} */
+
 
 /* {{{ pdo_nuodb_module_entry
  */
@@ -90,8 +93,8 @@ zend_module_entry pdo_nuodb_module_entry =
     pdo_nuodb_functions,
     PHP_MINIT(pdo_nuodb),
     PHP_MSHUTDOWN(pdo_nuodb),
-    PHP_RINIT(pdo_nuodb),		/* Replace with NULL if there's nothing to do at request start */
-    PHP_RSHUTDOWN(pdo_nuodb),	/* Replace with NULL if there's nothing to do at request end */
+    PHP_RINIT(pdo_nuodb),  /* Replace with NULL if there's nothing to do at request start */
+    PHP_RSHUTDOWN(pdo_nuodb),  /* Replace with NULL if there's nothing to do at request end */
     PHP_MINFO(pdo_nuodb),
 #if ZEND_MODULE_API_NO >= 20010901
     "0.1", /* Replace with version number for your extension */
@@ -100,9 +103,11 @@ zend_module_entry pdo_nuodb_module_entry =
 };
 /* }}} */
 
+
 #ifdef COMPILE_DL_PDO_NUODB
 ZEND_GET_MODULE(pdo_nuodb)
 #endif
+
 
 /* {{{ PHP_INI
  */
@@ -111,8 +116,8 @@ STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, e
 STD_PHP_INI_ENTRY("pdo_nuodb.log_level",      "1", PHP_INI_ALL, OnUpdateLong, log_level, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 PHP_INI_END()
-
 /* }}} */
+
 
 /* {{{ php_pdo_nuodb_init_globals
  */
@@ -134,8 +139,8 @@ static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals
     pdo_nuodb_globals->log_level = PDO_NUODB_LOG_ERRORS;
     pdo_nuodb_globals->logfile_path = NULL;
 }
-
 /* }}} */
+
 
 /* {{{ PHP_MINIT_FUNCTION
  */
@@ -143,7 +148,6 @@ PHP_MINIT_FUNCTION(pdo_nuodb)
 {
     ZEND_INIT_MODULE_GLOBALS(pdo_nuodb, php_pdo_nuodb_init_globals, NULL);
 
-    /* If you have INI entries, uncomment these lines */
     REGISTER_INI_ENTRIES();
 
     if (PDO_NUODB_G(enable_log) != 0) {
@@ -155,6 +159,7 @@ PHP_MINIT_FUNCTION(pdo_nuodb)
 }
 /* }}} */
 
+
 /* {{{ PHP_MSHUTDOWN_FUNCTION
  */
 PHP_MSHUTDOWN_FUNCTION(pdo_nuodb)
@@ -162,13 +167,13 @@ PHP_MSHUTDOWN_FUNCTION(pdo_nuodb)
     FILE *fp = PDO_NUODB_G(log_fp);
     if (fp != NULL) fclose(PDO_NUODB_G(log_fp));
 
-    /* uncomment this line if you have INI entries */
     UNREGISTER_INI_ENTRIES();
 
     php_pdo_unregister_driver(&pdo_nuodb_driver);
     return SUCCESS;
 }
 /* }}} */
+
 
 /* {{{ PHP_RINIT_FUNCTION
  */
@@ -178,6 +183,7 @@ PHP_RINIT_FUNCTION(pdo_nuodb)
 }
 /* }}} */
 
+
 /* {{{ PHP_RSHUTDOWN_FUNCTION
  */
 PHP_RSHUTDOWN_FUNCTION(pdo_nuodb)
@@ -185,6 +191,7 @@ PHP_RSHUTDOWN_FUNCTION(pdo_nuodb)
     return SUCCESS;
 }
 /* }}} */
+
 
 /* {{{ PHP_MINFO_FUNCTION
  */
@@ -201,4 +208,3 @@ PHP_MINFO_FUNCTION(pdo_nuodb)
 
 }
 /* }}} */
-

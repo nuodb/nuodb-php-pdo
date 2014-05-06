@@ -29,8 +29,10 @@
 #ifndef PHP_PDO_NUODB_H
 #define PHP_PDO_NUODB_H
 
+
 extern zend_module_entry pdo_nuodb_module_entry;
 #define phpext_pdo_nuodb_ptr &pdo_nuodb_module_entry
+
 
 #ifdef PHP_WIN32
 #	define PHP_PDO_NUODB_API __declspec(dllexport)
@@ -40,15 +42,18 @@ extern zend_module_entry pdo_nuodb_module_entry;
 #	define PHP_PDO_NUODB_API
 #endif
 
+
 #ifdef ZTS
 #    include "TSRM.h"
 #endif
+
 
 PHP_MINIT_FUNCTION(pdo_nuodb);
 PHP_MSHUTDOWN_FUNCTION(pdo_nuodb);
 PHP_RINIT_FUNCTION(pdo_nuodb);
 PHP_RSHUTDOWN_FUNCTION(pdo_nuodb);
 PHP_MINFO_FUNCTION(pdo_nuodb);
+
 
 /*
   Declare any global variables you may need between the BEGIN
@@ -72,6 +77,7 @@ ZEND_END_MODULE_GLOBALS(pdo_nuodb)
    examples in any other php module directory.
 */
 
+
 #ifdef ZTS
 #    define PDO_NUODB_G(v) TSRMG(pdo_nuodb_globals_id, zend_pdo_nuodb_globals *, v)
 #else
@@ -79,6 +85,7 @@ ZEND_END_MODULE_GLOBALS(pdo_nuodb)
 #endif
 
 #endif	/* PHP_PDO_NUODB_H */
+
 
 /*
  * Local variables:
