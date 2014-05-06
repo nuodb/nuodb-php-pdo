@@ -180,7 +180,7 @@ int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, 
     }
 
     einfo->errmsg = pestrdup(error_message, dbh->is_persistent);
-    strncpy(*pdo_err, sql_state, 6);
+    strncpy(*pdo_err, sql_state, PDO_NUODB_SQLSTATE_LEN);
 
     if (!dbh->methods) {
         TSRMLS_FETCH();
@@ -390,7 +390,7 @@ static long nuodb_handle_doer(pdo_dbh_t * dbh, const char * sql, long sql_len TS
     res = pdo_nuodb_db_handle_doer(H, dbh, sql, (unsigned)dbh->in_txn, (unsigned)dbh->auto_commit, &pdo_dbh_t_set_in_txn);
 
     /* do we have a dbh error code? */
-    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
+    if (strncmp(dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         PDO_DBG_RETURN(-1, dbh);
     }
 
@@ -501,7 +501,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
                                     PdoNuoDbStatement ** nuodb_stmt TSRMLS_DC)
 {
     pdo_nuodb_db_handle * H = NULL;
-    char * c, *new_sql, in_quote, in_param, pname[64], *ppname;
+    char * c, *new_sql, in_quote, in_param, pname[PDO_NUODB_PNAME_BUFFER], *ppname;
     long l, pindex = -1;
 
     PDO_DBG_ENTER("nuodb_alloc_prepare_stmt", dbh);
@@ -567,12 +567,12 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt, cons
     }
 
     /* do we have a statement error code? */
-    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6)) {
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         PDO_DBG_RETURN(0, dbh);
     }
 
     /* do we have a dbh error code? */
-    if (strncmp(dbh->error_code, PDO_ERR_NONE, 6)) {
+    if (strncmp(dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         PDO_DBG_RETURN(0, dbh);
     }
 
@@ -747,9 +747,8 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     int i;
     int ret = 0;
     int status;
-    short buf_len = 256;
     short dpb_len;
-    SqlOption options[4];
+    SqlOption options[PDO_NUODB_OPTIONS_ARR_SIZE];
     SqlOptionArray optionsArray;
     char *errMessage = NULL;
 
@@ -828,7 +827,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[3].option = "schema";
     options[3].extra = (vars[1].optval == NULL) ? "USER" : vars[1].optval;
 
-    optionsArray.count = 4;
+    optionsArray.count = PDO_NUODB_OPTIONS_ARR_SIZE;
     optionsArray.array = options;
 
     PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : pdo_nuodb_handle_factory : database=%s user=%s schema=%s",
@@ -887,7 +886,7 @@ pdo_driver_t pdo_nuodb_driver =   /* {{{ */
 
 void get_timestamp(char *time_buffer)
 {
-    char fmt[64];
+    char fmt[PDO_NUODB_TIMESTAMP_BUFFER];
 
     struct timeval  tv;
     struct tm       *tm;
@@ -916,9 +915,9 @@ void get_timestamp(char *time_buffer)
     {
         strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
 #ifdef WIN32
-        _snprintf(time_buffer, 64, fmt, tv.tv_usec);
+        _snprintf(time_buffer, PDO_NUODB_TIMESTAMP_BUFFER, fmt, tv.tv_usec);
 #else
-        snprintf(time_buffer, 64, fmt, tv.tv_usec);
+        snprintf(time_buffer, PDO_NUODB_TIMESTAMP_BUFFER, fmt, tv.tv_usec);
 #endif
     }
 }
@@ -926,7 +925,7 @@ void get_timestamp(char *time_buffer)
 
 void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
 {
-    char buf[64] = "";
+    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
 
     TSRMLS_FETCH();
 
@@ -946,7 +945,7 @@ void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log
 
 void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...)
 {
-    char buf[64] = "";
+    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
     va_list args;
 
     TSRMLS_FETCH();
@@ -970,7 +969,7 @@ void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format
 
 
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh) {
-    char buf[64] = "";
+    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
 
     TSRMLS_FETCH();
 
@@ -989,7 +988,7 @@ int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, in
 }
 
 void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh) {
-    char buf[64] = "";
+    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
 
     TSRMLS_FETCH();
 

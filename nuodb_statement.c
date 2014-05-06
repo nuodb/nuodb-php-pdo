@@ -190,7 +190,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
         {
-            col->maxlen = 24;
+            col->maxlen = CHAR_BUF_LEN;
             col->param_type = PDO_PARAM_STR;
             break;
         }
@@ -406,13 +406,13 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
     }
 
     /* do we have a statement error code? */
-    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN))
     {
         return 0;
     }
 
     /* do we have a dbh error code? */
-    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, 6))
+    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN))
     {
         return 0;
     }

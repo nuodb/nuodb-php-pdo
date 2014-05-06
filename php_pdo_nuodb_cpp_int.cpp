@@ -161,7 +161,7 @@ PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
     einfo.line = 0;
 
     strcpy(sqlstate, PDO_ERR_NONE);
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<PDO_NUODB_OPTIONS_ARR_SIZE; i++) {
         _opt_arr[i].option = NULL;
         _opt_arr[i].extra = NULL;
     }
@@ -242,7 +242,7 @@ void PdoNuoDbHandle::setEinfoErrmsg(const char *errmsg) {
 
 
 void PdoNuoDbHandle::setSqlstate(const char *sqlState) {
-    strncpy(this->sqlstate, sqlState, 6);
+    strncpy(this->sqlstate, sqlState, PDO_NUODB_SQLSTATE_LEN);
 }
 
 
@@ -251,7 +251,7 @@ void PdoNuoDbHandle::deleteOptions()
     if (_opts == NULL) {
         return;
     }
-    for (int i=0; i<4; i++)
+    for (int i=0; i<PDO_NUODB_OPTIONS_ARR_SIZE; i++)
     {
         if (_opt_arr[i].option != NULL) {
             free((void *)_opt_arr[i].option);
@@ -287,7 +287,7 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
 {
     deleteOptions();
     _opts = new SqlOptionArray;
-    _opts->count = 4;
+    _opts->count = PDO_NUODB_OPTIONS_ARR_SIZE;
     _opts->array = _opt_arr;
     for (int i=0; i<_opts->count; i++) {
         _opt_arr[i].option = (char const *) (options->array[i].option ? strdup(options->array[i].option) : NULL );
@@ -585,7 +585,7 @@ void PdoNuoDbStatement::setEinfoErrmsg(const char *errmsg) {
 
 
 void PdoNuoDbStatement::setSqlstate(const char *sqlState) {
-    strncpy(this->sqlstate, sqlState, 6);
+    strncpy(this->sqlstate, sqlState, PDO_NUODB_SQLSTATE_LEN);
 }
 
 

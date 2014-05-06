@@ -60,6 +60,10 @@
 #define PDO_NUODB_LOG_FUNCTIONS     4
 #define PDO_NUODB_LOG_EVERYTHING    5
 
+#define PDO_NUODB_OPTIONS_ARR_SIZE  4
+#define PDO_NUODB_TIMESTAMP_BUFFER 64
+#define PDO_NUODB_PNAME_BUFFER     64
+#define PDO_NUODB_SQLSTATE_LEN      6
 
 #ifdef __cplusplus
 extern "C" {
