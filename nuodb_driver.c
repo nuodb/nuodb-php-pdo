@@ -54,10 +54,12 @@
 
 #define PdoNuoDbStatement void
 #define PdoNuoDbHandle void
+
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_int.h"
 
 /* {{{ sqlcode_to_sqlstate_t
+ *
  * Workaround DB-4112 (see below)
  */
 struct sqlcode_to_sqlstate_t {
@@ -82,7 +84,7 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t *, pdo_stmt_t *, const char *, lon
  * Workaround DB-4112.  NuoDB C++ exceptions do not currently
  * return a string for the SqlState.  Until that gets fix, we will
  * simply map the sqlcode returned by NuoDB to an apporiate
- * SqlState string.
+ * SqlState string.  For now, steal the SQL states from SQLState.java
  */
 static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
     {-1, "42000"},
@@ -138,7 +140,7 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
     {-51, "58000"},
     {-52, "58000"},
     {-53, "58000"},
-    {-54, "42703"},
+    {-54, "58000"},
     {-55, "58000"}
 };
 /* }}} */
@@ -153,7 +155,7 @@ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
  */
 const char *nuodb_get_sqlstate(int sqlcode) {
     int index = abs(sqlcode) - 1;
-    if ((sqlcode > -1) || (sqlcode < -53)) {
+    if ((sqlcode > -1) || (sqlcode < -55)) {
         return NULL;
     }
     return sqlcode_to_sqlstate[index].sqlstate;
@@ -161,6 +163,8 @@ const char *nuodb_get_sqlstate(int sqlcode) {
 
 
 /* {{{ _record_error
+ *
+ * All errors get recorded here.
  */
 int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message)
 {
@@ -317,14 +321,12 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
     stmt->named_rewrite_template = ":pdo%d";
     ret = pdo_parse_params(stmt, (char*)sql, sql_len, &nsql, &nsql_len TSRMLS_CC);
-    if (ret == 1) /* the SQL query was re-written */
-    {
+    if (ret == 1) { /* the SQL query was re-written */
         rewritten = 1;
         sql = nsql;
         sql_len = nsql_len;
     }
-    else if (ret == -1) /* could not understand it! */
-    {
+    else if (ret == -1) { /* could not understand it! */
         strcpy(dbh->error_code, stmt->error_code);
         PDO_DBG_RETURN(0, dbh);
     }
@@ -353,8 +355,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
             index = 0;
             S->in_params = (nuo_params *) ecalloc(1, NUO_PARAMS_LENGTH(map_size));
             S->in_params->num_alloc = S->in_params->num_params = map_size;
-            for (index = 0; index < map_size; index++)
-            {
+            for (index = 0; index < map_size; index++) {
                 S->in_params->params[index].col_name[0] = '\0';
                 S->in_params->params[index].col_name_length = 0;
                 S->in_params->params[index].len = 0;
