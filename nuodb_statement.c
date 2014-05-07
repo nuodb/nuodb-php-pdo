@@ -65,7 +65,9 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 
 
 /* {{{ nuodb_stmt_dtor
-   Called by PDO to clean up a statement handle */
+ *
+ * Called by PDO to clean up a statement handle
+ */
 int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int result = 1;
@@ -102,7 +104,9 @@ int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 
 
 /* {{{ nuodb_stmt_execute
-   Called by PDO to execute a prepared query */
+ *
+ * Called by PDO to execute a prepared query
+ */
 static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int status;
@@ -136,7 +140,9 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 
 
 /* {{{ nuodb_stmt_fetch
-   Called by PDO to fetch the next row from a statement */
+ *
+ * Called by PDO to fetch the next row from a statement
+ */
 static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt,
                             enum pdo_fetch_orientation ori,
                             long offset TSRMLS_DC)
@@ -156,7 +162,10 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt,
 
 
 /* {{{ nuodb_stmt_describe
-   Called by PDO to retrieve information about the fields being returned */
+ *
+ * Called by PDO to retrieve information about the fields being
+ * returned
+ */
 static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC)
 {
     pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
@@ -250,7 +259,9 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC)
 
 
 /* {{{ nuodb_stmt_get_col
-   Get column information. */
+ *
+ * Get column information.
+ */
 static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
                               char ** ptr, unsigned long * len,
                               int * caller_frees TSRMLS_DC)
@@ -273,10 +284,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
     switch (sqlTypeNumber)
     {
         /*
-        ** PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
-        ** a NULL value in the result set.  Attempts to obtain any
-        ** value should be a NULL value.
-        */
+         * PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
+         * a NULL value in the result set.  Attempts to obtain any
+         * value should be a NULL value.
+         */
         case PDO_NUODB_SQLTYPE_NULL:
         {
             int str_len;
@@ -717,3 +728,12 @@ struct pdo_stmt_methods nuodb_stmt_methods =
     NULL, /* next_rowset_func */
     nuodb_stmt_cursor_closer
 };
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

@@ -38,12 +38,14 @@
 
 class PdoNuoDbStatement;
 
+
 struct PdoNuoDbGeneratedKeyElement
 {
     char *columnName;
     int columnIndex;
     int columnKeyValue;
 };
+
 
 class PdoNuoDbGeneratedKeys
 {
@@ -57,6 +59,7 @@ public:
     int getIdValue();
     int getIdValue(const char *seqName);
 };
+
 
 class PdoNuoDbHandle
 {
@@ -100,6 +103,7 @@ public:
     const char *getNuoDBProductName();
     const char *getNuoDBProductVersion();
 };
+
 
 class PdoNuoDbStatement
 {
@@ -154,4 +158,13 @@ public:
 };
 
 
-#endif	/* PHP_PDO_NUODB_INT_CPP_H */
+#endif	/* end of: PHP_PDO_NUODB_INT_CPP_H */
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

@@ -30,11 +30,11 @@
 #define PHP_PDO_NUODB_C_CPP_COMMON_H
 
 /*
-** This is a common file that will be compiled by both C and C++.
-** The definitions here are use by both the "C/PHP/Zend" parts of this
-** driver as well as the "C++/NuoDB" parts of this driver.
-**
-*/
+ * This is a common file that will be compiled by both C and C++.
+ * The definitions here are use by both the "C/PHP/Zend" parts of this
+ * driver as well as the "C++/NuoDB" parts of this driver.
+ *
+ */
 #define SHORT_MAX (1 << (8*sizeof(short)-1))
 
 #define PDO_NUODB_SQLTYPE_BOOLEAN   1
@@ -52,8 +52,8 @@
 #define PDO_NUODB_SQLTYPE_NULL     12
 
 /*
-** Levels of detail for logging.
-*/
+ * Levels of detail for logging.
+ */
 #define PDO_NUODB_LOG_ERRORS        1
 #define PDO_NUODB_LOG_SQL           2
 #define PDO_NUODB_LOG_API           3
@@ -101,7 +101,6 @@ extern "C" {
 }
 #endif
 
-/*#if PHP_DEBUG && !defined(PHP_WIN32) */
 #define PDO_DBG_ENABLED 1
 
 #ifdef PDO_DBG_ENABLED
@@ -176,7 +175,7 @@ extern "C" {
 /*void _nuodb_error_new(pdo_dbh_t * dbh, pdo_stmt_t * stmt, char const
  * * file, long line, const char *sql_state, int nuodb_error_code,
  * const char *format, ...); */
-    int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line/* TSRMLS_DC*/);
+    int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line);
     int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message);
     int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...);
 
@@ -191,10 +190,6 @@ extern "C" {
 
         /* NuoDB error information */
         pdo_nuodb_error_info einfo;
-
-        /* the last error that didn't come from the API */
-        /*char const * last_app_error;  // TODO: this needs to go away in
-         * favor of 'einfo' */
 
         char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
         char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
@@ -288,3 +283,12 @@ extern "C" {
 #endif
 
 #endif  /* PHP_PDO_NUODB_C_CPP_COMMON_H */
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

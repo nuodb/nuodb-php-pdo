@@ -120,18 +120,17 @@ PHP_INI_END()
 
 
 /* {{{ php_pdo_nuodb_init_globals
+ *
+ * The log_level is the level of logging "detail" that the user wants
+ * to see in the log.  The higher level numbers have more detail.
+ * The higher level numbers include lesser levels:
+ *
+ *   PDO_NUODB_LOG_ERRORS        1     errors/exceptions
+ *   PDO_NUODB_LOG_SQL           2     SQL statements
+ *   PDO_NUODB_LOG_API           3     API
+ *   PDO_NUODB_LOG_FUNCTIONS     4     Functions
+ *   PDO_NUODB_LOG_EVERYTHING    5     Everything
  */
-/*
-** The log_level is the level of logging "detail" that the user wants
-** to see in the log.  The higher level numbers have more detail.
-** The higher level numbers include lesser levels:
-**
-**   PDO_NUODB_LOG_ERRORS        1     errors/exceptions
-**   PDO_NUODB_LOG_SQL           2     SQL statements
-**   PDO_NUODB_LOG_API           3     API
-**   PDO_NUODB_LOG_FUNCTIONS     4     Functions
-**   PDO_NUODB_LOG_EVERYTHING    5     Everything
-*/
 static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals)
 {
     pdo_nuodb_globals->log_fp = NULL;
@@ -205,6 +204,14 @@ PHP_MINFO_FUNCTION(pdo_nuodb)
 
     /* Remove comments if you have entries in php.ini */
     DISPLAY_INI_ENTRIES();
-
 }
 /* }}} */
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */
