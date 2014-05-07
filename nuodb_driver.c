@@ -137,7 +137,9 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
     {-50, "58000"},
     {-51, "58000"},
     {-52, "58000"},
-    {-53, "58000"}
+    {-53, "58000"},
+    {-54, "42703"},
+    {-55, "58000"}
 };
 /* }}} */
 
@@ -683,7 +685,7 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr,
                     {
                         /* turning on auto_commit with an open transaction is illegal, because
                            we won't know what to do with it */
-                        _record_error_formatted(dbh, NULL, __FILE__, __LINE__, "HY011", -17, "Cannot enable auto-commit while a transaction is already open");
+                        _record_error_formatted(dbh, NULL, __FILE__, __LINE__, "HY011", PDO_NUODB_SQLCODE_INTERNAL_ERROR, "Cannot enable auto-commit while a transaction is already open");
                         PDO_DBG_RETURN(0, dbh);
                     }
                     else
@@ -841,7 +843,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[0].option = "database";
     options[0].extra = (void *) vars[0].optval;
     if (options[0].extra == NULL) {
-        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
+        H->einfo.errcode = PDO_NUODB_SQLCODE_CONNECTION_ERROR;
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error_formatted(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'database' parameter. DSN=\"%s\"", dbh->data_source);
@@ -862,7 +864,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[1].option = "user";
     options[1].extra = (void *) dbh->username;
     if (options[1].extra == NULL) {
-        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
+        H->einfo.errcode = PDO_NUODB_SQLCODE_CONNECTION_ERROR;
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'user' parameter");
@@ -883,7 +885,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     options[2].option = "password";
     options[2].extra = (void *) dbh->password;
     if (options[2].extra == NULL) {
-        H->einfo.errcode = -10;  /* NuoDB SqlCode.CONNECTION_ERROR */
+        H->einfo.errcode = PDO_NUODB_SQLCODE_CONNECTION_ERROR;
         H->einfo.file = __FILE__;
         H->einfo.line = __LINE__;
         _record_error(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "DSN is missing 'password' parameter");

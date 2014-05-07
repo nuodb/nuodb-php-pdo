@@ -394,7 +394,7 @@ int PdoNuoDbHandle::getLastId(const char *name)
      * but NuoDB does not currently support getting IDs by name,
      * so instead we must signal an error as follows:
      */
-    setEinfoErrcode(-17);
+    setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
     setEinfoErrmsg("Unknown Error in PdoNuoDbHandle::getLastId");
     setEinfoFile(__FILE__);
     setEinfoLine(__LINE__);
@@ -513,7 +513,7 @@ NuoDB::PreparedStatement * PdoNuoDbStatement::createStatement(char const * sql)
         _nuodbh->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), NULL, _nuodbh->getEinfoFile(), _nuodbh->getEinfoLine());
     } catch (...) {
-        _nuodbh->setEinfoErrcode(-17);
+        _nuodbh->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
         _nuodbh->setEinfoErrmsg("Unknown Error in PdoNuoDbStatement::createStatement");
         _nuodbh->setEinfoFile(__FILE__);
         _nuodbh->setEinfoLine(__LINE__);
@@ -681,7 +681,7 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
         setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine());
     } catch (...) {
-        setEinfoErrcode(-17);
+        setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
         setEinfoErrmsg("Unknown Error in PdoNuoDbStatement::getColumnName");
         setEinfoFile(__FILE__);
         setEinfoLine(__LINE__);
@@ -763,7 +763,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
         setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine());
     } catch (...) {
-        setEinfoErrcode(-17);
+        setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
         setEinfoErrmsg("Unknown Error in PdoNuoDbStatement::getSqlType");
         setEinfoFile(__FILE__);
         setEinfoLine(__LINE__);
@@ -1205,7 +1205,7 @@ extern "C" {
         }
         catch (...)
         {
-            db->setEinfoErrcode(-17);
+            db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_set_auto_commit()");
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
@@ -1239,7 +1239,7 @@ extern "C" {
         }
         catch (...)
         {
-            db->setEinfoErrcode(-17);
+            db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_name()");
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
@@ -1274,7 +1274,7 @@ extern "C" {
         }
         catch (...)
         {
-            db->setEinfoErrcode(-17);
+            db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_get_nuodb_product_version()");
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
@@ -1345,7 +1345,7 @@ extern "C" {
         }
         catch (...)
         {
-            db->setEinfoErrcode(-17);
+            db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             db->setEinfoErrmsg("UNKNOWN ERROR in pdo_nuodb_db_handle_doer()");
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
@@ -1382,7 +1382,7 @@ extern "C" {
             return 0;
         } catch (...) {
             if (db != NULL) {
-                db->setEinfoErrcode(-17);
+                db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
                 db->setEinfoErrmsg("Unknown Error in pdo_nuodb_db_handle_factory()");
                 db->setEinfoFile(__FILE__);
                 db->setEinfoLine(__LINE__);
@@ -1489,7 +1489,7 @@ extern "C" {
             return 0;
         }
         catch (...) {
-            db->setEinfoErrcode(-17);
+            db->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             db->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_delete()");
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
@@ -1548,7 +1548,7 @@ extern "C" {
             return 0;
         }
         catch (...) {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_execute()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1589,7 +1589,7 @@ extern "C" {
                 nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
                 _pdo_nuodb_error(H->pdo_dbh, nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
             } catch (...) {
-                nuodb_stmt->setEinfoErrcode(-17);
+                nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
                 nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_fetch()");
                 nuodb_stmt->setEinfoFile(__FILE__);
                 nuodb_stmt->setEinfoLine(__LINE__);
@@ -1620,7 +1620,7 @@ extern "C" {
             _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
             return 0;
         } catch (...) {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_column_name()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1649,7 +1649,7 @@ extern "C" {
             _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
             return 0;
         } catch (...) {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_sql_type()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1679,7 +1679,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_integer()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1709,7 +1709,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_boolean()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1741,7 +1741,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1772,7 +1772,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_bytes()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1803,7 +1803,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_blob()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1834,7 +1834,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_clob()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1864,7 +1864,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_integer()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1893,7 +1893,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_boolean()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1922,7 +1922,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_long()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1953,7 +1953,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_string()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -1983,7 +1983,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_date()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -2012,7 +2012,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_time()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -2042,7 +2042,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_timestamp()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -2073,7 +2073,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_blob()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
@@ -2103,7 +2103,7 @@ extern "C" {
         }
         catch (...)
         {
-            nuodb_stmt->setEinfoErrcode(-17);
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_get_clob()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);

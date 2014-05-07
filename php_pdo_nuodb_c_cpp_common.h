@@ -65,6 +65,10 @@
 #define PDO_NUODB_PNAME_BUFFER     64
 #define PDO_NUODB_SQLSTATE_LEN      6
 
+#define PDO_NUODB_SQLCODE_CONNECTION_ERROR   -10
+#define PDO_NUODB_SQLCODE_APPLICATION_ERROR  -12
+#define PDO_NUODB_SQLCODE_INTERNAL_ERROR     -17
+
 #ifdef __cplusplus
 extern "C" {
 #endif
