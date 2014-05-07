@@ -56,8 +56,7 @@
 
 #define CHAR_BUF_LEN 24
 
-/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
-
+int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
 static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 {
@@ -65,8 +64,9 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 }
 
 
-/* called by PDO to clean up a statement handle */
-/* static */ int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_dtor
+   Called by PDO to clean up a statement handle */
+int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int result = 1;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
@@ -101,8 +101,9 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 /* }}} */
 
 
-/* called by PDO to execute a prepared query */
-static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_execute
+   Called by PDO to execute a prepared query */
+static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int status;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
@@ -134,9 +135,11 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 /* }}} */
 
 
-/* called by PDO to fetch the next row from a statement */
-static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
-                            enum pdo_fetch_orientation ori, long offset TSRMLS_DC)
+/* {{{ nuodb_stmt_fetch
+   Called by PDO to fetch the next row from a statement */
+static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt,
+                            enum pdo_fetch_orientation ori,
+                            long offset TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_fetch", pdo_stmt->dbh);
@@ -152,8 +155,9 @@ static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
 /* }}} */
 
 
-/* called by PDO to retrieve information about the fields being returned */
-static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_describe
+   Called by PDO to retrieve information about the fields being returned */
+static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC)
 {
     pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     struct pdo_column_data *col = &pdo_stmt->columns[colno];
@@ -245,8 +249,11 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
 /* }}} */
 
 
-static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
-                              unsigned long * len, int * caller_frees TSRMLS_DC)
+/* {{{ nuodb_stmt_get_col
+   Get column information. */
+static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
+                              char ** ptr, unsigned long * len,
+                              int * caller_frees TSRMLS_DC)
 {
     static void * (*ereallocPtr)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC) = &_erealloc;
 
@@ -336,8 +343,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         {
             int str_len;
             const char * str = pdo_nuodb_stmt_get_string(S, colno);
-            if (str == NULL)
-            {
+            if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
@@ -428,8 +434,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
 /* }}} */
 
 
+/* {{{ nuodb_stmt_param_hook
+ */
 static int
-nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /* {{{ */
+nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
                       enum pdo_param_event event_type TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
@@ -631,7 +639,9 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
 /* }}} */
 
 
-static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_set_attribute
+ */
+static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
@@ -653,7 +663,10 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 /* }}} */
 
 
-static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_get_attribute
+ */
+static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr,
+                                    zval * val TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
@@ -674,7 +687,9 @@ static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 /* }}} */
 
 
-static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
+/* {{{ nuodb_stmt_cursor_closer
+ */
+static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
@@ -688,7 +703,7 @@ static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
 /* }}} */
 
 
-struct pdo_stmt_methods nuodb_stmt_methods =   /* {{{ */
+struct pdo_stmt_methods nuodb_stmt_methods =
 {
     nuodb_stmt_dtor,
     nuodb_stmt_execute,
@@ -702,4 +717,3 @@ struct pdo_stmt_methods nuodb_stmt_methods =   /* {{{ */
     NULL, /* next_rowset_func */
     nuodb_stmt_cursor_closer
 };
-/* }}} */

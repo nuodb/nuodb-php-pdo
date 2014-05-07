@@ -138,7 +138,8 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
 int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
 
-/* Workaround DB-4112 */
+/* {{{ nuodb_get_sqlstate
+   Workaround DB-4112 */
 const char *nuodb_get_sqlstate(int sqlcode) {
     int index = abs(sqlcode) - 1;
     if ((sqlcode > -1) || (sqlcode < -53)) {
