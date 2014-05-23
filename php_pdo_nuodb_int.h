@@ -29,7 +29,6 @@
 #ifndef PHP_PDO_NUODB_INT_H
 #define PHP_PDO_NUODB_INT_H
 
-
 extern pdo_driver_t pdo_nuodb_driver;
 
 extern struct pdo_stmt_methods nuodb_stmt_methods;

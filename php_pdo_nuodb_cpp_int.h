@@ -35,9 +35,7 @@
 #include "DatabaseMetaData.h"
 #include "PreparedStatement.h"
 
-
 class PdoNuoDbStatement;
-
 
 struct PdoNuoDbGeneratedKeyElement
 {
@@ -45,7 +43,6 @@ struct PdoNuoDbGeneratedKeyElement
     int columnIndex;
     int columnKeyValue;
 };
-
 
 class PdoNuoDbGeneratedKeys
 {
@@ -59,7 +56,6 @@ public:
     int getIdValue();
     int getIdValue(const char *seqName);
 };
-
 
 class PdoNuoDbHandle
 {
@@ -103,7 +99,6 @@ public:
     const char *getNuoDBProductName();
     const char *getNuoDBProductVersion();
 };
-
 
 class PdoNuoDbStatement
 {
@@ -156,7 +151,6 @@ public:
     void setBlob(size_t index, const char *value, int len);
     void setClob(size_t index, const char *value, int len);
 };
-
 
 #endif	/* end of: PHP_PDO_NUODB_INT_CPP_H */
 

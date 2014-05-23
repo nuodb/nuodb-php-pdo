@@ -93,7 +93,6 @@ extern "C" {
 }
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -148,7 +147,6 @@ typedef struct SqlOptionArray_t
     SqlOption const * array;
 } SqlOptionArray;
 
-
 typedef struct
 {
     short sqltype;  /* datatype */
@@ -182,7 +180,6 @@ extern "C" {
     int _pdo_nuodb_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line);
     int _record_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *error_message);
     int _record_error_formatted(pdo_dbh_t *dbh, pdo_stmt_t *stmt, const char *file, int line, const char *sql_state,  int error_code, const char *format, ...);
-
 
     typedef struct
     {

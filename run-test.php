@@ -126,7 +126,6 @@ if (PHP_MAJOR_VERSION < 6) {
 | depending on how you configured "safe_mode" !             |
 +-----------------------------------------------------------+
 
-
 SAFE_MODE_WARNING;
 	}
 }
