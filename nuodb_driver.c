@@ -68,7 +68,6 @@ struct sqlcode_to_sqlstate_t {
 };
 /* }}} */
 
-
 ZEND_DECLARE_MODULE_GLOBALS(pdo_nuodb)
 
 char const * const NUODB_OPT_DATABASE = "database";
@@ -145,9 +144,7 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
 };
 /* }}} */
 
-
 int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
-
 
 /* {{{ nuodb_get_sqlstate
  *
@@ -160,7 +157,6 @@ const char *nuodb_get_sqlstate(int sqlcode) {
     }
     return sqlcode_to_sqlstate[index].sqlstate;
 }
-
 
 /* {{{ _record_error
  *
@@ -346,7 +342,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     stmt->driver_data = S;
     stmt->methods = &nuodb_stmt_methods;
 
-    map_size = 0;
     if (stmt->bound_param_map)
     {
         map_size = zend_hash_num_elements(stmt->bound_param_map);
@@ -678,22 +673,16 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr,
             convert_to_boolean(val);
 
             /* ignore if the new value equals the old one */
-            if (dbh->auto_commit ^ Z_BVAL_P(val))
-            {
-                if (dbh->in_txn)
-                {
-                    if (Z_BVAL_P(val))
-                    {
+            if (dbh->auto_commit ^ Z_BVAL_P(val)) {
+                if (dbh->in_txn) {
+                    if (Z_BVAL_P(val)) {
                         /* turning on auto_commit with an open transaction is illegal, because
                            we won't know what to do with it */
                         _record_error_formatted(dbh, NULL, __FILE__, __LINE__, "HY011", PDO_NUODB_SQLCODE_INTERNAL_ERROR, "Cannot enable auto-commit while a transaction is already open");
                         PDO_DBG_RETURN(0, dbh);
-                    }
-                    else
-                    {
+                    } else {
                         /* close the transaction */
-                        if (!nuodb_handle_commit(dbh TSRMLS_CC))
-                        {
+                        if (!nuodb_handle_commit(dbh TSRMLS_CC)) {
                             break;
                         }
                         dbh->in_txn = 0;
@@ -701,7 +690,6 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr,
                 }
                 dbh->auto_commit = Z_BVAL_P(val);
                 pdo_nuodb_db_handle_set_auto_commit(H, dbh->auto_commit);
-
             }
             PDO_DBG_RETURN(1, dbh);
 

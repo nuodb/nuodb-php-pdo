@@ -447,9 +447,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
 
 /* {{{ nuodb_stmt_param_hook
  */
-static int
-nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
-                      enum pdo_param_event event_type TSRMLS_DC)
+static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
+                                 enum pdo_param_event event_type TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
     nuo_params * nuodb_params = NULL;
@@ -473,9 +472,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
                 {
                     if (!strncmp(param->name, ":pdo", 4)) {
                         param->paramno = atoi(param->name + 4);
-                    }
-                    else
-                    {
+                    } else {
                         /* resolve parameter name to rewritten name */
                         char *nameptr;
                         if (stmt->bound_param_map &&
@@ -484,9 +481,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
                                                       param->namelen + 1,
                                                       (void**)&nameptr)) {
                             param->paramno = atoi(nameptr + 4) - 1;
-                        }
-                        else
-                        {
+                        } else {
                             _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Invalid parameter name '%s'", param->name);
                             return 0;
                         }
