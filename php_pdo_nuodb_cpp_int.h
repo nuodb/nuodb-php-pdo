@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,6 @@
 #include "DatabaseMetaData.h"
 #include "PreparedStatement.h"
 
-
 class PdoNuoDbStatement;
 
 struct PdoNuoDbGeneratedKeyElement
@@ -47,10 +46,10 @@ struct PdoNuoDbGeneratedKeyElement
 
 class PdoNuoDbGeneratedKeys
 {
-  private:
+private:
     int _qty;
     PdoNuoDbGeneratedKeyElement *_keys;
-  public:
+public:
     PdoNuoDbGeneratedKeys();
     ~PdoNuoDbGeneratedKeys();
     void setKeys(NuoDB::ResultSet *rs);
@@ -67,8 +66,10 @@ private:
     SqlOption _opt_arr[4];
     pdo_nuodb_error_info einfo; /* NuoDB error information */
     pdo_error_type sqlstate;
-    PdoNuoDbStatement * _last_stmt; // will be NULL if the last statement was closed.
-    PdoNuoDbGeneratedKeys *_last_keys;  // pointer to array of generated keys.
+    PdoNuoDbStatement * _last_stmt; /* will be NULL if the last
+                                       statement was closed. */
+    PdoNuoDbGeneratedKeys *_last_keys;  /* pointer to array of
+                                           generated keys. */
     void deleteOptions();
 public:
     PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options);
@@ -135,7 +136,6 @@ public:
     void getInteger(size_t column, int **int_val);
     bool getBoolean(size_t column, char **bool_val);
     void getLong(size_t column, int64_t **long_val);
-    //unsigned long getTimestamp(size_t column);
     char const * getTimestamp(size_t column);
     void getDate(size_t column, int64_t **date_val);
     void getTime(size_t column, int64_t **time_val);
@@ -152,5 +152,13 @@ public:
     void setClob(size_t index, const char *value, int len);
 };
 
+#endif	/* end of: PHP_PDO_NUODB_INT_CPP_H */
 
-#endif	/* PHP_PDO_NUODB_INT_CPP_H */
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

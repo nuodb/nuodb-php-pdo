@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,6 @@
 #ifndef PHP_PDO_NUODB_INT_H
 #define PHP_PDO_NUODB_INT_H
 
-
 extern pdo_driver_t pdo_nuodb_driver;
 
 extern struct pdo_stmt_methods nuodb_stmt_methods;
@@ -43,4 +42,13 @@ enum
     PDO_NUODB_ATTR_TIMESTAMP_FORMAT,
 };
 
-#endif	/* PHP_PDO_NUODB_INT_H */
+#endif  /* PHP_PDO_NUODB_INT_H */
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

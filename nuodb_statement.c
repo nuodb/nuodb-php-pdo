@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012 - 2013, NuoDB, Inc.
+ * Copyright (c) 2012 - 2014, NuoDB, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#ifdef _MSC_VER  // Visual Studio specific
+#ifdef _MSC_VER  /* Visual Studio specific */
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -56,33 +56,37 @@
 
 #define CHAR_BUF_LEN 24
 
-/*static*/ int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
+int nuodb_handle_commit(pdo_dbh_t * dbh TSRMLS_DC);
 
 static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 {
-        pdo_nuodb_stmt_delete(S);
+    pdo_nuodb_stmt_delete(S);
 }
 
-/* called by PDO to clean up a statement handle */
-/* static */ int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_dtor
+ *
+ * Called by PDO to clean up a statement handle
+ */
+int nuodb_stmt_dtor(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int result = 1;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_dtor", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", pdo_stmt->dbh, S);
 
-        if (S->commit_on_close == 1) {
-                nuodb_handle_commit(pdo_stmt->dbh TSRMLS_CC);
-        }
+    if (S->commit_on_close == 1) {
+        nuodb_handle_commit(pdo_stmt->dbh TSRMLS_CC);
+    }
 
     _release_PdoNuoDbStatement(S); /* release the statement */
 
-        if (S->sql) {
+    if (S->sql) {
         free(S->sql);
         S->sql = NULL;
     }
 
-        if (S->einfo.errmsg) {
+    if (S->einfo.errmsg) {
         pefree(S->einfo.errmsg, pdo_stmt->dbh->is_persistent);
         S->einfo.errmsg = NULL;
     }
@@ -98,13 +102,16 @@ static void _release_PdoNuoDbStatement(pdo_nuodb_stmt * S)
 }
 /* }}} */
 
-/* called by PDO to execute a prepared query */
-static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_execute
+ *
+ * Called by PDO to execute a prepared query
+ */
+static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC)
 {
     int status;
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     pdo_nuodb_db_handle * H = NULL;
-
 
     PDO_DBG_ENTER("nuodb_stmt_execute", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p S=%p sql=%s", pdo_stmt->dbh, pdo_stmt->driver_data, S->sql);
@@ -113,13 +120,13 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
     }
 
     if ((pdo_stmt->dbh->auto_commit == 0) &&
-                (pdo_stmt->dbh->in_txn == 0))
+        (pdo_stmt->dbh->in_txn == 0))
     {
         H = (pdo_nuodb_db_handle *)pdo_stmt->dbh->driver_data;
         if ((H->in_nuodb_implicit_txn == 0) && (H->in_nuodb_explicit_txn == 0)) {
-                H->in_nuodb_implicit_txn = 1;
-                S->commit_on_close = 1;
-                S->implicit_txn = 1;
+            H->in_nuodb_implicit_txn = 1;
+            S->commit_on_close = 1;
+            S->implicit_txn = 1;
         }
     }
     status = pdo_nuodb_stmt_execute(S, &pdo_stmt->column_count, &pdo_stmt->row_count);
@@ -131,24 +138,35 @@ static int nuodb_stmt_execute(pdo_stmt_t * pdo_stmt TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-/* called by PDO to fetch the next row from a statement */
-static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt, /* {{{ */
-                            enum pdo_fetch_orientation ori, long offset TSRMLS_DC)
+
+/* {{{ nuodb_stmt_fetch
+ *
+ * Called by PDO to fetch the next row from a statement
+ */
+static int nuodb_stmt_fetch(pdo_stmt_t * pdo_stmt,
+                            enum pdo_fetch_orientation ori,
+                            long offset TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     PDO_DBG_ENTER("nuodb_stmt_fetch", pdo_stmt->dbh);
     PDO_DBG_INF_FMT("dbh=%p : S=%p", pdo_stmt->dbh, S);
+
     if (!pdo_stmt->executed)
     {
-        _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", -12, "Cannot fetch from a closed cursor");
+        _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "01001", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Cannot fetch from a closed cursor");
         PDO_DBG_RETURN(0, pdo_stmt->dbh);
     }
     PDO_DBG_RETURN(pdo_nuodb_stmt_fetch(S, &pdo_stmt->row_count), pdo_stmt->dbh);
 }
 /* }}} */
 
-/* called by PDO to retrieve information about the fields being returned */
-static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_describe
+ *
+ * Called by PDO to retrieve information about the fields being
+ * returned
+ */
+static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC)
 {
     pdo_nuodb_stmt *S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     struct pdo_column_data *col = &pdo_stmt->columns[colno];
@@ -161,8 +179,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
     col->maxlen = 0;
 
     column_name = pdo_nuodb_stmt_get_column_name(S, colno);
-    if (column_name == NULL)
-    {
+    if (column_name == NULL) {
         return 0;
     }
     colname_len = strlen(column_name);
@@ -190,7 +207,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
         {
-            col->maxlen = 24;
+            col->maxlen = CHAR_BUF_LEN;
             col->param_type = PDO_PARAM_STR;
             break;
         }
@@ -231,7 +248,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
         }
         default:
         {
-                _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_describe()", sqlTypeNumber);
+            _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_INTERNAL_ERROR, "unknown/unsupported type: '%d' in nuodb_stmt_describe()", sqlTypeNumber);
             return 0;
         }
     }
@@ -240,8 +257,14 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC) /* {{
 }
 /* }}} */
 
-static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* {{{ */
-                              unsigned long * len, int * caller_frees TSRMLS_DC)
+
+/* {{{ nuodb_stmt_get_col
+ *
+ * Get column information.
+ */
+static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
+                              char ** ptr, unsigned long * len,
+                              int * caller_frees TSRMLS_DC)
 {
     static void * (*ereallocPtr)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC) = &_erealloc;
 
@@ -252,13 +275,19 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
 
     *len = 0;
     *caller_frees = 1;
-    if (*ptr != NULL) efree(*ptr);
+
+    if (*ptr != NULL) {
+        efree(*ptr);
+    }
     *ptr = NULL;
+
     switch (sqlTypeNumber)
     {
-        // PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
-        // a NULL value in the result set.  Attempts to obtain any
-        // value should be a NULL value.
+        /*
+         * PDO_NUODB_SQLTYPE_NULL occurs when the NuoDB C++ API has
+         * a NULL value in the result set.  Attempts to obtain any
+         * value should be a NULL value.
+         */
         case PDO_NUODB_SQLTYPE_NULL:
         {
             int str_len;
@@ -269,7 +298,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
                 *len = 0;
                 break;
             }
-            _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "Unexpected value for SQLTYPE NULL: str=%s", str);
+            _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_INTERNAL_ERROR, "Unexpected value for SQLTYPE NULL: str=%s", str);
             return 0;
         }
         case PDO_NUODB_SQLTYPE_BOOLEAN:
@@ -289,8 +318,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         case PDO_NUODB_SQLTYPE_INTEGER:
         {
-                int val = 0;
-                int *pVal = &val;
+            int val = 0;
+            int *pVal = &val;
             pdo_nuodb_stmt_get_integer(S, colno, &pVal);
             if (pVal == NULL) {
                 *ptr = NULL;
@@ -305,8 +334,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         case PDO_NUODB_SQLTYPE_BIGINT:
         {
-                int64_t val = 0;
-                int64_t *pVal = &val;
+            int64_t val = 0;
+            int64_t *pVal = &val;
             pdo_nuodb_stmt_get_long(S, colno, &pVal);
             if (pVal == NULL) {
                 *ptr = NULL;
@@ -325,8 +354,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         {
             int str_len;
             const char * str = pdo_nuodb_stmt_get_string(S, colno);
-            if (str == NULL)
-            {
+            if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
@@ -340,8 +368,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         case PDO_NUODB_SQLTYPE_DATE:
         {
-                int64_t val = 0;
-                int64_t *pVal = &val;
+            int64_t val = 0;
+            int64_t *pVal = &val;
             pdo_nuodb_stmt_get_date(S, colno, &pVal);
             if (pVal == NULL) {
                 *ptr = NULL;
@@ -355,8 +383,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         case PDO_NUODB_SQLTYPE_TIME:
         {
-                int64_t val = 0;
-                int64_t *pVal = &val;
+            int64_t val = 0;
+            int64_t *pVal = &val;
             pdo_nuodb_stmt_get_time(S, colno, &pVal);
             if (pVal == NULL) {
                 *ptr = NULL;
@@ -372,8 +400,7 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         {
             int str_len;
             const char * str = pdo_nuodb_stmt_get_timestamp(S, colno);
-            if (str == NULL)
-            {
+            if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
@@ -397,21 +424,19 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
         }
         default:
         {
-                _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", -17, "unknown/unsupported type: '%d' in nuodb_stmt_get_col()", sqlTypeNumber);
-                return 0;
+            _record_error_formatted(pdo_stmt->dbh, pdo_stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_INTERNAL_ERROR, "unknown/unsupported type: '%d' in nuodb_stmt_get_col()", sqlTypeNumber);
+            return 0;
             break;
         }
     }
 
-    // do we have a statement error code?
-    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, 6))
-    {
+    /* do we have a statement error code? */
+    if ((pdo_stmt->error_code[0] != '\0') && strncmp(pdo_stmt->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         return 0;
     }
 
-    // do we have a dbh error code?
-    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, 6))
-    {
+    /* do we have a dbh error code? */
+    if (strncmp(pdo_stmt->dbh->error_code, PDO_ERR_NONE, PDO_NUODB_SQLSTATE_LEN)) {
         return 0;
     }
 
@@ -419,8 +444,10 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno, char ** ptr, /* 
 }
 /* }}} */
 
-static int
-nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /* {{{ */
+
+/* {{{ nuodb_stmt_param_hook
+ */
+static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param,
                                  enum pdo_param_event event_type TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
@@ -437,42 +464,33 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             case PDO_PARAM_EVT_EXEC_POST:
             case PDO_PARAM_EVT_FETCH_PRE:
             case PDO_PARAM_EVT_FETCH_POST:
-                //PDO_DBG_RETURN(1);
                 return 1;
 
             case PDO_PARAM_EVT_NORMALIZE:
                 /* decode name from :pdo1, :pdo2 into 0, 1 etc. */
                 if (param->name)
                 {
-                    if (!strncmp(param->name, ":pdo", 4))
-                    {
+                    if (!strncmp(param->name, ":pdo", 4)) {
                         param->paramno = atoi(param->name + 4);
-                    }
-                    else
-                    {
+                    } else {
                         /* resolve parameter name to rewritten name */
                         char *nameptr;
                         if (stmt->bound_param_map &&
                             SUCCESS == zend_hash_find(stmt->bound_param_map,
-                                              param->name,
-                                              param->namelen + 1,
-                                              (void**)&nameptr))
-                        {
+                                                      param->name,
+                                                      param->namelen + 1,
+                                                      (void**)&nameptr)) {
                             param->paramno = atoi(nameptr + 4) - 1;
-                        }
-                        else
-                        {
-                                _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Invalid parameter name '%s'", param->name);
-                            //PDO_DBG_RETURN(0);
-                                return 0;
+                        } else {
+                            _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Invalid parameter name '%s'", param->name);
+                            return 0;
                         }
                     }
                 }
 
                 if (nuodb_params == NULL) {
-                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", -12, "Error processing parameters");
-                    //PDO_DBG_RETURN(0);
-                        return 0;
+                    _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "42P02", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Error processing parameters");
+                    return 0;
                 }
 
                 nuodb_param = &nuodb_params->params[param->paramno];
@@ -504,28 +522,24 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             {
                 int num_input_params = 0;
                 if (!stmt->bound_param_map) {
-                    //PDO_DBG_RETURN(0);
-                        return 0;
+                    return 0;
                 }
 
                 if (param->paramno >= 0)
                 {
                     if (param->paramno >= (long) S->qty_input_params) {
-                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", -12, "Invalid parameter number %d", param->paramno);
-                        //PDO_DBG_RETURN(0);
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY093", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Invalid parameter number %d", param->paramno);
                         return 0;
                     }
 
                     if (nuodb_params == NULL) {
-                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "nuodb_params is NULL");
-                        //PDO_DBG_RETURN(0);
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "nuodb_params is NULL");
                         return 0;
                     }
 
                     nuodb_param = &nuodb_params->params[param->paramno];
                     if (nuodb_param == NULL) {
-                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Error locating parameters");
-                        //PDO_DBG_RETURN(0);
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Error locating parameters");
                         return 0;
                     }
 
@@ -535,10 +549,11 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                         nuodb_param->col_name_length = param->namelen;
                     }
 
-                    // TODO: add code to process streaming LOBs heres when NuoDB supports it.
+                    /* TODO: add code to process streaming LOBs here
+                     * when NuoDB supports it. */
 
                     if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_NULL ||
-                          Z_TYPE_P(param->parameter) == IS_NULL)
+                        Z_TYPE_P(param->parameter) == IS_NULL)
                     {
                         nuodb_param->len = 0;
                         nuodb_param->data = NULL;
@@ -550,7 +565,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                     }
                     else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_INT)
                     {
-                        nuodb_param->len = 4;
+                        nuodb_param->len = sizeof(int);
                         nuodb_param->data = (void *)Z_LVAL_P(param->parameter);
                         pdo_nuodb_stmt_set_integer(S, param->paramno,  (long)nuodb_param->data);
                         PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (LONG)",
@@ -563,7 +578,7 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                     {
                         nuodb_param->len = 1;
                         nuodb_param->data = Z_BVAL_P(param->parameter) ? "t" : "f";
-                            pdo_nuodb_stmt_set_boolean(S, param->paramno,  nuodb_param->data[0]);
+                        pdo_nuodb_stmt_set_boolean(S, param->paramno,  nuodb_param->data[0]);
                         PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %s (BOOL)",
                                         stmt->dbh,
                                         param->paramno,
@@ -587,37 +602,37 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
                     else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB)
                     {
                         if (Z_TYPE_P(param->parameter) == IS_RESOURCE) {
-                                 php_stream *stm;
-                                 php_stream_from_zval_no_verify(stm, &param->parameter);
-                                 if (stm) {
-                                         SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
-                                         Z_TYPE_P(param->parameter) = IS_STRING;
-                                         Z_STRLEN_P(param->parameter) = php_stream_copy_to_mem(stm,
-                                                 &Z_STRVAL_P(param->parameter), PHP_STREAM_COPY_ALL, 0);
-                                 } else {
-                                     _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY105", -12, "Expected a stream resource");
-                                     //PDO_DBG_RETURN(0);
-                                     return 0;
-                                 }
-                         } else {
-                                 // If the parameter is not a stream resource, then convert it to a string.
-                                 SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
-                                 convert_to_string(param->parameter);
-                                 nuodb_param->len = Z_STRLEN_P(param->parameter);
-                                 nuodb_param->data = Z_STRVAL_P(param->parameter);
-                                 pdo_nuodb_stmt_set_blob(S, param->paramno,  nuodb_param->data, nuodb_param->len);
-                                 PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (length: %d) (BLOB)",
-                                        stmt->dbh,
-                                        param->paramno,
-                                        param->name,
-                                        nuodb_param->data,
-                                        nuodb_param->len);
-                         }
+                            php_stream *stm;
+                            php_stream_from_zval_no_verify(stm, &param->parameter);
+                            if (stm) {
+                                SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+                                Z_TYPE_P(param->parameter) = IS_STRING;
+                                Z_STRLEN_P(param->parameter) = php_stream_copy_to_mem(stm,
+                                                                                      &Z_STRVAL_P(param->parameter), PHP_STREAM_COPY_ALL, 0);
+                            } else {
+                                _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "HY105", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Expected a stream resource");
+                                return 0;
+                            }
+                        } else {
+                            /* If the parameter is not a stream
+                               resource, then convert it to a
+                               string. */
+                            SEPARATE_ZVAL_IF_NOT_REF(&param->parameter);
+                            convert_to_string(param->parameter);
+                            nuodb_param->len = Z_STRLEN_P(param->parameter);
+                            nuodb_param->data = Z_STRVAL_P(param->parameter);
+                            pdo_nuodb_stmt_set_blob(S, param->paramno,  nuodb_param->data, nuodb_param->len);
+                            PDO_DBG_INF_FMT("dbh=%p : Param: %d  Name: %s = %ld (length: %d) (BLOB)",
+                                            stmt->dbh,
+                                            param->paramno,
+                                            param->name,
+                                            nuodb_param->data,
+                                            nuodb_param->len);
+                        }
                     }
 
                     else {
-                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", -12, "Unsupported parameter type: %d", Z_TYPE_P(param->parameter));
-                        //PDO_DBG_RETURN(0);
+                        _record_error_formatted(stmt->dbh, stmt, __FILE__, __LINE__, "XX000", PDO_NUODB_SQLCODE_APPLICATION_ERROR, "Unsupported parameter type: %d", Z_TYPE_P(param->parameter));
                         return 0;
                     }
                 }
@@ -625,12 +640,14 @@ nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data * param, /*
             break;
         }
     }
-    //PDO_DBG_RETURN(1);
     return 1;
 }
 /* }}} */
 
-static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_set_attribute
+ */
+static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
@@ -639,47 +656,50 @@ static int nuodb_stmt_set_attribute(pdo_stmt_t * stmt, long attr, zval * val TSR
 
     switch (attr)
     {
-    default:
-        PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", stmt->dbh, attr);
-        PDO_DBG_RETURN(0, stmt->dbh);
-    case PDO_ATTR_CURSOR_NAME:
-        convert_to_string(val);
-        strlcpy(S->name, Z_STRVAL_P(val), sizeof(S->name));
-        break;
+        default:
+            PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", stmt->dbh, attr);
+            PDO_DBG_RETURN(0, stmt->dbh);
+        case PDO_ATTR_CURSOR_NAME:
+            convert_to_string(val);
+            strlcpy(S->name, Z_STRVAL_P(val), sizeof(S->name));
+            break;
     }
     PDO_DBG_RETURN(1, stmt->dbh);
 }
 /* }}} */
 
-static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr, zval * val TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_get_attribute
+ */
+static int nuodb_stmt_get_attribute(pdo_stmt_t * stmt, long attr,
+                                    zval * val TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
     switch (attr)
     {
-    default:
-        return 0;
-    case PDO_ATTR_CURSOR_NAME:
-        if (*S->name)
-        {
-            ZVAL_STRING(val,S->name,1);
-        }
-        else
-        {
-            ZVAL_NULL(val);
-        }
-        break;
+        default:
+            return 0;
+        case PDO_ATTR_CURSOR_NAME:
+            if (*S->name) {
+                ZVAL_STRING(val,S->name,1);
+            } else {
+                ZVAL_NULL(val);
+            }
+            break;
     }
     return 1;
 }
 /* }}} */
 
-static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
+
+/* {{{ nuodb_stmt_cursor_closer
+ */
+static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC)
 {
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)stmt->driver_data;
 
-    if ((*S->name || S->cursor_open))
-    {
+    if ((*S->name || S->cursor_open)) {
         _release_PdoNuoDbStatement(S);
     }
     *S->name = 0;
@@ -689,7 +709,7 @@ static int nuodb_stmt_cursor_closer(pdo_stmt_t * stmt TSRMLS_DC) /* {{{ */
 /* }}} */
 
 
-struct pdo_stmt_methods nuodb_stmt_methods =   /* {{{ */
+struct pdo_stmt_methods nuodb_stmt_methods =
 {
     nuodb_stmt_dtor,
     nuodb_stmt_execute,
@@ -703,4 +723,12 @@ struct pdo_stmt_methods nuodb_stmt_methods =   /* {{{ */
     NULL, /* next_rowset_func */
     nuodb_stmt_cursor_closer
 };
-/* }}} */
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */
