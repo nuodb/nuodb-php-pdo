@@ -1,7 +1,5 @@
 --TEST--
-Show table statement for a specific table 
---FILE--
-Show Table test.
+Show table test for a specific table 
 --FILE--
 <?php
 
