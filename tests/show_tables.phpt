@@ -9,26 +9,35 @@ open_db();
 
 try {
 
-  $sql1 = "drop table test cascade if exists";
+  $sql1 = "DROP TABLE test CASCADE IF EXISTS";
   $db->query($sql1);
 
-  $sql2 = "create table test (a char)";
+  $sql2 = "CREATE TABLE test (C1 CHAR(10),C2 INTEGER)";
   $db->query($sql2);
 
-  $sql3 = "SHOW TABLES";
-  $db->query($sql3);
+  $sql3 = "SHOW TABLE test";
 
-  $sql4 = "drop table test cascade if exists";
+  foreach ($db->query($sql3) as $row) {
+		print_r ($row[0]);
+  }
+
+  $sql4 = "DROP TABLE test CASCADE IF EXISTS";
   $db->query($sql4);
- 
   $db = NULL;
 
 } catch(PDOException $e) {
   echo $e->getMessage();
 }
 
-echo "done\n";
-
+echo "\ndone\n";
 ?>
 --EXPECT--
+
+    Tables named TEST
+
+    Found table TEST in schema PDOTEST
+
+        Fields:
+            C1 char(10)
+            C2 integer
 done
