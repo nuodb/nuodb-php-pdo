@@ -13,6 +13,7 @@ notifications:
     - buck.robert.j@gmail.com
     - rbuck@nuodb.com
     - tgates@nuodb.com
+    - braj.saxena@gmail.com
 
 before_install:
   - uname -a
