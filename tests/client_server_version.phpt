@@ -24,7 +24,7 @@ open_db();
                        printf("[001] Server version string seems wrong, got '%s'\n", $server_version);
                }
 	       else {
-		        echo "NuoDB server version is $matches[0]\n"; 	
+		        echo "NuoDB server version is valid\n"; 	
 
  			/* The following conditions can be used if required in case of
     			   checking the Major version,sub version or fix pack version */		
@@ -38,7 +38,7 @@ open_db();
 	      }
 	}
 	else {
-		echo "NuoDB server version is $server_version\n";
+		echo "NuoDB server version is valid\n";
 	}
 
 	if (is_string($client_version)) {
@@ -46,7 +46,7 @@ open_db();
                         printf("[001] Client version string seems wrong, got '%s'\n", $client_version);
                 }
                 else {    
-                        echo "NuoDB client version is $matches[0]\n";
+                        echo "NuoDB client version is valid\n";
 		
 		    	   /* The following conditions can be used if required in case of
     			   checking the Major version,sub version or fix pack version */
@@ -61,7 +61,7 @@ open_db();
 		}
 	}
 	else {
-		echo "NuoDB client version is $client_version\n";
+		echo "NuoDB client version is valid\n";
 	}	
 
 } catch(PDOException $e) {
@@ -72,6 +72,6 @@ $db = NULL;
 echo "done\n";
 ?>
 --EXPECT--
-NuoDB server version is 2.0.3-19
-NuoDB client version is 2.0.4
+NuoDB server version is valid
+NuoDB client version is valid
 done
