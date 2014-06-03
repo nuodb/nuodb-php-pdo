@@ -1,7 +1,10 @@
 --TEST--
 URI based connection test
 --FILE--
+
 <?php
+
+require("testdb.inc");
 
   function getTempDir() {
 
@@ -29,26 +32,24 @@ URI based connection test
 
 try {  
        if ($tmp = getTempDir()) {
-           $file = $tmp . DIRECTORY_SEPARATOR . 'pdomuri.tst';
-           $dsn = 'nuodb:database=test@localhost:48004';
-           $user = 'cloud';
-           $pass = 'user';
-           $uri = sprintf('uri:file://%s', $file);
+           $file = $tmp . DIRECTORY_SEPARATOR . 'pdo_uri.tst';
+           $uri = "nuodb:database=test@localhost:" . $nuotestport;
+           $temp = sprintf('uri:file://%s', $file);
 
            if ($fp = @fopen($file, 'w')) {
-               fwrite($fp, $dsn);
+               fwrite($fp, $uri);
                fclose($fp);
                clearstatcache();
                assert(file_exists($file));
               
                try {
-                      $db = new PDO($dsn, $user, $pass);
+                      $db = new PDO($uri, $user, $password);
         	      echo "URI connection test successful\n";
 		   } catch (PDOException $e) {
 		           printf("[002] URI=%s, DSN=%s, File=%s (%d bytes, '%s'), %s\n",
-                           $uri, $dsn, $file, filesize($file), file_get_contents($file), $e->getMessage());
+                           $temp, $uri, $file, filesize($file), file_get_contents($file), $e->getMessage());
                      }
-                           unlink($file);
+//                           unlink($file);
           }
   }
 
@@ -57,7 +58,6 @@ $db = NULL;
   echo "FAILED: connect failed when it should succeed.\n";
   $db = NULL;
 }
-
 
 $db = NULL;  
 echo "done\n";
