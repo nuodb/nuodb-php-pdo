@@ -49,7 +49,7 @@ try {
 		           printf("[002] URI=%s, DSN=%s, File=%s (%d bytes, '%s'), %s\n",
                            $temp, $uri, $file, filesize($file), file_get_contents($file), $e->getMessage());
                      }
-//                           unlink($file);
+                           unlink($file);
           }
   }
 
