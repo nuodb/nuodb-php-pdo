@@ -25,16 +25,6 @@ open_db();
                }
 	       else {
 		        echo "NuoDB server version is valid\n"; 	
-
- 			/* The following conditions can be used if required in case of
-    			   checking the Major version,sub version or fix pack version */		
-  
-  //                    if ($matches[1] < 2)
-  //                           printf("[002] This is not the latest major version: '%s'. can be upgraded\n", $matches[1]);
-  //                    if ($matches[2] > 0)
-  //                          printf("[003] , This is server fix pack version -'%s'\n", $matches[2]);
-  //                    if ($matches[3])
-  //                          printf("[004] This is server sub version - '%s'\n", $matches[2]);
 	      }
 	}
 	else {
@@ -47,17 +37,6 @@ open_db();
                 }
                 else {    
                         echo "NuoDB client version is valid\n";
-		
-		    	   /* The following conditions can be used if required in case of
-    			   checking the Major version,sub version or fix pack version */
-
-  //                    if ($matches[1] < 2)
-  //                           printf("[002] This is not the latest major version: '%s'. can be upgraded\n", $matches[1]);
-  //                    if ($matches[2] > 0)
-  //                           printf("[003] , This is client fix pack version '%s'\n", $matches[2]);
-  //                    if ($matches[3])
-  //                           printf("[004] this is client sub version - '%s'\n", $matches[2]);
-
 		}
 	}
 	else {
