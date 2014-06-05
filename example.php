@@ -1,6 +1,7 @@
 <?php 
 try {  
   $db = new PDO("nuodb:database=test@localhost;schema=Hockey", "dba", "goalie") or die;
+  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $number = 12;
   $sql = "select * from HOCKEY where NUMBER < :number";
   $stmt = $db->prepare($sql);
