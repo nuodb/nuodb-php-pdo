@@ -12,6 +12,7 @@ PDO_Nuodb: connect/disconnect
 
   global $db;
   $db = open_db();
+
 	try {
 	    $sql = "create table test1 (i integer, c varchar(100), ts timestamp, d date, t time)";
 	    $db->query($sql);
@@ -25,7 +26,6 @@ PDO_Nuodb: connect/disconnect
     	  echo "FAILED: ";
 	  echo $e->getMessage(); 
 	}
-   
 	try {
 	    $sql = "DROP TABLE test1 CASCADE IF EXISTS";
 	    $db->query($sql);
