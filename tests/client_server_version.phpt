@@ -18,9 +18,9 @@ open_db();
 	if ('' == $client_version) {
                 echo "Client version must not be empty\n";
 	}
-
-        if (is_string($server_version)) {
-               if (!preg_match('/(\d+)\.(\d+)\.(\d+)\-(.*)/', $server_version, $matches)) {
+        
+	if (is_string($server_version)) {
+               if (!preg_match('/(\d+)\.(\d+)\.(\\.|\\-|\\D+|\\d+)\-(.*)/', $server_version, $matches)) {
                        printf("[001] Server version string seems wrong, got '%s'\n", $server_version);
                }
 	       else {
