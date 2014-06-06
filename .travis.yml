@@ -15,7 +15,7 @@ notifications:
     - rbuck@nuodb.com
     - tgates@nuodb.com
     - braj.saxena@gmail.com
-	
+
 before_install:
   - uname -a
   - phpenv versions
