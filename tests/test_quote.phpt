@@ -10,21 +10,21 @@ open_db();
 try {
 
 
-  $sql1 = "drop table char_test cascade if exists";
+  $sql1 = "drop table test cascade if exists";
   $db->query($sql1);
    
-  $sql2 = "create table char_test (i int,a varchar(100))";
+  $sql2 = "create table test (i int,a varchar(100))";
   $db->query($sql2);
 
   $string1 = 'This is not a Null value'; 
-  $sql3 = sprintf("insert char_test (i,a) values(100,%s)",$db->quote($string1));
+  $sql3 = sprintf("insert test (i,a) values(100,%s)",$db->quote($string1));
   $db->query($sql3);
 
   $string2 = 'This is a Null \0 value test in PHP string';
-  $sql3 = sprintf("insert char_test (i,a) values(200,%s)",$db->quote($string2));
+  $sql3 = sprintf("insert test (i,a) values(200,%s)",$db->quote($string2));
   $db->query($sql3);  
 
-  $sql4 = "select * from char_test";
+  $sql4 = "select * from test";
   $stmt = $db->prepare($sql4);
   $stmt->execute();
   $result = $stmt->fetchAll();
