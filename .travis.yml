@@ -14,6 +14,7 @@ notifications:
     - buck.robert.j@gmail.com
     - rbuck@nuodb.com
     - tgates@nuodb.com
+    - braj.saxena@gmail.com
 
 before_install:
   - uname -a
@@ -23,6 +24,7 @@ before_install:
   - ls -al `php-config --extension-dir`
   - wget -q http://download.nuohub.org/nuodb-${NUODB_VERSION}.linux.x64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
+  - sleep 5
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
   - ${NUODB_ROOT}/bin/nuosql test@localhost --user dba --password dba < create_user_cloud.sql
