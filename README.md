@@ -43,6 +43,19 @@ del /S /Q C:\php\php_pdo_nuodb.*
 copy Release_TS\php_pdo_nuodb.* C:\php
 ```
 
+## Linux Driver Configuration ##
+
+After the NuoDB PHP PDO Driver is installed, you must configure PHP to automatically load it.  The NuoDB PHP PDO Driver is a PHP extension library.  The NuoDB PHP PDO Driver extension library depends on the PHP PDO extension library, and must be loaded after it.  Otherwise you will get an error message when PHP attempts to load.
+
+If your PHP installation has a configuration that exists entirely in a single PHP initization file (php.ini), then add the following to that php.ini, after the PHP PDO extension library is loaded:
+
+  extension=pdo_nuodb.so
+
+Your PHP installation may have a configuration that does not exist entirely in a single PHP initalization file (php.ini).  Some PHP installations are set to scan an additional directory for initialization files.  For example, on Ubuntu 14.04, the command line version of PHP is coded to scan the /etc/php5/cli/conf.d directory for initalization files.  In those cases, you should create your own initialziation file (e.g. nuodb.ini) file which loads the NuoDB PHP PDO Extension library:
+
+  extension=pdo_nuodb.so
+
+and have that nuodb.ini loaded after the PHP PDO extension library.
 
 
 ## RUNNING TESTS ##
