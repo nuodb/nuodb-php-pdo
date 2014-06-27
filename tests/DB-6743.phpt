@@ -41,8 +41,10 @@ DB-6743 -  PDO::ATTR_ERRMODE
         echo "ERROR: Level [$errno] on line $errline\n";
         if($errno!=2)
             echo "FAILED: E_WARNING not emitted, expected errno = 2 received errno = ",$errno,"\n";
-        if(false === stristr($errmsg, $db->errorInfo()[2]))
+        $info = $db->errorInfo();
+        if(false === stristr($errmsg, $info[2]))
             echo "FAILED: E_WARNING is not reporting the correct Driver errorMsg\n";
+        
         if($errfile !== __FILE__)
             echo "FAILED: E_WARNING is not reporting the correct file; thrown in file ",__FILE__, " reported as in file ",$errfile,"\n";
         if($errline!=$line)
@@ -88,7 +90,7 @@ DB-6743 -  PDO::ATTR_ERRMODE
             echo "FAILED: No Driver specific error message received\n";
         if($e->getCode() !==$code)
             echo "FAILED: PDOException errorcode does not match recieved errorCode";
-        if(false === stristr($e->getMessage(), $db->errorInfo()[2]))
+        if(false === stristr($e->getMessage(), $info[2]))
             echo "FAILED: PDOException is not reporting the correct Driver errorMsg\n";
         if($e->getFile() !== __FILE__)
             echo "FAILED: PDOException is not reporting the correct file; thrown in file ",__FILE__, " reported as in file ",$e->getFile(),"\n";
@@ -101,7 +103,7 @@ DB-6743 -  PDO::ATTR_ERRMODE
 ?>
 --EXPECT--
 FAILED: Driver threw driver error code -1
-ERROR: Level [2] on line 50
+ERROR: Level [2] on line 52
 FAILED: Driver threw driver error code -1
 EXCEPTION: PDOException should be thrown by ERRMODE_EXCEPTION
 FAILED: Driver threw driver error code -1
