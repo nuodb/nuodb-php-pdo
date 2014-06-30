@@ -69,6 +69,7 @@ error_reporting=E_ALL
     //TEST FOR ERRMODE_WARNING <- similar to ERRMODE_SILENT; but emits E_WARNING
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
     function error_handler($errno, $errmsg, $errfile, $errline){
+        echo "Error being handled by error_handler\n";
         global $db,$line;
         echo "ERROR: Level [$errno] on line $errline\n";
         if($errno!=2)
@@ -141,6 +142,7 @@ Expecting PDOException
 Expecting PDOException
 FAILED: Improper way of setting ERRMODE, any String input seems to set ERRMODE_EXCEPTION
 FAILED: Driver threw driver error code -1
+Error being handled by error_handler
 ERROR: Level [2] on line %d
 FAILED: Driver threw driver error code -1
 EXCEPTION: PDOException should be thrown by ERRMODE_EXCEPTION
