@@ -1,5 +1,5 @@
 --TEST--
-DB-6743 -  PDO::ATTR_ERRMODE
+PDO::ATTR_ERRMODE
 --INI--
 error_reporting=E_ALL
 --FILE--
