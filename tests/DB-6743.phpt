@@ -1,5 +1,7 @@
 --TEST--
 DB-6743 -  PDO::ATTR_ERRMODE
+--INI--
+error_reporting=E_ALL
 --FILE--
 <?php
 
@@ -13,7 +15,37 @@ DB-6743 -  PDO::ATTR_ERRMODE
         if(false == $db->setAttribute(PDO::ATTR_ERRMODE,$i))
             echo "FAILED: A valid ERRMODE was deemed impossible to set";
     }
-    $sql = "A BAD SQL STRING"; //default invalid sql string to use 
+    $sql = "A BAD SQL STRING"; //default invalid sql string to use
+    
+    //TEST FOR ATTR_ERRMODE with invalid Strategy modes
+    do { 
+        $invalid = mt_rand(-9999, 9999);
+    } while (in_array($invalid, $valid));
+    
+    try{
+        if( false != $db->setAttribute(PDO::ATTR_ERRMODE, $invalid))
+            echo "FAILED: Invalid ATTR_ERRMODE was set\n";
+    }catch(PDOException $e){
+        echo "Expecting PDOException\n";
+    }
+    try{
+        $tmp = array();
+        if (false != $db->setAttribute(PDO::ATTR_ERRMODE, $tmp))
+            echo "FAILED: Improper way of setting ERRMODE\n";
+    }catch(PDOException $e){
+        echo "Expecting PDOException\n";
+    }
+    try{
+        $tmp = new stdClass();
+        if (false != $db->setAttribute(PDO::ATTR_ERRMODE, $tmp))
+            echo "FAILED: Improper way of setting ERRMODE\n";
+    }catch(PDOException $e){
+        echo "Expecting PDOException\n";
+    }
+    
+    $tmp = "some string";
+    if (false != $db->setAttribute(PDO::ATTR_ERRMODE, $tmp))
+        echo "FAILED: Improper way of setting ERRMODE, any String input seems to set ERRMODE_EXCEPTION\n";
 
     //TEST FOR ERRMODE_SILENT
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
@@ -36,7 +68,7 @@ DB-6743 -  PDO::ATTR_ERRMODE
 
     //TEST FOR ERRMODE_WARNING <- similar to ERRMODE_SILENT; but emits E_WARNING
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
-    function warning_handler($errno, $errmsg, $errfile, $errline){
+    function error_handler($errno, $errmsg, $errfile, $errline){
         global $db,$line;
         echo "ERROR: Level [$errno] on line $errline\n";
         if($errno!=2)
@@ -49,8 +81,10 @@ DB-6743 -  PDO::ATTR_ERRMODE
             echo "FAILED: E_WARNING is not reporting the correct file; thrown in file ",__FILE__, " reported as in file ",$errfile,"\n";
         if($errline!=$line)
             echo "FAILED: E_WARNING is not reporting the correct line; thrown in line ",$line," reported as in line ",$errline,"\n";
+        
+        return true;
     }
-    set_error_handler('warning_handler');
+    set_error_handler('error_handler');
     $line = __LINE__ +1;
     $db->query($sql);
     $code = $db->errorCode();
@@ -101,9 +135,13 @@ DB-6743 -  PDO::ATTR_ERRMODE
     $db = null;
     echo 'done';
 ?>
---EXPECT--
+--EXPECTF--
+Expecting PDOException
+Expecting PDOException
+Expecting PDOException
+FAILED: Improper way of setting ERRMODE, any String input seems to set ERRMODE_EXCEPTION
 FAILED: Driver threw driver error code -1
-ERROR: Level [2] on line 52
+ERROR: Level [2] on line %d
 FAILED: Driver threw driver error code -1
 EXCEPTION: PDOException should be thrown by ERRMODE_EXCEPTION
 FAILED: Driver threw driver error code -1
