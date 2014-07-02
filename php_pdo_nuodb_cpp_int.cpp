@@ -968,6 +968,17 @@ void PdoNuoDbStatement::setString(size_t index, const char *value)
     return;
 }
 
+void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
+{
+    /* NOTE: caller catches exceptions. */
+    if (_stmt == NULL) {
+        return;
+    }
+
+    _stmt->setString(index+1, value, length);
+    return;
+}
+
 
 void PdoNuoDbStatement::setBytes(size_t index, const void *value, int length)
 {
@@ -1743,6 +1754,37 @@ extern "C" {
         {
             nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string()");
+            nuodb_stmt->setEinfoFile(__FILE__);
+            nuodb_stmt->setEinfoLine(__LINE__);
+            nuodb_stmt->setSqlstate("XX000");
+            _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
+            return 0;
+        }
+        return 1;
+    }
+
+    int pdo_nuodb_stmt_set_string_with_length(pdo_nuodb_stmt *S, int paramno, char *str_val, int length)
+    {
+
+        PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+
+        try {
+            nuodb_stmt->setString(paramno,  str_val, length);
+        } catch (NuoDB::SQLException & e) {
+            nuodb_stmt->setEinfoErrcode(e.getSqlcode());
+            nuodb_stmt->setEinfoErrmsg(e.getText());
+            nuodb_stmt->setEinfoFile(__FILE__);
+            nuodb_stmt->setEinfoLine(__LINE__);
+            /* Workaround DB-4112 */
+            /* pdo_stmt->setSqlstate(e.getSQLState()); */
+            nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+            _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
+            return 0;
+        }
+        catch (...)
+        {
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
+            nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string_with_length()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
             nuodb_stmt->setSqlstate("XX000");

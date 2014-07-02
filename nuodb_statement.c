@@ -597,7 +597,7 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
                                         param->name,
                                         nuodb_param->data,
                                         nuodb_param->len);
-                        pdo_nuodb_stmt_set_bytes(S, param->paramno,  (const void *)nuodb_param->data, nuodb_param->len);
+                        pdo_nuodb_stmt_set_string_with_length(S, param->paramno,  (const void *)nuodb_param->data, nuodb_param->len);
                     }
                     else if (PDO_PARAM_TYPE(param->param_type) == PDO_PARAM_LOB)
                     {

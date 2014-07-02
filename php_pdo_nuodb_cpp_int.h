@@ -147,6 +147,7 @@ public:
     void setInteger(size_t index, int value);
     void setBoolean(size_t index, bool value);
     void setString(size_t index, const char *value);
+    void setString(size_t index, const char *value, int length);
     void setBytes(size_t index, const void *value, int length);
     void setBlob(size_t index, const char *value, int len);
     void setClob(size_t index, const char *value, int len);

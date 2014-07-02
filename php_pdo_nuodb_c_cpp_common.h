@@ -268,6 +268,7 @@ extern "C" {
     int pdo_nuodb_stmt_set_integer(pdo_nuodb_stmt *S, int paramno, long int_val);
     int pdo_nuodb_stmt_set_boolean(pdo_nuodb_stmt *S, int paramno, char bool_val);
     int pdo_nuodb_stmt_set_string(pdo_nuodb_stmt *S, int paramno, char *str_val);
+    int pdo_nuodb_stmt_set_string_with_length(pdo_nuodb_stmt *S, int paramno, char *str_val, int length);
     int pdo_nuodb_stmt_set_bytes(pdo_nuodb_stmt *S, int paramno, const void *val, int length);
     void pdo_nuodb_stmt_get_integer(pdo_nuodb_stmt *S, int colno, int **int_val);
     void pdo_nuodb_stmt_get_boolean(pdo_nuodb_stmt *S, int colno, char **bool_val);
