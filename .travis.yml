@@ -45,6 +45,7 @@ script:
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - make install
   - php run-test.php -m tests/*.phpt
+  - php tests/perforance_test.php
 
 after_failure:
   - cat tests/*.out
