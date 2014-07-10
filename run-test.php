@@ -757,6 +757,8 @@ HELP;
 					$pattern_match = glob($argv[$i]);
 				} else if (preg_match("/\*$/", $argv[$i])) {
 					$pattern_match = glob($argv[$i] . '.phpt');
+				} else if (preg_match("/\.php$/", $argv[$i])) {
+                                        $pattern_match = glob($argv[$i]);
 				} else {
 					die("bogus test name " . $argv[$i] . "\n");
 				}
@@ -769,6 +771,8 @@ HELP;
 				find_files($testfile);
 			} else if (preg_match("/\.phpt$/", $testfile)) {
 				$test_files[] = $testfile;
+			} else if (preg_match("/\.php$/", $testfile)) {
+			        $test_files[] = $testfile;
 			} else {
 				die("bogus test name " . $argv[$i] . "\n");
 			}
