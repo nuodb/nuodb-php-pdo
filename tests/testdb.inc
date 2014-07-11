@@ -8,7 +8,8 @@ $db = NULL;
 ini_set('nuodb.default_user',$user);
 ini_set('nuodb.default_password',$password);
 
-$nuotestport = getenv("NUOTESTPORT");
+$nuotestport = getenv("NUODB_PORT");
+
 if (!$nuotestport) {
   $nuotestport = "48004";
 }
@@ -18,9 +19,8 @@ unlink($test_base = tempnam('/tmp',"php_nuodb_test"));
 
 function open_db()
 {
-  global $db, $user, $password;
+  global $db, $user, $password, $nuotestport;
 
-  $nuotestport = getenv("NUOTESTPORT");
   if (! $nuotestport) {
       $nuotestport = "48004";
   }
@@ -39,9 +39,8 @@ function open_db()
 
 function open_db_as_dba()
 {
-  global $db, $dba_user, $dba_password;
+  global $db, $dba_user, $dba_password, $nuotestport;
 
-  $nuotestport = getenv("NUOTESTPORT");
   if (! $nuotestport) {
       $nuotestport = "48004";
   }
