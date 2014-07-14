@@ -45,7 +45,7 @@ script:
   - echo "extension=pdo_nuodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - make install
   - php run-test.php -m tests/*.phpt
-  - chmod("tests/performance_test.php", 0755) 
+  - chmod('tests/performance_test.php', 0755) 
   - php tests/performance_test.php
 
 after_failure:
