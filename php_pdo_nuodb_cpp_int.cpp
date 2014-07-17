@@ -153,7 +153,8 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
-    : _pdo_dbh(pdo_dbh), _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+    : _pdo_dbh(pdo_dbh), _driverMajorVersion(0), _driverMinorVersion(0),
+      _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -188,6 +189,13 @@ _pdo_dbh_t *PdoNuoDbHandle::getPdoDbh() {
     return _pdo_dbh;
 }
 
+int PdoNuoDbHandle::getDriverMajorVersion() {
+    return _driverMajorVersion;
+}
+
+int PdoNuoDbHandle::getDriverMinorVersion() {
+    return _driverMinorVersion;
+}
 
 int PdoNuoDbHandle::getEinfoLine() {
     return einfo.line;
@@ -309,6 +317,12 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
+    /* Get NuoDB Client major and minor version numbers */
+    NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
+    if (dbmd != NULL) {
+      _driverMajorVersion = dbmd->getDriverMajorVersion();
+      _driverMinorVersion = dbmd->getDriverMinorVersion();
+    }
     return _con;
 }
 
@@ -1769,7 +1783,11 @@ extern "C" {
         PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
 
         try {
-            nuodb_stmt->setString(paramno,  str_val, length);
+        	if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
+        		nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+        	} else {
+                nuodb_stmt->setString(paramno,  str_val, length);
+        	}
         } catch (NuoDB::SQLException & e) {
             nuodb_stmt->setEinfoErrcode(e.getSqlcode());
             nuodb_stmt->setEinfoErrmsg(e.getText());

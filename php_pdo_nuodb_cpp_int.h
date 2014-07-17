@@ -35,6 +35,16 @@
 #include "DatabaseMetaData.h"
 #include "PreparedStatement.h"
 
+/* derived from platform/version.h */
+static const int NUODB_1_0_2_VERSION        = 19;
+static const int NUODB_1_2_0_VERSION        = 25;
+static const int NUODB_2_0_0_VERSION        = 26;
+static const int NUODB_2_0_1_VERSION        = 27;
+static const int NUODB_2_0_2_VERSION        = 28;
+static const int NUODB_2_0_3_VERSION        = 29;
+static const int NUODB_2_0_4_VERSION        = 30;
+static const int NUODB_2_0_5_VERSION        = 31;
+
 class PdoNuoDbStatement;
 
 struct PdoNuoDbGeneratedKeyElement
@@ -62,6 +72,9 @@ class PdoNuoDbHandle
 private:
     NuoDB::Connection * _con;
     _pdo_dbh_t *_pdo_dbh;
+    int _driverMajorVersion;
+    int _driverMinorVersion;
+
     SqlOptionArray * _opts;
     SqlOption _opt_arr[4];
     pdo_nuodb_error_info einfo; /* NuoDB error information */
@@ -75,6 +88,8 @@ public:
     PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options);
     ~PdoNuoDbHandle();
     _pdo_dbh_t *getPdoDbh();
+    int getDriverMajorVersion();
+    int getDriverMinorVersion();
     int getEinfoLine();
     const char *getEinfoFile();
     int getEinfoErrcode();
