@@ -989,7 +989,19 @@ void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
         return;
     }
 
+#if ((NUODB_PRODUCT_VERSION_MAJOR <= 2) && (NUODB_PRODUCT_VERSION_MINOR <= 0) && (NUODB_PRODUCT_VERSION_PATCH <= 4))
+    /* it should be impossible to reach this code.  If so, throw an internal error */
+    setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
+    setEinfoErrmsg("Unknown Error in PdoNuoDbStatement::setString(size_t index, const char *value, int length)");
+    setEinfoFile(__FILE__);
+    setEinfoLine(__LINE__);
+    setSqlstate("XX000");
+    _pdo_nuodb_error(_nuodbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine());
+    return;
+#else
     _stmt->setString(index+1, value, length);
+#endif
+
     return;
 }
 
