@@ -34,6 +34,7 @@
 #include "ResultSet.h"
 #include "DatabaseMetaData.h"
 #include "PreparedStatement.h"
+#include "ProductVersion.h"
 
 /* derived from platform/version.h */
 static const int NUODB_1_0_2_VERSION        = 19;
