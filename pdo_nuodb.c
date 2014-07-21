@@ -93,8 +93,8 @@ zend_module_entry pdo_nuodb_module_entry =
     pdo_nuodb_functions,
     PHP_MINIT(pdo_nuodb),
     PHP_MSHUTDOWN(pdo_nuodb),
-    PHP_RINIT(pdo_nuodb),  /* Replace with NULL if there's nothing to do at request start */
-    PHP_RSHUTDOWN(pdo_nuodb),  /* Replace with NULL if there's nothing to do at request end */
+    NULL, // RINIT 
+    NULL, // RSHUTDOWN
     PHP_MINFO(pdo_nuodb),
 #if ZEND_MODULE_API_NO >= 20010901
     "0.1", /* Replace with version number for your extension */
@@ -172,25 +172,6 @@ PHP_MSHUTDOWN_FUNCTION(pdo_nuodb)
     return SUCCESS;
 }
 /* }}} */
-
-
-/* {{{ PHP_RINIT_FUNCTION
- */
-PHP_RINIT_FUNCTION(pdo_nuodb)
-{
-    return SUCCESS;
-}
-/* }}} */
-
-
-/* {{{ PHP_RSHUTDOWN_FUNCTION
- */
-PHP_RSHUTDOWN_FUNCTION(pdo_nuodb)
-{
-    return SUCCESS;
-}
-/* }}} */
-
 
 /* {{{ PHP_MINFO_FUNCTION
  */
