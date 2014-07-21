@@ -153,7 +153,8 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
-    : _pdo_dbh(pdo_dbh), _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+    : _pdo_dbh(pdo_dbh), _driverMajorVersion(0), _driverMinorVersion(0),
+      _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -188,6 +189,13 @@ _pdo_dbh_t *PdoNuoDbHandle::getPdoDbh() {
     return _pdo_dbh;
 }
 
+int PdoNuoDbHandle::getDriverMajorVersion() {
+    return _driverMajorVersion;
+}
+
+int PdoNuoDbHandle::getDriverMinorVersion() {
+    return _driverMinorVersion;
+}
 
 int PdoNuoDbHandle::getEinfoLine() {
     return einfo.line;
@@ -309,6 +317,12 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
+    /* Get NuoDB Client major and minor version numbers */
+    NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
+    if (dbmd != NULL) {
+      _driverMajorVersion = dbmd->getDriverMajorVersion();
+      _driverMinorVersion = dbmd->getDriverMinorVersion();
+    }
     return _con;
 }
 
@@ -965,6 +979,29 @@ void PdoNuoDbStatement::setString(size_t index, const char *value)
     }
 
     _stmt->setString(index+1, value);
+    return;
+}
+
+void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
+{
+    /* NOTE: caller catches exceptions. */
+    if (_stmt == NULL) {
+        return;
+    }
+
+#if ((NUODB_PRODUCT_VERSION_MAJOR <= 2) && (NUODB_PRODUCT_VERSION_MINOR <= 0) && (NUODB_PRODUCT_VERSION_PATCH <= 4))
+    /* it should be impossible to reach this code.  If so, throw an internal error */
+    setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
+    setEinfoErrmsg("Unknown Error in PdoNuoDbStatement::setString(size_t index, const char *value, int length)");
+    setEinfoFile(__FILE__);
+    setEinfoLine(__LINE__);
+    setSqlstate("XX000");
+    _pdo_nuodb_error(_nuodbh->getPdoDbh(), _pdo_stmt, getEinfoFile(), getEinfoLine());
+    return;
+#else
+    _stmt->setString(index+1, value, length);
+#endif
+
     return;
 }
 
@@ -1743,6 +1780,48 @@ extern "C" {
         {
             nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
             nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string()");
+            nuodb_stmt->setEinfoFile(__FILE__);
+            nuodb_stmt->setEinfoLine(__LINE__);
+            nuodb_stmt->setSqlstate("XX000");
+            _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
+            return 0;
+        }
+        return 1;
+    }
+
+    int pdo_nuodb_stmt_set_string_with_length(pdo_nuodb_stmt *S, int paramno, char *str_val, int length)
+    {
+
+        PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
+
+        try {
+
+/* if we are compiled with versions less than 2.0.5, use setBytes(...) */
+#if ((NUODB_PRODUCT_VERSION_MAJOR <= 2) && (NUODB_PRODUCT_VERSION_MINOR <= 0) && (NUODB_PRODUCT_VERSION_PATCH <= 4))
+        	nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+#else  /* compiled with 2.0.5 or later, check the version of libNuoRemote at runtime */
+        	if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
+        		nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+        	} else {
+                nuodb_stmt->setString(paramno,  str_val, length);
+        	}
+#endif
+
+        } catch (NuoDB::SQLException & e) {
+            nuodb_stmt->setEinfoErrcode(e.getSqlcode());
+            nuodb_stmt->setEinfoErrmsg(e.getText());
+            nuodb_stmt->setEinfoFile(__FILE__);
+            nuodb_stmt->setEinfoLine(__LINE__);
+            /* Workaround DB-4112 */
+            /* pdo_stmt->setSqlstate(e.getSQLState()); */
+            nuodb_stmt->setSqlstate(nuodb_get_sqlstate(e.getSqlcode()));
+            _pdo_nuodb_error(nuodb_stmt->getNuoDbHandle()->getPdoDbh(), nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
+            return 0;
+        }
+        catch (...)
+        {
+            nuodb_stmt->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
+            nuodb_stmt->setEinfoErrmsg("Unknown Error in pdo_nuodb_stmt_set_string_with_length()");
             nuodb_stmt->setEinfoFile(__FILE__);
             nuodb_stmt->setEinfoLine(__LINE__);
             nuodb_stmt->setSqlstate("XX000");

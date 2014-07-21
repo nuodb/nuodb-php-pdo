@@ -34,6 +34,17 @@
 #include "ResultSet.h"
 #include "DatabaseMetaData.h"
 #include "PreparedStatement.h"
+#include "ProductVersion.h"
+
+/* derived from platform/version.h */
+static const int NUODB_1_0_2_VERSION        = 19;
+static const int NUODB_1_2_0_VERSION        = 25;
+static const int NUODB_2_0_0_VERSION        = 26;
+static const int NUODB_2_0_1_VERSION        = 27;
+static const int NUODB_2_0_2_VERSION        = 28;
+static const int NUODB_2_0_3_VERSION        = 29;
+static const int NUODB_2_0_4_VERSION        = 30;
+static const int NUODB_2_0_5_VERSION        = 31;
 
 class PdoNuoDbStatement;
 
@@ -62,6 +73,9 @@ class PdoNuoDbHandle
 private:
     NuoDB::Connection * _con;
     _pdo_dbh_t *_pdo_dbh;
+    int _driverMajorVersion;
+    int _driverMinorVersion;
+
     SqlOptionArray * _opts;
     SqlOption _opt_arr[4];
     pdo_nuodb_error_info einfo; /* NuoDB error information */
@@ -75,6 +89,8 @@ public:
     PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options);
     ~PdoNuoDbHandle();
     _pdo_dbh_t *getPdoDbh();
+    int getDriverMajorVersion();
+    int getDriverMinorVersion();
     int getEinfoLine();
     const char *getEinfoFile();
     int getEinfoErrcode();
@@ -147,6 +163,7 @@ public:
     void setInteger(size_t index, int value);
     void setBoolean(size_t index, bool value);
     void setString(size_t index, const char *value);
+    void setString(size_t index, const char *value, int length);
     void setBytes(size_t index, const void *value, int length);
     void setBlob(size_t index, const char *value, int len);
     void setClob(size_t index, const char *value, int len);
