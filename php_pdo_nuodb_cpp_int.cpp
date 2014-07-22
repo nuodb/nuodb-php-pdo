@@ -317,7 +317,10 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
-    /* Get NuoDB Client major and minor version numbers */
+    /*
+     * Get NuoDB (C++) Driver major and minor version numbers, which
+     * are actually the underlying NuoDB "client" protocol version numbers.
+     */
     NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
     if (dbmd != NULL) {
       _driverMajorVersion = dbmd->getDriverMajorVersion();
@@ -1798,13 +1801,13 @@ extern "C" {
 
 /* if we are compiled with versions less than 2.0.5, use setBytes(...) */
 #if ((NUODB_PRODUCT_VERSION_MAJOR <= 2) && (NUODB_PRODUCT_VERSION_MINOR <= 0) && (NUODB_PRODUCT_VERSION_PATCH <= 4))
-        	nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+                nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
 #else  /* compiled with 2.0.5 or later, check the version of libNuoRemote at runtime */
-        	if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
-        		nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
-        	} else {
+                if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
+                        nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+                } else {
                 nuodb_stmt->setString(paramno,  str_val, length);
-        	}
+                }
 #endif
 
         } catch (NuoDB::SQLException & e) {
