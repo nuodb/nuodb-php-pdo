@@ -1789,7 +1789,7 @@ extern "C" {
         return 1;
     }
 
-    int pdo_nuodb_stmt_set_string_with_length(pdo_nuodb_stmt *S, int paramno, char *str_val, int length)
+    int pdo_nuodb_stmt_set_string_with_length(pdo_nuodb_stmt *S, int paramno, const char *str_val, int length)
     {
 
         PdoNuoDbStatement *nuodb_stmt = (PdoNuoDbStatement *) S->stmt;
