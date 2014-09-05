@@ -1405,6 +1405,9 @@ extern "C" {
             db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
             H->db = (void *) db;
             db->createConnection();
+            NuoDB::Connection *con = db->createConnection();
+            PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : pdo_nuodb_handle_factory : Connected to database on URL=%s connectionSring=%s user=%s schema=%s",
+                        H->pdo_dbh, con->getMetaData()->getURL(), optionsArray->array[0].extra, optionsArray->array[1].extra, optionsArray->array[3].extra);
         } catch (NuoDB::SQLException & e) {
             if (db != NULL) {
                 db->setEinfoErrcode(e.getSqlcode());
