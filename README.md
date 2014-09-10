@@ -7,7 +7,8 @@
 In order to build the driver you must have PHP plus developer tools installed.
 This may be done from source or using package managers.
 
-PHP version 5.3 or 5.4 is required. 
+Windows: PHP version 5.3 and 5.4 is required - with Thread Safety (TS)    
+Linux:	PHP version 5.3, 5.4, or 5.5 is required - with Thread Safety (TS)  
 
 NuoDB installed
 
@@ -79,21 +80,21 @@ pear run-tests tests/*.phpt
 
 You can optionally enable and control logging with the following PHP configuration variables:
 
-  pdo_nuodb.enable_log
-  pdo_nuodb.log_level
-  pdo_nuodb.logfile_path
+  **pdo_nuodb**.enable_log  
+  **pdo_nuodb**.log_level   
+  **pdo_nuodb**.logfile_path  
 
-pdo_nuodb.enable_log defaults to 0.  To enable logging, set pdo_nuodb.enable_log=1.
+**pdo_nuodb**.enable_log defaults to 0.  To enable logging, set **pdo_nuodb**.enable_log=1.
 
-pdo_nuodb.log_level defaults to 1.  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
+**pdo_nuodb**.log_level defaults to 1.  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
 
-  1 - errors/exceptions only
-  2 - SQL statements
-  3 - API
-  4 - Functions
-  5 - Everything
+  1 - errors/exceptions only  
+  2 - SQL statements  
+  3 - API   
+  4 - Functions   
+  5 - Everything  
 
-pdo_nuodb.logfile_path defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
+**pdo_nuodb**.logfile_path defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
 
 
 
