@@ -63,6 +63,7 @@ class PdoNuoDbHandle
 private:
     NuoDB::Connection * _con;
     _pdo_dbh_t *_pdo_dbh;
+    int _txn_isolation_level;
     SqlOptionArray * _opts;
     SqlOption _opt_arr[4];
     pdo_nuodb_error_info einfo; /* NuoDB error information */
@@ -79,6 +80,8 @@ public:
     int getEinfoErrcode();
     const char *getEinfoErrmsg();
     pdo_error_type *getSqlstate();
+    void setTransactionIsolation(int level);
+    int getTransactionIsolation();
     void setEinfoLine(int line);
     void setEinfoFile(const char *file);
     void setEinfoErrcode(int errcode);

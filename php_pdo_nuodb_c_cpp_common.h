@@ -50,6 +50,16 @@
 #define PDO_NUODB_SQLTYPE_CLOB     11
 #define PDO_NUODB_SQLTYPE_NULL     12
 
+#define PDO_NUODB_TXN_NONE             0
+#define PDO_NUODB_TXN_READ_UNCOMMITTED 1
+#define PDO_NUODB_TXN_READ_COMMITTED   2
+#define PDO_NUODB_TXN_REPEATABLE_READ  4
+#define PDO_NUODB_TXN_WRITE_COMMITTED  5
+#define PDO_NUODB_TXN_CONSISTENT_READ  7; // Default - NuoDB native mode
+#define PDO_NUODB_TXN_SERIALIZABLE     8
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -181,7 +181,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 }
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
-    : _pdo_dbh(pdo_dbh), _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+    : _pdo_dbh(pdo_dbh), _con(NULL), _txn_isolation_level(7), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -226,6 +226,20 @@ const char *PdoNuoDbHandle::getEinfoErrmsg() {
 
 pdo_error_type *PdoNuoDbHandle::getSqlstate() {
         return &sqlstate;
+}
+
+void PdoNuoDbHandle::setTransactionIsolation(int level) {
+    _txn_isolation_level = level;
+    if (_con != NULL) {
+        _con->setTransactionIsolation(level);
+    }
+}
+
+int PdoNuoDbHandle::getTransactionIsolation() {
+    if (_con != NULL) {
+        _txn_isolation_level = _con->getTransactionIsolation();
+    }
+    return _txn_isolation_level;
 }
 
 void PdoNuoDbHandle::setEinfoLine(int line) {
@@ -323,6 +337,12 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
+//hack for now
+_txn_isolation_level = PDO_NUODB_TXN_READ_COMMITTED;
+
+//    if (_txn_isolation_level != PDO_NUODB_TXN_CONSISTENT_READ) {
+        _con->setTransactionIsolation(_txn_isolation_level);
+//    }
     return _con;
 }
 

@@ -61,6 +61,7 @@ FILE *log_fp;
 long enable_log;
 long log_level;
 char *logfile_path;
+char *default_txn_isolation;
 ZEND_END_MODULE_GLOBALS(pdo_nuodb)
 
 
