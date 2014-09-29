@@ -337,12 +337,10 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
 
-//hack for now
-_txn_isolation_level = PDO_NUODB_TXN_READ_COMMITTED;
-
-//    if (_txn_isolation_level != PDO_NUODB_TXN_CONSISTENT_READ) {
+    if (_txn_isolation_level != PDO_NUODB_TXN_CONSISTENT_READ) {
         _con->setTransactionIsolation(_txn_isolation_level);
-//    }
+    }
+
     return _con;
 }
 
@@ -1295,6 +1293,7 @@ int pdo_nuodb_db_handle_factory(pdo_nuodb_db_handle * H, SqlOptionArray *options
         db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
         H->db = (void *) db;
         db->createConnection();
+        db->setTransactionIsolation(H->default_txn_isolation_level);
     } catch (NuoDB::SQLException & e) {
         if (db != NULL) {
            db->setEinfoErrcode(e.getSqlcode());

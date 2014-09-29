@@ -55,7 +55,7 @@
 #define PDO_NUODB_TXN_READ_COMMITTED   2
 #define PDO_NUODB_TXN_REPEATABLE_READ  4
 #define PDO_NUODB_TXN_WRITE_COMMITTED  5
-#define PDO_NUODB_TXN_CONSISTENT_READ  7; // Default - NuoDB native mode
+#define PDO_NUODB_TXN_CONSISTENT_READ  7   // Default - NuoDB native mode
 #define PDO_NUODB_TXN_SERIALIZABLE     8
 
 
@@ -187,7 +187,11 @@ typedef struct
     pdo_nuodb_error_info einfo;
 
     /* the last error that didn't come from the API */
-    //char const * last_app_error;  // TODO: this needs to go away in favor of 'einfo'
+    //char const * last_app_error;  // TODO: this needs to go away in
+    //favor of 'einfo'
+
+    /* default transaction isolation level */
+    int default_txn_isolation_level;
 
     char in_nuodb_implicit_txn;  /* may not be the same as pdo_dbh->in_txn */
     char in_nuodb_explicit_txn;  /* may not be the same as pdo_dbh->in_txn */
