@@ -93,7 +93,7 @@ zend_module_entry pdo_nuodb_module_entry =
     pdo_nuodb_functions,
     PHP_MINIT(pdo_nuodb),
     PHP_MSHUTDOWN(pdo_nuodb),
-    NULL, // RINIT 
+    NULL, // RINIT
     NULL, // RSHUTDOWN
     PHP_MINFO(pdo_nuodb),
 #if ZEND_MODULE_API_NO >= 20010901
@@ -115,6 +115,7 @@ PHP_INI_BEGIN()
   STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, enable_log, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.log_level",      "1", PHP_INI_ALL, OnUpdateLong, log_level, zend_pdo_nuodb_globals, pdo_nuodb_globals)
   STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+  STD_PHP_INI_ENTRY("pdo_nuodb.default_txn_isolation", "ConsistentRead", PHP_INI_ALL, OnUpdateString, default_txn_isolation, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 PHP_INI_END()
 /* }}} */
 
