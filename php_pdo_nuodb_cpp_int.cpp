@@ -154,7 +154,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
     : _pdo_dbh(pdo_dbh), _driverMajorVersion(0), _driverMinorVersion(0),
-      _con(NULL), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+      _con(NULL), _txn_isolation_level(7), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -220,6 +220,19 @@ pdo_error_type *PdoNuoDbHandle::getSqlstate() {
     return &sqlstate;
 }
 
+void PdoNuoDbHandle::setTransactionIsolation(int level) {
+    _txn_isolation_level = level;
+    if (_con != NULL) {
+        _con->setTransactionIsolation(level);
+    }
+}
+
+int PdoNuoDbHandle::getTransactionIsolation() {
+    if (_con != NULL) {
+        _txn_isolation_level = _con->getTransactionIsolation();
+    }
+    return _txn_isolation_level;
+}
 
 void PdoNuoDbHandle::setEinfoLine(int line) {
     einfo.line = line;
@@ -316,6 +329,10 @@ NuoDB::Connection * PdoNuoDbHandle::createConnection()
     properties->putValue((const char *)_opts->array[3].option, (const char *)_opts->array[3].extra);
 
     _con->openDatabase((const char *)_opts->array[0].extra, properties);
+
+    if (_txn_isolation_level != PDO_NUODB_TXN_CONSISTENT_READ) {
+        _con->setTransactionIsolation(_txn_isolation_level);
+    }
 
     /* Get NuoDB Client major and minor version numbers */
     NuoDB::DatabaseMetaData *dbmd = _con->getMetaData();
@@ -1404,10 +1421,10 @@ extern "C" {
         try {
             db = new PdoNuoDbHandle(H->pdo_dbh, optionsArray);
             H->db = (void *) db;
-            db->createConnection();
             NuoDB::Connection *con = db->createConnection();
             PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : pdo_nuodb_handle_factory : Connected to database on URL=%s connectionSring=%s user=%s schema=%s",
                         H->pdo_dbh, con->getMetaData()->getURL(), optionsArray->array[0].extra, optionsArray->array[1].extra, optionsArray->array[3].extra);
+            db->setTransactionIsolation(H->default_txn_isolation_level);
         } catch (NuoDB::SQLException & e) {
             if (db != NULL) {
                 db->setEinfoErrcode(e.getSqlcode());

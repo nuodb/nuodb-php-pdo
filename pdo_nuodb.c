@@ -112,31 +112,50 @@ ZEND_GET_MODULE(pdo_nuodb)
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
-STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, enable_log, zend_pdo_nuodb_globals, pdo_nuodb_globals)
-STD_PHP_INI_ENTRY("pdo_nuodb.log_level",      "1", PHP_INI_ALL, OnUpdateLong, log_level, zend_pdo_nuodb_globals, pdo_nuodb_globals)
-STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+  STD_PHP_INI_ENTRY("pdo_nuodb.enable_log",      "0", PHP_INI_ALL, OnUpdateLong, enable_log, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+  STD_PHP_INI_ENTRY("pdo_nuodb.log_level",      "1", PHP_INI_ALL, OnUpdateLong, log_level, zend_pdo_nuodb_globals, pdo_nuodb_globals)
+  STD_PHP_INI_ENTRY("pdo_nuodb.logfile_path", "nuodb_pdo.log", PHP_INI_ALL, OnUpdateString, logfile_path, zend_pdo_nuodb_globals, pdo_nuodb_globals)
 PHP_INI_END()
 /* }}} */
 
 
 /* {{{ php_pdo_nuodb_init_globals
- *
- * The log_level is the level of logging "detail" that the user wants
- * to see in the log.  The higher level numbers have more detail.
- * The higher level numbers include lesser levels:
- *
- *   PDO_NUODB_LOG_ERRORS        1     errors/exceptions
- *   PDO_NUODB_LOG_SQL           2     SQL statements
- *   PDO_NUODB_LOG_API           3     API
- *   PDO_NUODB_LOG_FUNCTIONS     4     Functions
- *   PDO_NUODB_LOG_EVERYTHING    5     Everything
- */
+*/
+/*
+** The log_level is the level of logging "detail" that the user wants
+** to see in the log.  The higher level numbers have more detail.
+** The higher level numbers include lesser levels.
+**
+**  1 - errors/exceptions
+**  2 - SQL statements
+**  3 - API
+**  4 - Functions
+**  5 - Everything
+**
+** The default_txn_isolation which is set each time a NuoDB connection
+** is opened.  It must be one of:
+**
+**   None - 0 Transactions are not supported.
+**   ReadUncommitted - 1 Dirty reads, non-repeatable reads and
+**                     phantom reads can occur.
+**   ReadCommitted - 2 Dirty reads are prevented; non-repeatable reads
+**                   and phantom reads can occur.
+**   RepeatableRead - 4 Dirty reads are prevented; non-repeatable
+**                    reads happen after writes; phantom reads can occur.
+**   Serializable - 8 Dirty reads, non-repeatable reads and phantom
+**                  reads are prevented.
+**   WriteCommitted - 5 Dirty reads are prevented; non-repeatable
+**                    reads happen after writes; phantom reads can occur.
+**   ConsistentRead - 7 NuoDB native mode
+**
+*/
 static void php_pdo_nuodb_init_globals(zend_pdo_nuodb_globals *pdo_nuodb_globals)
 {
-    pdo_nuodb_globals->log_fp = NULL;
-    pdo_nuodb_globals->enable_log = 0;
-    pdo_nuodb_globals->log_level = PDO_NUODB_LOG_ERRORS;
-    pdo_nuodb_globals->logfile_path = NULL;
+  pdo_nuodb_globals->log_fp = NULL;
+  pdo_nuodb_globals->enable_log = 0;
+  pdo_nuodb_globals->log_level = PDO_NUODB_LOG_ERRORS;
+  pdo_nuodb_globals->logfile_path = NULL;
+  pdo_nuodb_globals->default_txn_isolation = NULL;
 }
 /* }}} */
 
