@@ -5,12 +5,11 @@ Attempt to connect, checking various error condition/processing/messages.
 
 require("testdb.inc");
 
-
 // First prove that we CAN connect.
 echo "Test successful connection\n";
 try {  
   $url = "nuodb:database=test@localhost:" . $nuotestport;
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   echo "FAILED: connect failed when it should succeed.\n";
@@ -21,7 +20,7 @@ try {
 echo "Test NULL url\n";
 try {  
   $url = NULL;
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -35,7 +34,7 @@ try {
 echo "Test with bad pdo name\n";
 try {  
   $url = "no-such-driver-name";
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -49,7 +48,7 @@ try {
 echo "Test with missing parameters\n";
 try {  
   $url = "nuodb:";
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -64,7 +63,7 @@ try {
 echo "Test with dbname parameter\n";
 try {  
   $url = "nuodb:dbname=test@localhost:" . $nuotestport;
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -81,7 +80,7 @@ try {
 echo "Test with database=no-such-test@localhost\n";
 try {  
   $url = "nuodb:database=no-such-test@localhost:" . $nuotestport . ";schema=no-such-schema";
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -124,7 +123,7 @@ try {
 echo "Test with missing password\n";
 try {  
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", NULL, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, NULL, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -139,7 +138,7 @@ try {
 echo "Test with wrong password\n";
 try {  
   $url = "nuodb:database=test@localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -153,7 +152,7 @@ try {
 echo "Test with database=test@no-such-localhost\n";
 try {  
   $url = "nuodb:database=test@no-such-localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, "wrong-password", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -167,7 +166,7 @@ try {
 echo "Test with extra junk parameters\n";
 try {  
   $url = "nuodb:foo=bar;database=test@localhost:" . $nuotestport . ";schema=USER";
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
@@ -178,7 +177,7 @@ try {
 echo "Test with junk parameters\n";
 try {  
   $url = "nuodb:foo=bar;baz=bad";
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)) or die;
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
