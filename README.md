@@ -7,8 +7,8 @@
 In order to build the driver you must have PHP plus developer tools installed.
 This may be done from source or using package managers.
 
-Windows: PHP version 5.3 and 5.4 is required - with Thread Safety (TS)    
-Linux:	PHP version 5.3, 5.4, or 5.5 is required - with Thread Safety (TS)  
+Windows: PHP version 5.3 and 5.4 is required  
+Linux:	PHP version 5.3, 5.4, or 5.5 is required
 
 NuoDB installed
 
