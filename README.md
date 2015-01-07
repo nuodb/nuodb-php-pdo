@@ -52,11 +52,11 @@ If your PHP installation has a configuration that exists entirely in a single PH
 
   extension=pdo_nuodb.so
 
-Your PHP installation may have a configuration that does not exist entirely in a single PHP initalization file (php.ini).  Some PHP installations are set to scan an additional directory for initialization files.  For example, on Ubuntu 14.04, the command line version of PHP is coded to scan the /etc/php5/cli/conf.d directory for initalization files.  In those cases, you should create your own initialziation file (e.g. nuodb.ini) file which loads the NuoDB PHP PDO Extension library:
+Your PHP installation may have a configuration that does not exist entirely in a single PHP initalization file (php.ini).  Some PHP installations are set to scan an additional directory for initialization files.  For example, on Ubuntu 14.04, the command line version of PHP is coded to scan the /etc/php5/cli/conf.d directory for initalization files.  In those cases, you should create your own initialziation file (e.g. pdo_nuodb.ini) file which loads the NuoDB PHP PDO Extension library:
 
   extension=pdo_nuodb.so
 
-and have that nuodb.ini loaded after the PHP PDO extension library.
+and make sure that pdo_nuodb.ini loaded after the PHP PDO extension library (pdo.so).
 
 
 ## RUNNING TESTS ##
