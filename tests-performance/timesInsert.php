@@ -1,6 +1,6 @@
 <?php
 
-require("testdb.inc");
+require(__DIR__."/../tests/testdb.inc");
 global $db;
 open_db();
 
