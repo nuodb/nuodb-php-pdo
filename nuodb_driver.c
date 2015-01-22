@@ -697,9 +697,17 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr,
             convert_to_boolean(val);
             H->fetch_table_names = Z_BVAL_P(val);
             PDO_DBG_RETURN(1, dbh);
+
+        case PDO_NUODB_ATTR_TXN_ISOLATION_LEVEL:
+            convert_to_long(val);
+            H->default_txn_isolation_level = Z_LVAL_P(val);
+            PDO_DBG_RETURN(1, dbh);
+
         default:
             PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", dbh, attr);
             break;
+
+
     }
     PDO_DBG_RETURN(0, dbh);
 }
@@ -743,6 +751,10 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr,
 
         case PDO_ATTR_FETCH_TABLE_NAMES:
             ZVAL_BOOL(val, H->fetch_table_names);
+            return 1;
+
+        case PDO_NUODB_ATTR_TXN_ISOLATION_LEVEL:
+            ZVAL_LONG(val, H->default_txn_isolation_level);
             return 1;
     }
     return 0;
@@ -820,9 +832,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
         {7, "ConsistentRead"},  /* KEEP ConsistentRead FIRST */
         {5, "WriteCommitted"},
         {2, "ReadCommitted"},
-        {4, "RepeatableRead"},
         {8, "Serializable"},
-        {1, "ReadUncommitted"},
     };
 
     pdo_nuodb_db_handle * H = NULL;
