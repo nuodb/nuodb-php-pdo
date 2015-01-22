@@ -154,7 +154,7 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
     : _pdo_dbh(pdo_dbh), _driverMajorVersion(0), _driverMinorVersion(0),
-      _con(NULL), _txn_isolation_level(7), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+      _con(NULL), _txn_isolation_level(PDO_NUODB_TXN_CONSISTENT_READ), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -1818,13 +1818,13 @@ extern "C" {
 
 /* if we are compiled with versions less than 2.0.5, use setBytes(...) */
 #if ((NUODB_PRODUCT_VERSION_MAJOR <= 2) && (NUODB_PRODUCT_VERSION_MINOR <= 0) && (NUODB_PRODUCT_VERSION_PATCH <= 4))
-        	nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+                nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
 #else  /* compiled with 2.0.5 or later, check the version of libNuoRemote at runtime */
-        	if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
-        		nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
-        	} else {
+                if (nuodb_stmt->getNuoDbHandle()->getDriverMinorVersion() < NUODB_2_0_5_VERSION) {
+                        nuodb_stmt->setBytes(paramno,  (const void *)str_val, length);
+                } else {
                 nuodb_stmt->setString(paramno,  str_val, length);
-        	}
+                }
 #endif
 
         } catch (NuoDB::SQLException & e) {
