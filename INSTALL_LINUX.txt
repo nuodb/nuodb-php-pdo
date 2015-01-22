@@ -75,6 +75,10 @@ After you have copied the NuoDB PHP PDO driver to the PHP extension directory, y
 
   extension=pdo_nuodb.so
  
+The pdo_nuodb.so must be loaded after pdo.so, otherwise you will get a PHP Warning message that is similar to:
+
+PHP message: PHP Warning: PHP Startup: Unable to load dynamic library '/usr/lib64/php/modules/pdo_nuodb.so' - /usr/lib64/php/modules/pdo_nuodb.so: undefined symbol: php_pdo_unregister_driver in Unknown on line 0
+
 
 3.0 Verifying the NuoDB PHP PDO Driver
 ======================================

@@ -86,7 +86,7 @@ $db = NULL;
 // auto commit disabled tests with commits and rollback.
 echo "autocommit disabled test.\n";
 try {  
-  $db = new PDO($url, "dba", "dba", array(PDO::ATTR_AUTOCOMMIT => false)) or die;
+  $db = new PDO($url, $dba_user, $dba_password, array(PDO::ATTR_AUTOCOMMIT => false)) or die;
 
   if ($db->inTransaction()) echo "Failed inTransaction() test.\n";
 

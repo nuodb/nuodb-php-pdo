@@ -7,7 +7,8 @@
 In order to build the driver you must have PHP plus developer tools installed.
 This may be done from source or using package managers.
 
-PHP version 5.3 or 5.4 is required. 
+Windows: PHP version 5.3 and 5.4 is required - with Thread Safety (TS)    
+Linux:	PHP version 5.3, 5.4, or 5.5 is required - with Thread Safety (TS)  
 
 NuoDB installed
 
@@ -51,11 +52,11 @@ If your PHP installation has a configuration that exists entirely in a single PH
 
   extension=pdo_nuodb.so
 
-Your PHP installation may have a configuration that does not exist entirely in a single PHP initalization file (php.ini).  Some PHP installations are set to scan an additional directory for initialization files.  For example, on Ubuntu 14.04, the command line version of PHP is coded to scan the /etc/php5/cli/conf.d directory for initalization files.  In those cases, you should create your own initialziation file (e.g. nuodb.ini) file which loads the NuoDB PHP PDO Extension library:
+Your PHP installation may have a configuration that does not exist entirely in a single PHP initalization file (php.ini).  Some PHP installations are set to scan an additional directory for initialization files.  For example, on Ubuntu 14.04, the command line version of PHP is coded to scan the /etc/php5/cli/conf.d directory for initalization files.  In those cases, you should create your own initialziation file (e.g. pdo_nuodb.ini) file which loads the NuoDB PHP PDO Extension library:
 
   extension=pdo_nuodb.so
 
-and have that nuodb.ini loaded after the PHP PDO extension library.
+and make sure that pdo_nuodb.ini loaded after the PHP PDO extension library (pdo.so).
 
 
 ## RUNNING TESTS ##
@@ -78,22 +79,23 @@ pear run-tests tests/*.phpt
 ## LOGGING ##
 
 You can optionally enable and control logging with the following PHP configuration variables:
+Add the following to your loaded php.ini 
 
-  pdo_nuodb.enable_log
-  pdo_nuodb.log_level
-  pdo_nuodb.logfile_path
+  **pdo_nuodb.enable_log**   
+  **pdo_nuodb.log_level**     
+  **pdo_nuodb.logfile_path**  
 
-pdo_nuodb.enable_log defaults to 0.  To enable logging, set pdo_nuodb.enable_log=1.
+**pdo_nuodb.enable_log** defaults to 0.  To enable logging, set **pdo_nuodb.enable_log=1**.
 
-pdo_nuodb.log_level defaults to 1.  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
+**pdo_nuodb.log_level** defaults to 1.  You can use levels 1-5. The higher level numbers have more detail.  The higher level numbers include lesser levels:
 
-  1 - errors/exceptions only
-  2 - SQL statements
-  3 - API
-  4 - Functions
-  5 - Everything
+  1 - errors/exceptions only  
+  2 - SQL statements  
+  3 - API   
+  4 - Functions   
+  5 - Everything  
 
-pdo_nuodb.logfile_path defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
+**pdo_nuodb.logfile_path** defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
 
 
 
