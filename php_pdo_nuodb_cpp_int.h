@@ -73,6 +73,7 @@ class PdoNuoDbHandle
 private:
     NuoDB::Connection * _con;
     _pdo_dbh_t *_pdo_dbh;
+    int _txn_isolation_level;
     int _driverMajorVersion;
     int _driverMinorVersion;
 
@@ -96,6 +97,8 @@ public:
     int getEinfoErrcode();
     const char *getEinfoErrmsg();
     pdo_error_type *getSqlstate();
+    void setTransactionIsolation(int level);
+    int getTransactionIsolation();
     void setEinfoLine(int line);
     void setEinfoFile(const char *file);
     void setEinfoErrcode(int errcode);

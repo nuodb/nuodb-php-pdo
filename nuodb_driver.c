@@ -697,9 +697,17 @@ static int nuodb_handle_set_attribute(pdo_dbh_t * dbh, long attr,
             convert_to_boolean(val);
             H->fetch_table_names = Z_BVAL_P(val);
             PDO_DBG_RETURN(1, dbh);
+
+        case PDO_NUODB_ATTR_TXN_ISOLATION_LEVEL:
+            convert_to_long(val);
+            H->default_txn_isolation_level = Z_LVAL_P(val);
+            PDO_DBG_RETURN(1, dbh);
+
         default:
             PDO_DBG_ERR_FMT("dbh=%p : unknown/unsupported attribute: %d", dbh, attr);
             break;
+
+
     }
     PDO_DBG_RETURN(0, dbh);
 }
@@ -743,6 +751,10 @@ static int nuodb_handle_get_attribute(pdo_dbh_t * dbh, long attr,
 
         case PDO_ATTR_FETCH_TABLE_NAMES:
             ZVAL_BOOL(val, H->fetch_table_names);
+            return 1;
+
+        case PDO_NUODB_ATTR_TXN_ISOLATION_LEVEL:
+            ZVAL_LONG(val, H->default_txn_isolation_level);
             return 1;
     }
     return 0;
@@ -811,6 +823,18 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
             { NUODB_OPT_SCHEMA,  NULL,  0 }  /* "schema" */
         };
 
+    struct nuodb_iso_levels_t {
+        int level_id;
+        const char *level_name;
+    };
+
+    struct nuodb_iso_levels_t nuodb_iso_levels[6] = {
+        {7, "ConsistentRead"},  /* KEEP ConsistentRead FIRST */
+        {5, "WriteCommitted"},
+        {2, "ReadCommitted"},
+        {8, "Serializable"},
+    };
+
     pdo_nuodb_db_handle * H = NULL;
     int i;
     int ret = 0;
@@ -819,6 +843,9 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     SqlOption options[PDO_NUODB_OPTIONS_ARR_SIZE];
     SqlOptionArray optionsArray;
     char *errMessage = NULL;
+    char *def_txn_iso_level_init_string = NULL;
+
+
 
     PDO_DBG_ENTER("pdo_nuodb_handle_factory", dbh);
     dbh->driver_data = pecalloc(1, sizeof(*H), dbh->is_persistent);
@@ -826,6 +853,7 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     H->pdo_dbh = dbh;
     H->einfo.errcode = 0;
     H->einfo.errmsg = NULL;
+    H->default_txn_isolation_level = PDO_NUODB_TXN_CONSISTENT_READ;
 
     php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, 2);
 
@@ -900,6 +928,37 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
 
     PDO_DBG_LEVEL_FMT(PDO_NUODB_LOG_SQL, "dbh=%p : pdo_nuodb_handle_factory : database=%s user=%s schema=%s",
                       dbh, options[0].extra, options[1].extra, options[3].extra);
+
+    def_txn_iso_level_init_string = PDO_NUODB_G(default_txn_isolation);
+    if (def_txn_iso_level_init_string != NULL) {
+        H->default_txn_isolation_level = PDO_NUODB_TXN_NONE;
+        for (i = 0; i < 6; i++) {
+            if (!strcmp(def_txn_iso_level_init_string, nuodb_iso_levels[i].level_name)) {
+                H->default_txn_isolation_level = nuodb_iso_levels[i].level_id;
+                break;
+            }
+        }
+        if (H->default_txn_isolation_level == PDO_NUODB_TXN_NONE) {
+            H->einfo.errcode = -12;  // NuoDB SqlCode.APPLICATION_ERROR
+            H->einfo.file = __FILE__;
+            H->einfo.line = __LINE__;
+            _record_error_formatted(H->pdo_dbh, NULL, H->einfo.file, H->einfo.line, "HY000", H->einfo.errcode, "PHP Initialization Default Transaction Isolation level '%s' is incorrect", def_txn_iso_level_init_string);
+            if (H->einfo.errmsg) {
+                pefree(H->einfo.errmsg, dbh->is_persistent);
+                H->einfo.errmsg = NULL;
+            }
+            pefree(dbh->driver_data, dbh->is_persistent);
+            dbh->driver_data = NULL;
+            for (i = 0; i < sizeof(vars)/sizeof(vars[0]); ++i)
+            {
+                if (vars[i].freeme)
+                {
+                    efree(vars[i].optval);
+                }
+            }
+            PDO_DBG_RETURN(0, dbh);
+        }
+    }
 
     status = pdo_nuodb_db_handle_factory(H, &optionsArray, &errMessage);
     if (status != 0) {
