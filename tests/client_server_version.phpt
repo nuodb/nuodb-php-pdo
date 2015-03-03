@@ -35,7 +35,7 @@ try {
     }
 
     if (is_string($client_version)) {
-        if (!preg_match('/(\d+)\.(\d+)\.(.*)/', $client_version, $matches)) {
+        if (!preg_match('/(\d+)\.(\d+)(\.\d+)?(\.[A-Za-z0-9]+)?(\-\d+)?(\-[a-z0-9]+)?/', $client_version, $matches)) {
             printf("[001] Client version string seems wrong, got '%s'\n", $client_version);
         }
         else {
