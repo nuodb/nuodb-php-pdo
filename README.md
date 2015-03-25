@@ -95,7 +95,7 @@ Add the following to your loaded php.ini
   4 - Functions   
   5 - Everything  
 
-**pdo_nuodb.logfile_path** defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
+**pdo_nuodb.logfile_path** defaults to the current directory from which you executed the php process. You can override that default by specifying your own path.
 
 
 
