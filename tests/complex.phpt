@@ -287,7 +287,7 @@ select test7
 select test8
 select test9
 select test10
-SQLSTATE[42000]: Syntax error or access violation: -1 can't resolve field "NO_SUCH_COLUMN"
+SQLSTATE[42703]: Undefined column: -54 can't resolve field "NO_SUCH_COLUMN"
 SQL: select no_such_column from Hockey_test where NUMBER=37
 select test11
 drop table Hockey_test
