@@ -139,7 +139,7 @@ static struct sqlcode_to_sqlstate_t sqlcode_to_sqlstate[] = {
     {-51, "58000"},
     {-52, "58000"},
     {-53, "58000"},
-    {-54, "58000"},
+    {-54, "42703"}, /* An undefined column or parameter name was detected. */
     {-55, "58000"}
 };
 /* }}} */
