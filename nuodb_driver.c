@@ -312,7 +312,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     char *pData;
 
     PDO_DBG_ENTER("nuodb_handle_preparer", dbh);
-    PDO_DBG_INF_FMT("dbh=%p  sql=%.*s", dbh, sql_len, sql);
+
 
     stmt->supports_placeholders = PDO_PLACEHOLDER_NAMED;
     stmt->named_rewrite_template = ":pdo%d";
@@ -341,6 +341,7 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
 
     stmt->driver_data = S;
     stmt->methods = &nuodb_stmt_methods;
+    PDO_DBG_INF_FMT("dbh=%p  S=%p  sql=%.*s", dbh, S, sql_len, sql);
 
     if (stmt->bound_param_map)
     {
@@ -1015,7 +1016,7 @@ pdo_driver_t pdo_nuodb_driver =
 
 void get_timestamp(char *time_buffer)
 {
-    char fmt[PDO_NUODB_TIMESTAMP_BUFFER];
+    char fmt[PDO_NUODB_TEMPORAL_BUFFER];
 
     struct timeval  tv;
     struct tm       *tm;
@@ -1044,9 +1045,9 @@ void get_timestamp(char *time_buffer)
     {
         strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
 #ifdef WIN32
-        _snprintf(time_buffer, PDO_NUODB_TIMESTAMP_BUFFER, fmt, tv.tv_usec);
+        _snprintf(time_buffer, PDO_NUODB_TEMPORAL_BUFFER, fmt, tv.tv_usec);
 #else
-        snprintf(time_buffer, PDO_NUODB_TIMESTAMP_BUFFER, fmt, tv.tv_usec);
+        snprintf(time_buffer, PDO_NUODB_TEMPORAL_BUFFER, fmt, tv.tv_usec);
 #endif
     }
 }
@@ -1054,7 +1055,7 @@ void get_timestamp(char *time_buffer)
 
 void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg)
 {
-    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
+    char buf[PDO_NUODB_TEMPORAL_BUFFER] = "";
 
     TSRMLS_FETCH();
 
@@ -1074,7 +1075,7 @@ void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log
 
 void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...)
 {
-    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
+    char buf[PDO_NUODB_TEMPORAL_BUFFER] = "";
     va_list args;
 
     TSRMLS_FETCH();
@@ -1098,7 +1099,7 @@ void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format
 
 
 int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh) {
-    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
+    char buf[PDO_NUODB_TEMPORAL_BUFFER] = "";
 
     TSRMLS_FETCH();
 
@@ -1117,7 +1118,7 @@ int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, in
 }
 
 void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh) {
-    char buf[PDO_NUODB_TIMESTAMP_BUFFER] = "";
+    char buf[PDO_NUODB_TEMPORAL_BUFFER] = "";
 
     TSRMLS_FETCH();
 
