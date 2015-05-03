@@ -232,19 +232,19 @@ void PdoNuoDbHandle::setTransactionIsolation(int level) {
 }
 
 int PdoNuoDbHandle::getTransactionIsolation() {
-	int status = 0;
+        int status = 0;
     if (_con != NULL) {
         status = _con->getTransactionIsolation(_con, (NuoDB_TransactionIsolationLevel*)&_txn_isolation_level);
     }
     if (status) {
-    	NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
-    	setEinfoErrcode(e->getCode(e));
-    	setEinfoErrmsg(e->getText(e));
-    	setEinfoFile(__FILE__);
-    	setEinfoLine(__LINE__);
-    	setSqlstate(e->getSqlState(e));
-    	_pdo_nuodb_error(getPdoDbh(), NULL, getEinfoFile(), getEinfoLine());
-    	return 0;
+        NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
+        setEinfoErrcode(e->getCode(e));
+        setEinfoErrmsg(e->getText(e));
+        setEinfoFile(__FILE__);
+        setEinfoLine(__LINE__);
+        setSqlstate(e->getSqlState(e));
+        _pdo_nuodb_error(getPdoDbh(), NULL, getEinfoFile(), getEinfoLine());
+        return 0;
     }
     return _txn_isolation_level;
 }
@@ -854,7 +854,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
 char const * PdoNuoDbStatement::getString(size_t column)
 {
     /* NOTE: caller catches exceptions. */
-	int status = 0;
+        int status = 0;
     char const *res = NULL;
 
     if (_rs == NULL) {
@@ -862,7 +862,7 @@ char const * PdoNuoDbStatement::getString(size_t column)
     }
     status = _rs->getString(_rs, column+1, NULL, &res);
     if (status) {
-    	return NULL;
+        return NULL;
     }
 
     if (_rs->wasNull(_rs)) {
@@ -874,7 +874,7 @@ char const * PdoNuoDbStatement::getString(size_t column)
 
 void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
 {
-	int status = 0;
+        int status = 0;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
         return;
@@ -882,8 +882,8 @@ void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
 
     status = _rs->getInt(_rs, column+1, *int_val);
     if (status) {
-    	*int_val = NULL;
-    	return;
+        *int_val = NULL;
+        return;
     }
     if (_rs->wasNull(_rs)) {
         *int_val = NULL;
@@ -893,16 +893,16 @@ void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
 
 bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
 {
-	int status = 0;
-	nuodb_bool_t b;
+        int status = 0;
+        nuodb_bool_t b;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
         return 0;
     }
     status = _rs->getBoolean(_rs, column+1, &b);
     if (status) {
-    	*bool_val = NULL;
-    	return 0;
+        *bool_val = NULL;
+        return 0;
     }
     if (_rs->wasNull(_rs)) {
         *bool_val = NULL;
@@ -915,7 +915,7 @@ bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
 
 void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
 {
-	int status = 0;
+        int status = 0;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
         return;
@@ -923,8 +923,8 @@ void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
 
     status = _rs->getLong(_rs, column+1, *long_val);
     if (status) {
-    	*long_val = NULL;
-    	return;
+        *long_val = NULL;
+        return;
     }
     if (_rs->wasNull(_rs)) {
         *long_val = NULL;
@@ -934,7 +934,7 @@ void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
 
 char const *PdoNuoDbStatement::getTimestamp(size_t column)
 {
-	int status = 0;
+        int status = 0;
     /* NOTE: caller catches exceptions. */
     char const *res = NULL;
 
@@ -944,7 +944,7 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
 
     status = _rs->getString(_rs, column+1, NULL, &res);
     if (status) {
-    	return NULL;
+        return NULL;
     }
     if (_rs->wasNull(_rs)) {
         res = NULL;
@@ -955,7 +955,7 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
 
 void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
 {
-	int status = 0;
+        int status = 0;
     NuoDB_Temporal *time = NULL;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
@@ -964,8 +964,8 @@ void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
 
     status = _rs->getTemporal(_rs, column+1, NUODB_TEMPORAL_TIMESTAMP, &time);
     if (status) {
-    	*time_val = NULL;
-    	return;
+        *time_val = NULL;
+        return;
     }
     if (_rs->wasNull(_rs)) {
         *time_val = NULL;
@@ -977,7 +977,7 @@ void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
 
 void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
 {
-	int status = 0;
+        int status = 0;
     NuoDB_Temporal *date = NULL;
 
     /* NOTE: caller catches exceptions. */
@@ -1000,7 +1000,7 @@ void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
 
 void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
-	int status = 0;
+        int status = 0;
     NuoDB_Lob *blob = NULL;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
@@ -1009,8 +1009,8 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
 
     status = _rs->getLob(_rs, column+1, NUODB_BLOB_TYPE, &blob);
     if (status) {
-    	*ptr = NULL;
-    	return;
+        *ptr = NULL;
+        return;
     }
     *len = blob->getLength(blob);
     if ((*len) == 0) {
@@ -1020,13 +1020,14 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
         memcpy(*ptr, blob->getData(blob), *len);
         (*ptr)[*len] = '\0';
     }
+    NuoDB_Lob_Free(blob);
     return;
 }
 
 
 void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
-	int status = 0;
+        int status = 0;
     NuoDB_Lob *clob = NULL;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
@@ -1035,8 +1036,8 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len,
 
     status = _rs->getLob(_rs, column+1, NUODB_CLOB_TYPE, &clob);
     if (status) {
-    	*ptr = NULL;
-    	return;
+        *ptr = NULL;
+        return;
     }
     *len = clob->getLength(clob);
     if ((*len) == 0) {
@@ -1046,6 +1047,7 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len,
         memcpy(*ptr, clob->getData(clob), *len);
         (*ptr)[*len] = '\0';
     }
+    NuoDB_Lob_Free(clob);
     return;
 }
 
@@ -1142,6 +1144,7 @@ void PdoNuoDbStatement::setBlob(size_t index, const char *value, int len)
         blob->setData(blob, (char *)value, len);
     }
     _stmt->setLob(_stmt, index+1, blob);
+    NuoDB_Lob_Free(blob);
     return;
 }
 
@@ -1158,6 +1161,7 @@ void PdoNuoDbStatement::setClob(size_t index, const char *value, int len)
         clob->setData(clob, (char *)value, len);
     }
     _stmt->setLob(_stmt, index+1, clob);
+    NuoDB_Lob_Free(clob);
     return;
 }
 
@@ -1418,12 +1422,13 @@ extern "C" {
     long pdo_nuodb_db_handle_doer(pdo_nuodb_db_handle * H, void *dbh_opaque, const char * sql, unsigned in_txn, unsigned auto_commit, void (*pt2pdo_dbh_t_set_in_txn)(void *dbh_opaque, unsigned in_txn))
     {
         PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
+        PdoNuoDbStatement * nuodb_stmt = NULL;
         unsigned in_txn_state = in_txn;
         long res;
 
         try
         {
-            PdoNuoDbStatement * nuodb_stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, NULL, sql);
+            nuodb_stmt = (PdoNuoDbStatement *) pdo_nuodb_db_handle_create_statement(H, NULL, sql);
 
             if ((H->pdo_dbh->auto_commit == 0) &&
                 (H->pdo_dbh->in_txn == 0))
@@ -1450,9 +1455,11 @@ extern "C" {
             db->setSqlstate("XX000");
             _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine());
             (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
+            delete nuodb_stmt;
             return -1;
         }
         (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
+        delete nuodb_stmt;
         return res;
     }
 
