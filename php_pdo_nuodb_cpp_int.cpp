@@ -238,11 +238,17 @@ int PdoNuoDbHandle::getTransactionIsolation() {
     }
     if (status) {
         NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
+        const char *sqlState = e->getSqlState(e);
         setEinfoErrcode(e->getCode(e));
         setEinfoErrmsg(e->getText(e));
         setEinfoFile(__FILE__);
         setEinfoLine(__LINE__);
-        setSqlstate(e->getSqlState(e));
+        if ((sqlState == NULL) || (sqlState[0] == '\0'))
+        {
+            setSqlstate("XX000");
+        } else {
+            setSqlstate(sqlState);
+        }
         _pdo_nuodb_error(getPdoDbh(), NULL, getEinfoFile(), getEinfoLine());
         return 0;
     }
@@ -359,11 +365,17 @@ NuoDB_Connection * PdoNuoDbHandle::createConnection()
         NuoDB_Connection_Free(_con);
         _con = NULL;
         NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
+        const char *sqlState = e->getSqlState(e);
         setEinfoErrcode(e->getCode(e));
         setEinfoErrmsg(e->getText(e));
         setEinfoFile(__FILE__);
         setEinfoLine(__LINE__);
-        setSqlstate(e->getSqlState(e));
+        if ((sqlState == NULL) || (sqlState[0] == '\0'))
+        {
+            setSqlstate("XX000");
+        } else {
+            setSqlstate(sqlState);
+        }
         _pdo_nuodb_error(getPdoDbh(), NULL, getEinfoFile(), getEinfoLine());
         return NULL;
     }
@@ -582,6 +594,8 @@ NuoDB_Statement * PdoNuoDbStatement::createStatement(char const * sql)
                 /* Workaround DB-4112 */
                 _nuodbh->setSqlstate(nuodb_get_sqlstate(e->getCode(e)));
                 _pdo_nuodb_error(_nuodbh->getPdoDbh(), NULL, _nuodbh->getEinfoFile(), _nuodbh->getEinfoLine());
+                NuoDB_Statement_Free(_stmt);
+                _stmt = NULL;
         }
     } catch (...) {
         _nuodbh->setEinfoErrcode(PDO_NUODB_SQLCODE_INTERNAL_ERROR);
@@ -590,6 +604,8 @@ NuoDB_Statement * PdoNuoDbStatement::createStatement(char const * sql)
         _nuodbh->setEinfoLine(__LINE__);
         _nuodbh->setSqlstate("XX000");
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), NULL, _nuodbh->getEinfoFile(), _nuodbh->getEinfoLine());
+        NuoDB_Statement_Free(_stmt);
+        _stmt = NULL;
     }
 
     return _stmt;
@@ -656,6 +672,9 @@ void PdoNuoDbStatement::setEinfoErrmsg(const char *errmsg) {
 
 
 void PdoNuoDbStatement::setSqlstate(const char *sqlState) {
+        if (sqlState == NULL) {
+                return;
+        }
     strncpy(this->sqlstate, sqlState, PDO_NUODB_SQLSTATE_LEN);
 }
 
@@ -699,6 +718,8 @@ int PdoNuoDbStatement::execute()
                 NuoDB_ResultSet_Free(_rs_gen_keys);
             }
         }
+    } else {
+        update_count = -1; /* use -1 to signal an error */
     }
 
     PDO_DBG_RETURN(update_count, getNuoDbHandle()->getPdoDbh());
@@ -1301,7 +1322,6 @@ extern "C" {
         return 1;
     }
 
-
     int pdo_nuodb_db_handle_rollback(pdo_nuodb_db_handle *H) {
         try {
             PdoNuoDbHandle *db = (PdoNuoDbHandle *) (H->db);
@@ -1441,7 +1461,11 @@ extern "C" {
             res = nuodb_stmt->execute();
 
             if (H->in_nuodb_implicit_txn == 1) {
-                pdo_nuodb_db_handle_commit(H);
+                if (res == -1) {
+                    pdo_nuodb_db_handle_rollback(H);
+                } else {
+                    pdo_nuodb_db_handle_commit(H);
+                }
                 H->in_nuodb_implicit_txn = 0;
                 H->in_nuodb_explicit_txn = 0;
             }
@@ -1453,6 +1477,24 @@ extern "C" {
             db->setEinfoFile(__FILE__);
             db->setEinfoLine(__LINE__);
             db->setSqlstate("XX000");
+            _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine());
+            (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
+            delete nuodb_stmt;
+            return -1;
+        }
+        if (res == -1) {
+            NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
+            const char *sqlState = e->getSqlState(e);
+            db->setEinfoErrcode(e->getCode(e));
+            db->setEinfoErrmsg(e->getText(e));
+            db->setEinfoFile(__FILE__);
+            db->setEinfoLine(__LINE__);
+            if ((sqlState == NULL) || (sqlState[0] == '\0'))
+            {
+                db->setSqlstate("XX000");
+            } else {
+                db->setSqlstate(sqlState);
+            }
             _pdo_nuodb_error(H->pdo_dbh, NULL, db->getEinfoFile(), db->getEinfoLine());
             (*pt2pdo_dbh_t_set_in_txn)(dbh_opaque, in_txn_state);
             delete nuodb_stmt;
@@ -1619,7 +1661,24 @@ extern "C" {
         }
 
         try {
-            affected_rows = nuodb_stmt->execute();
+            int res = nuodb_stmt->execute();
+            if (res == -1) {
+                NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
+                const char *sqlState = e->getSqlState(e);
+                nuodb_stmt->setEinfoErrcode(e->getCode(e));
+                nuodb_stmt->setEinfoErrmsg(e->getText(e));
+                nuodb_stmt->setEinfoFile(__FILE__);
+                nuodb_stmt->setEinfoLine(__LINE__);
+                if ((sqlState == NULL) || (sqlState[0] == '\0'))
+                {
+                    nuodb_stmt->setSqlstate("XX000");
+                } else {
+                    nuodb_stmt->setSqlstate(sqlState);
+                }
+                _pdo_nuodb_error(H->pdo_dbh, nuodb_stmt->getPdoStmt(), nuodb_stmt->getEinfoFile(), nuodb_stmt->getEinfoLine());
+                return 0;
+            }
+            affected_rows = res;
             S->cursor_open = nuodb_stmt->hasResultSet();
             *column_count = nuodb_stmt->getColumnCount();
         }
