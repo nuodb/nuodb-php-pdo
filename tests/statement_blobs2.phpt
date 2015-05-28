@@ -8,8 +8,6 @@ global $db;
 open_db();
 
 	$blobs = array(
-//		'TINYBLOB'		=> 255,
-//		'TINYTEXT'		=> 255,
 		'BLOB'				=> 32767,
 //		'TEXT'				=> 32767,
 //		'MEDIUMBLOB'	=> 100000,

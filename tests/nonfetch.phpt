@@ -9,8 +9,6 @@ open_db();
 
 
 	$blobs = array(
-//		'TINYBLOB'		=> 255,
-//		'TINYTEXT'		=> 255,
 		'BLOB'				=> 4,
 //		'TEXT'				=> 4,
 //		'MEDIUMBLOB'	=> 100000,

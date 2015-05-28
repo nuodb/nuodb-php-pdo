@@ -821,7 +821,6 @@ int PdoNuoDbStatement::getSqlType(size_t column)
                 return PDO_NUODB_SQLTYPE_BOOLEAN;
             case NUODB_TYPE_INTEGER:
             case NUODB_TYPE_SMALLINT:
-            case NUODB_TYPE_TINYINT:
                 return PDO_NUODB_SQLTYPE_INTEGER;
 
                 /*
