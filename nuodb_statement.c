@@ -376,6 +376,8 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
                 *len = 0;
                 break;
             }
+            // Use "long" here because the PDO spec requires this: note "long" is different sizes
+            // on different platforms.
             *len = sizeof(long);
             *ptr = (char *)emalloc(*len);
             memmove(*ptr, pVal, *len);
@@ -391,7 +393,9 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
                 *len = 0;
                 break;
             }
-            *len = sizeof(int64_t);
+            // Use "long" here because the PDO spec requires this: note "long" is different sizes
+            // on different platforms.
+            *len = sizeof(long);
             *ptr = (char *)emalloc(*len);
             memmove(*ptr, pVal, *len);
             break;

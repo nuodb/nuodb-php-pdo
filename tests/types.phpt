@@ -30,12 +30,12 @@ function tests($db){
     test_case($db, 32, 'SMALLINT', ".5", 1); // NuoDB rounds up from .5
     test_case($db, 33, 'SMALLINT', ".499999999", 0); // NuoDB rounds up from .5
     
-    test_case($db, 40, 'INTEGER', -2147483648, -2147483648);
+    test_case($db, 40, 'INTEGER', (int)-2147483648, (int)-2147483648);
     test_case($db, 41, 'INTEGER', 2147483647, 2147483647);
     test_case($db, 42, 'INTEGER', ".5", 1); // NuoDB rounds up from .5
     test_case($db, 43, 'INTEGER', ".499999999", 0); // NuoDB rounds up from .5
     
-    test_case($db, 50, 'INT', -2147483648, -2147483648);
+    test_case($db, 50, 'INT', (int)-2147483648, (int)-2147483648);
     test_case($db, 51, 'INT', 2147483647, 2147483647);
     test_case($db, 52, 'INT', ".5", 1); // NuoDB rounds up from .5
     test_case($db, 53, 'INT', ".499999999", 0); // NuoDB rounds up from .5
@@ -174,7 +174,7 @@ function test_case(&$db, $id, $sql_type, $value, $expect, $fail = false) {
 
     if (!isset($row['ID']) || !isset($row['VALUE'])) {
         if (!$fail){
-            printf("-- %s -- Fetched result is empty, dumping result: %s\n", $sql_type, var_export($row, true));
+            printf("-- %s::%d -- Fetched result is empty, dumping result: %s\n", $sql_type, $id, var_export($row, true));
             return false;
         } else {
             return true;
@@ -192,7 +192,7 @@ function test_case(&$db, $id, $sql_type, $value, $expect, $fail = false) {
 
     if ($row['VALUE'] != $expect) {
         if (!$fail) {
-            printf("-- %s -- Invalid VALUE: Expecting %s got %s \n", $sql_type, $expect, $row['VALUE']);
+            printf("-- %s::%d -- Invalid VALUE: Expecting %s got %s \n", $sql_type, $id, $expect, $row['VALUE']);
             return false;
         } else {
             return true;
@@ -201,7 +201,7 @@ function test_case(&$db, $id, $sql_type, $value, $expect, $fail = false) {
     
     if ($row['VALUE'] !== $expect) {
         if (!$fail) {
-            printf("-- %s -- Invalid VALUE type: Expecting %s got %s \n", $sql_type, strtoupper(gettype($expect)), strtoupper(gettype($row['VALUE'])));
+            printf("-- %s::%d -- Invalid VALUE type: Expecting %s got %s \n", $sql_type, $id, strtoupper(gettype($expect)), strtoupper(gettype($row['VALUE'])));
             return false;
         } else {
             return true;
@@ -214,7 +214,7 @@ function test_case(&$db, $id, $sql_type, $value, $expect, $fail = false) {
     $stmt->closeCursor();
     if ($row['VALUE'] != $row_string['VALUE']) {
         if (!$fail) {
-            printf("-- %s -- STRINGIGY = %s, NATIVE = %s\n", $sql_type, var_export($row_string['VALUE'], true), var_export($row['VALUE'], true));
+            printf("-- %s::%d -- STRINGIGY = %s, NATIVE = %s\n", $sql_type, $id, var_export($row_string['VALUE'], true), var_export($row['VALUE'], true));
             return false;
         } else {
             return true;
