@@ -983,7 +983,7 @@ void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
         return;
     }
 
-    status = _rs->getTemporal(_rs, column+1, NUODB_TEMPORAL_TIMESTAMP, &time);
+    status = _rs->getTemporal(_rs, column+1, NUODB_TEMPORAL_TIME, &time);
     if (status) {
         *time_val = NULL;
         return;
