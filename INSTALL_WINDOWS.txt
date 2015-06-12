@@ -67,10 +67,10 @@ The NuoDB PHP PDO Driver is a DLL that is dynamically loaded by the PHP executab
 
   > copy "C:\Program Files\NuoDB\drivers\php_pdo\vc9\php_pdo_nuodb.dll" C:\php
 
-2.2 NuoRemote.dll
+2.2 nuoclient.dll
 --------------------
 
-The NuoDB PHP PDO Driver DLL 'php_pdo_nuodb.dll' is dependent on one of the NuoRemote DLLs that are located in the 'C:\Program Files\NuoDB\bin32' directory.  You must manually add 'C:\Program Files\NuoDB\bin32' to your PATH environment variable so that PHP will be able to loade the dependent DLL.  If you are running PHP in a web server, you may want to add 'C:\Program Files\NuoDB\bin32' to your SYSTEM PATH environment variable (Start -> Control Panel -> System -> Advanced -> Environment Variables -> System Variables -> Variable: Path).  
+The NuoDB PHP PDO Driver DLL 'php_pdo_nuodb.dll' is dependent on one of the nuoclient DLLs that are located in the 'C:\Program Files\NuoDB\bin32' directory.  You must manually add 'C:\Program Files\NuoDB\bin32' to your PATH environment variable so that PHP will be able to loade the dependent DLL.  If you are running PHP in a web server, you may want to add 'C:\Program Files\NuoDB\bin32' to your SYSTEM PATH environment variable (Start -> Control Panel -> System -> Advanced -> Environment Variables -> System Variables -> Variable: Path).  
 
 
 2.3 Enable the NuoDB PHP PDO Driver
