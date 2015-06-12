@@ -7,7 +7,7 @@ if (PHP_PDO_NUODB != "no")
 {
   PHP_PGI = "no";
   PHP_PGO = "yes";
-  if (CHECK_LIB("NuoRemote_vc9.lib", "pdo_nuodb", PHP_PDO_NUODB + "\\lib32")
+  if (CHECK_LIB("nuoclient.lib", "pdo_nuodb", PHP_PDO_NUODB + "\\lib32")
       && CHECK_HEADER_ADD_INCLUDE('NuoDB.h', 'CFLAGS_PDO_NUODB', PHP_PDO_NUODB + "\\include")
       && CHECK_HEADER_ADD_INCLUDE('stdint.h', 'CFLAGS_PDO_NUODB', "include_extras\\VC9")) 
   {
