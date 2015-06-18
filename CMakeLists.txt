@@ -56,6 +56,10 @@ SET (CPACK_DEBIAN_PACKAGE_MAINTAINER "Robert Buck") #required
 
 INCLUDE (CPack)
 
+IF (APPLE)
+   SET (CMAKE_MACOSX_RPATH ON)
+ENDIF ()
+
 # Remove the following three lines when we use 2.0.0.
 # See CMake Bug #792, 6/28/2011, Target Version 2.0.0.
 IF (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
