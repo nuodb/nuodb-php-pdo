@@ -1120,7 +1120,7 @@ void PdoNuoDbStatement::setString(size_t index, const char *value)
         return;
     }
 
-    _stmt->setString(_stmt, index+1, value, strlen(value));
+    _stmt->setStringWithLength(_stmt, index+1, value, strlen(value));
     return;
 }
 
@@ -1130,7 +1130,7 @@ void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
     if (_stmt == NULL) {
         return;
     }
-    _stmt->setString(_stmt, index+1, value, length);
+    _stmt->setStringWithLength(_stmt, index+1, value, length);
     return;
 }
 
