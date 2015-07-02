@@ -880,7 +880,7 @@ char const * PdoNuoDbStatement::getString(size_t column)
     if (_rs == NULL) {
         return res;
     }
-    status = _rs->getString(_rs, column+1, NULL, &res);
+    status = _rs->getStringWithLength(_rs, column+1, NULL, &res);
     if (status != NUODB_SUCCESS) {
         return NULL;
     }
@@ -962,7 +962,7 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
         return res;
     }
 
-    status = _rs->getString(_rs, column+1, NULL, &res);
+    status = _rs->getStringWithLength(_rs, column+1, NULL, &res);
     if (status != NUODB_SUCCESS) {
         return NULL;
     }
