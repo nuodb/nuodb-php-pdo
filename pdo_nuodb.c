@@ -27,16 +27,16 @@
  ****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+# include "config.h"
 #endif
 
 #ifdef _MSC_VER  /* Visual Studio specific */
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/utime.h>
+# include <stdint.h>
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <sys/utime.h>
 #else
-#include <sys/time.h>
+# include <sys/time.h>
 #endif
 
 #include "php.h"

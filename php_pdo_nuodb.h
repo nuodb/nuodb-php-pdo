@@ -33,16 +33,21 @@ extern zend_module_entry pdo_nuodb_module_entry;
 #define phpext_pdo_nuodb_ptr &pdo_nuodb_module_entry
 
 #ifdef PHP_WIN32
-#	define PHP_PDO_NUODB_API __declspec(dllexport)
+# define PHP_PDO_NUODB_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_PDO_NUODB_API __attribute__ ((visibility("default")))
+# define PHP_PDO_NUODB_API __attribute__ ((visibility("default")))
 #else
-#	define PHP_PDO_NUODB_API
+# define PHP_PDO_NUODB_API
 #endif
 
 #ifdef ZTS
-#    include "TSRM.h"
+# include "TSRM.h"
 #endif
+
+#if defined(_WIN32) || defined(_WIN64)
+# define strdup _strdup
+#endif
+
 
 PHP_MINIT_FUNCTION(pdo_nuodb);
 PHP_MSHUTDOWN_FUNCTION(pdo_nuodb);

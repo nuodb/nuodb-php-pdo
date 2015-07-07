@@ -290,7 +290,6 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
          */
         case PDO_NUODB_SQLTYPE_NULL:
         {
-            int str_len;
             const char * str = pdo_nuodb_stmt_get_string(S, colno);
             if (str == NULL)
             {

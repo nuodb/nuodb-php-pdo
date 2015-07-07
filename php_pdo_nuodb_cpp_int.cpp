@@ -27,7 +27,7 @@
  ****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+# include "config.h"
 #endif
 
 #include <stdio.h>
@@ -51,12 +51,12 @@ extern "C" {
 }
 
 #ifdef _MSC_VER  /* Visual Studio specific */
-#include <stdint.h>
-#include <stdio.h>
-#include <winsock2.h>
-#include <windows.h>
+# include <stdint.h>
+# include <stdio.h>
+# include <winsock2.h>
+# include <windows.h>
 #else
-#include <sys/time.h>
+# include <sys/time.h>
 #endif
 
 #include <cstdio>
@@ -1246,7 +1246,7 @@ extern "C" {
     int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
     {
         if (timer == NULL) {
-            return 0.0;
+            return 0;
         }
 
 #ifdef WIN32

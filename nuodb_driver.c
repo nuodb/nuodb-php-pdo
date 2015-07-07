@@ -309,7 +309,6 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     long max_index = 0;
     char *nsql = NULL;
     int nsql_len = 0;
-    char *pData;
 
     PDO_DBG_ENTER("nuodb_handle_preparer", dbh);
 
@@ -840,7 +839,6 @@ static int pdo_nuodb_handle_factory(pdo_dbh_t * dbh, zval * driver_options TSRML
     int i;
     int ret = 0;
     int status;
-    short dpb_len;
     SqlOption options[PDO_NUODB_OPTIONS_ARR_SIZE];
     SqlOptionArray optionsArray;
     char *errMessage = NULL;
