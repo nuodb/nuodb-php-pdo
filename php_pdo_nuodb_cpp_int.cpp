@@ -352,17 +352,17 @@ NuoDB_Connection * PdoNuoDbHandle::createConnection()
 
     /* note: caller will catch exceptions. */
     closeConnection();
-    _con = NuoDB_Connection_CreateUtf8();
-    options = NuoDB_Options_Create();
+    _con = NuoDB_Connection_createUtf8();
+    options = NuoDB_Options_create();
     options->add(options,(const char *)_opts->array[3].option, (const char *)_opts->array[3].extra);
     status = _con->openDatabase(_con,
                        (const char *)_opts->array[0].extra, /* connection string */
                        (const char *)_opts->array[1].extra, /* username */
                        (const char *)_opts->array[2].extra, /* password */
                        options);
-    NuoDB_Options_Free(options);
+    NuoDB_Options_free(options);
     if (status != NUODB_SUCCESS) {
-        NuoDB_Connection_Free(_con);
+        NuoDB_Connection_free(_con);
         _con = NULL;
         NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
         const char *sqlState = e->getSqlState(e);
@@ -423,7 +423,7 @@ void PdoNuoDbHandle::closeConnection()
         return;
     }
 
-    NuoDB_Connection_Free(_con);
+    NuoDB_Connection_free(_con);
     _con = NULL;
 }
 
@@ -550,12 +550,12 @@ PdoNuoDbStatement::~PdoNuoDbStatement()
     _sql = NULL;
 
     if (_rs != NULL) {
-        NuoDB_ResultSet_Free(_rs);
+        NuoDB_ResultSet_free(_rs);
     }
     _rs = NULL;
 
     if (_stmt != NULL) {
-        NuoDB_Statement_Free(_stmt);
+        NuoDB_Statement_free(_stmt);
     }
     _stmt = NULL;
 }
@@ -578,7 +578,7 @@ NuoDB_Statement * PdoNuoDbStatement::createStatement(char const * sql)
 
     _stmt = NULL;
     try {
-        _stmt = NuoDB_Statement_Create(_con);
+        _stmt = NuoDB_Statement_create(_con);
         if (_stmt == NULL) {
                 NuoDB_Error *e = NuoDB_Error_getLastErrorInfo();
                 status = e->getStatus(e);
@@ -594,7 +594,7 @@ NuoDB_Statement * PdoNuoDbStatement::createStatement(char const * sql)
                 /* Workaround DB-4112 */
                 _nuodbh->setSqlstate(nuodb_get_sqlstate(e->getStatus(e)));
                 _pdo_nuodb_error(_nuodbh->getPdoDbh(), NULL, _nuodbh->getEinfoFile(), _nuodbh->getEinfoLine());
-                NuoDB_Statement_Free(_stmt);
+                NuoDB_Statement_free(_stmt);
                 _stmt = NULL;
         }
     } catch (...) {
@@ -604,7 +604,7 @@ NuoDB_Statement * PdoNuoDbStatement::createStatement(char const * sql)
         _nuodbh->setEinfoLine(__LINE__);
         _nuodbh->setSqlstate("XX000");
         _pdo_nuodb_error(_nuodbh->getPdoDbh(), NULL, _nuodbh->getEinfoFile(), _nuodbh->getEinfoLine());
-        NuoDB_Statement_Free(_stmt);
+        NuoDB_Statement_free(_stmt);
         _stmt = NULL;
     }
 
@@ -715,7 +715,7 @@ int PdoNuoDbStatement::execute()
                 PdoNuoDbGeneratedKeys *keys = new PdoNuoDbGeneratedKeys();
                 keys->setKeys(_rs_gen_keys);
                 _nuodbh->setLastKeys(keys);
-                NuoDB_ResultSet_Free(_rs_gen_keys);
+                NuoDB_ResultSet_free(_rs_gen_keys);
             }
         }
     } else {
@@ -1040,7 +1040,7 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
         memcpy(*ptr, blob->getData(blob), *len);
         (*ptr)[*len] = '\0';
     }
-    NuoDB_Lob_Free(blob);
+    NuoDB_Lob_free(blob);
     return;
 }
 
@@ -1067,7 +1067,7 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len,
         memcpy(*ptr, clob->getData(clob), *len);
         (*ptr)[*len] = '\0';
     }
-    NuoDB_Lob_Free(clob);
+    NuoDB_Lob_free(clob);
     return;
 }
 
@@ -1143,7 +1143,7 @@ void PdoNuoDbStatement::setBytes(size_t index, const void *value, int length)
     }
 
     NuoDB_Connection *con = _nuodbh->getConnection();
-    NuoDB_Lob *bytes = NuoDB_Lob_Create(con, NUODB_BYTES_TYPE);
+    NuoDB_Lob *bytes = NuoDB_Lob_create(con, NUODB_BYTES_TYPE);
     if (value != NULL) {
         bytes->setData(bytes, (char *)value, length);
     }
@@ -1159,12 +1159,12 @@ void PdoNuoDbStatement::setBlob(size_t index, const char *value, int len)
         return;
     }
     NuoDB_Connection *con = _nuodbh->getConnection();
-    NuoDB_Lob *blob = NuoDB_Lob_Create(con, NUODB_BLOB_TYPE);
+    NuoDB_Lob *blob = NuoDB_Lob_create(con, NUODB_BLOB_TYPE);
     if (value != NULL) {
         blob->setData(blob, (char *)value, len);
     }
     _stmt->setLob(_stmt, index+1, blob);
-    NuoDB_Lob_Free(blob);
+    NuoDB_Lob_free(blob);
     return;
 }
 
@@ -1176,12 +1176,12 @@ void PdoNuoDbStatement::setClob(size_t index, const char *value, int len)
     }
 
     NuoDB_Connection *con = _nuodbh->getConnection();
-    NuoDB_Lob *clob = NuoDB_Lob_Create(con, NUODB_CLOB_TYPE);
+    NuoDB_Lob *clob = NuoDB_Lob_create(con, NUODB_CLOB_TYPE);
     if (value != NULL) {
         clob->setData(clob, (char *)value, len);
     }
     _stmt->setLob(_stmt, index+1, clob);
-    NuoDB_Lob_Free(clob);
+    NuoDB_Lob_free(clob);
     return;
 }
 
