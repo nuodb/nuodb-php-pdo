@@ -338,7 +338,7 @@ void PdoNuoDbHandle::setOptions(SqlOptionArray * options)
     _opts = new SqlOptionArray;
     _opts->count = PDO_NUODB_OPTIONS_ARR_SIZE;
     _opts->array = _opt_arr;
-    for (int i=0; i<_opts->count; i++) {
+    for (size_t i=0; i<_opts->count; i++) {
         _opt_arr[i].option = (char const *) (options->array[i].option ? strdup(options->array[i].option) : NULL );
         _opt_arr[i].extra = (void *) (options->array[i].extra ? strdup((const char *)options->array[i].extra) : NULL);
     }

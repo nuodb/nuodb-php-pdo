@@ -1015,13 +1015,12 @@ pdo_driver_t pdo_nuodb_driver =
 void get_timestamp(char *time_buffer)
 {
     char fmt[PDO_NUODB_TEMPORAL_BUFFER];
-
-    struct timeval  tv;
-    struct tm       *tm;
-
 #ifdef WIN32
     __time64_t long_time;
+#else
+	struct timeval  tv;
 #endif
+    struct tm       *tm;
 
     TSRMLS_FETCH();
     if (PDO_NUODB_G(log_fp) == NULL) {
@@ -1043,7 +1042,7 @@ void get_timestamp(char *time_buffer)
     {
         strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
 #ifdef WIN32
-        _snprintf(time_buffer, PDO_NUODB_TEMPORAL_BUFFER, fmt, tv.tv_usec);
+        _snprintf(time_buffer, PDO_NUODB_TEMPORAL_BUFFER, fmt, long_time);
 #else
         snprintf(time_buffer, PDO_NUODB_TEMPORAL_BUFFER, fmt, tv.tv_usec);
 #endif
