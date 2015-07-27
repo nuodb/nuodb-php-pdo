@@ -76,14 +76,14 @@ function tests($db){
     ); // match 42 precision & 41 scale
     
     test_case($db, 100, 'DOUBLE', '-1.797693134862315e+308', '-1.797693134862315e+308'); //about min
-    test_case($db, 101, 'DOUBLE', '-1.797693134862315e+309', '-inf'); // unsupported min
+    test_case($db, 101, 'DOUBLE', '-1.797693134862315e+309', NULL, $fail = true); // unsupported min
     test_case($db, 102, 'DOUBLE', '1.797693134862315e+308', '1.797693134862315e+308'); //about min
-    test_case($db, 103, 'DOUBLE', '1.797693134862315E+309', 'inf'); // unsupported max
+    test_case($db, 103, 'DOUBLE', '1.797693134862315E+309', NULL, $fail = true); // unsupported max
     
     test_case($db, 110, 'FLOAT', '-1.797693134862315e+308', '-1.797693134862315e+308'); //about min
-    test_case($db, 111, 'FLOAT', '-1.797693134862315e+309', '-inf'); // unsupported min
+    test_case($db, 111, 'FLOAT', '-1.797693134862315e+309', NULL, $fail = true); // unsupported min
     test_case($db, 112, 'FLOAT', '1.797693134862315e+308', '1.797693134862315e+308'); //about min
-    test_case($db, 113, 'FLOAT', '1.797693134862315E+309', 'inf'); // unsupported max
+    test_case($db, 113, 'FLOAT', '1.797693134862315E+309', NULL, $fail = true); // unsupported max
     
     // ***DATE & TIME***
     
