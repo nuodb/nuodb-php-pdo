@@ -2,6 +2,8 @@
 
 [![Build Status](https://api.travis-ci.org/nuodb/nuodb-php-pdo.png?branch=master)](http://travis-ci.org/nuodb/nuodb-php-pdo)
 
+This is the official NuoDB PHP PDO driver. It is actively supported by NuoDB, updated and tested with each new release of NuoDB and upon major releases of PHP.
+
 ## Installing Necessary Dependencies ##
 
 In order to build the driver you must have PHP plus developer tools installed.
@@ -97,6 +99,6 @@ Add the following to your loaded php.ini
 
 **pdo_nuodb.logfile_path** defaults to /tmp/nuodb_pdo.log.  You can override that default by specifying your own path.
 
+## License ##
 
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/eebba2b3f495d19d760a0b42e0ce67fd "githalytics.com")](http://githalytics.com/nuodb/nuodb-php-pdo)
+[NuoDB License](https://github.com/nuodb/nuodb-php-pdo/blob/master/LICENSE)
