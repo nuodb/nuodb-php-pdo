@@ -2771,7 +2771,12 @@ function junit_get_suitename_for($file_name) {
 
 function junit_path_to_classname($file_name) {
     global $JUNIT;
-    return $JUNIT['name'] . '.' . str_replace(DIRECTORY_SEPARATOR, '.', $file_name);
+    $nuodb_php_test_name = getenv('PHP_TEST_NAME');
+    return $JUNIT['name'] . '.' . str_replace(
+        DIRECTORY_SEPARATOR, 
+        '.', 
+        $nuodb_php_test_name ? $nuodb_php_test_name : $file_name
+    );
 }
 
 function junit_init_suite($suite_name) {
