@@ -189,17 +189,52 @@ use these levels only when troubleshooting.
 4 - Functions
 5 - Everything
 
-By default the logfile_path defaults to /tmp/nuodb_pdo.log under *Nix 
-systems. By specifying a value, you will override this path. 
+By default the logfile_path defaults to nuodb_pdo.log. By 
+specifying a value, you will override this path. Under Windows
+the default path of the log file would be the home directory of 
+the php executable (i.e C:\PHP\pdo_nuodb.log). 
+ 
 
-You can also control NuoDB PHP PDO transaction isolation levels from within 
-the PHP initialization file by setting pdo_nuodb.default_txn_isolation.
+6.0 Noteworthy PDO Attributes
+================================
 
-NuoDB isolation Levels are: 
-1. ConsistentRead - (Default) NuoDB native mode.
-2. WriteCommitted - Dirty reads are prevented. Non-repeatable reads occur
-                    after write. Phantom reads can occur. 
-3. ReadCommitted - Dirty reads are prevented. Non-repeatable reads and 
-                    phantom reads can occur. 
-4. Serializable - Dirty reads, non-repeatable reads and phantom reads are   
-                    prevented.
+- PDO::ATTR_PERSISTENT
+    PDO has the ability to use persistent connections, 
+    akin to JDBC's Connection Pooling - but is not necessarily pooling 
+    multiple connections. A persistent connection is not closed at 
+    the end of the script and is instead cached. This allows another
+    script requesting a connection using the same credentials to re-use
+    the cached connection. By default set to False. Also important to 
+    note, that this attribute must be set within the driver options array
+    and passed to the PDO constructor at instantiation of the PDO object. 
+    It's highly Highly recommended when seeking performance improvements. 
+
+- PDO::ATTR_AUTOCOMMIT 
+    Whether to implicitly commit on every SQL statement,
+    by default this attribute is set to true. For advanced users it is
+    recommended that autocommit is disabled. This forces the user to
+    build a reliance on using transactions. By using transactions you will
+    in effect "batch up" your statements. Batching will lead to a performance
+    improvement of your scripts/app. 
+    
+- PDO::NUODB_TXN_ISOLATION_CONSISTENT_READ 
+    NuoDB supports several levels of transaction isolation, the above
+    attribute can be used to change the isolation level.
+
+
+    NuoDB isolation Levels are: 
+    1. ConsistentRead - (Default) NuoDB native mode.
+    2. WriteCommitted - Dirty reads are prevented. Non-repeatable reads occur
+                        after write. Phantom reads can occur. 
+    3. ReadCommitted - Dirty reads are prevented. Non-repeatable reads and 
+                        phantom reads can occur. 
+    4. Serializable - Dirty reads, non-repeatable reads and phantom reads are  
+                        prevented.
+
+    You can also control NuoDB PHP PDO transaction isolation levels from within
+    the PHP initialization file by setting pdo_nuodb.default_txn_isolation.
+
+    For an in-depth view of Transactions and Isolation Levels consult the 
+    Doc @ http://doc.nuodb.com/display/doc/Transactions+and+Isolation+Levels
+
+
