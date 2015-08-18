@@ -63,7 +63,7 @@ number and Thread Safety, you can obtain source code for the NuoDB PHP
 PDO Driver on GitHub which you can use to build your own NuoDB PHP PDO
 Driver that matches your particular version/thread safety of your PHP install.
 
-You can find and grab the PHP PDO Driver from GitHub at the following link
+You can find and obtain the PHP PDO Driver from GitHub at the following link
  https://github.com/nuodb/nuodb-php-pdo
 
 2.1 NuoDB PHP PDO Driver shared library (pdo_nuodb.so)
@@ -185,7 +185,6 @@ by adding the following to your PHP Configuration (php.ini):
 pdo_nuodb.enable_log=1
 pdo_nuodb.log_level=1
 pdo_nuodb.logfile_path=/tmp/nuodb_pdo.log
-pdo_nuodb.default_txn_isolation=ConsistentRead
 
 Just to note, there are 5 levels of logging. Beware that log_level 3 and above
 can be very verbose and will grow the log file quickly. It's recommended to 
@@ -216,7 +215,7 @@ where ever the php executable was used.
     the cached connection. By default set to False. Also important to 
     note, that this attribute must be set within the driver options array
     and passed to the PDO constructor at instantiation of the PDO object. 
-    It's highly Highly recommended when seeking performance improvements. 
+    It is highly recommended when seeking performance improvements. 
 
 - PDO::ATTR_AUTOCOMMIT 
     Whether to implicitly commit on every SQL statement,
@@ -230,14 +229,13 @@ where ever the php executable was used.
     NuoDB supports several levels of transaction isolation, the above
     attribute can be used to change the isolation level.
 
-
     NuoDB isolation Levels are: 
-    1. ConsistentRead - (Default) NuoDB native mode.
-    2. WriteCommitted - Dirty reads are prevented. Non-repeatable reads occur
+    * ConsistentRead - (Default) NuoDB native mode.
+    * WriteCommitted - Dirty reads are prevented. Non-repeatable reads occur
                         after write. Phantom reads can occur. 
-    3. ReadCommitted - Dirty reads are prevented. Non-repeatable reads and 
+    * ReadCommitted - Dirty reads are prevented. Non-repeatable reads and 
                         phantom reads can occur. 
-    4. Serializable - Dirty reads, non-repeatable reads and phantom reads are  
+    * Serializable - Dirty reads, non-repeatable reads and phantom reads are  
                         prevented.
 
     You can also control NuoDB PHP PDO transaction isolation levels from within
