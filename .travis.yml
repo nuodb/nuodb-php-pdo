@@ -9,11 +9,10 @@ env:
   - NUOVERSION=2.0.4.24 NUODB_ADD_DOMAIN_PASS=no NUODB_START_AGENT=no
   - NUOVERSION=2.1.1.10 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
   - NUOVERSION=2.2.0.9 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
+  - NUOVERSION=2.3.1.0 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
 
 notifications:
   recipients:
-    - buck.robert.j@gmail.com
-    - rbuck@nuodb.com
     - tgates@nuodb.com
 
 before_install:
