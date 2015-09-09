@@ -51,3 +51,4 @@ script:
 
 after_failure:
   - cat tests/*.out
+  - cat tests/*.diff
