@@ -18,6 +18,8 @@ before_install:
   - export NUODB_ROOT=/opt/nuodb
   - export NUODB_INCLUDE_DIR=/opt/nuodb/include
   - export NUODB_LIB_DIR=/opt/nuodb/lib64
+  - export TZ=America/New_York
+  - date
   - cat /etc/debian_version
   - sudo apt-get update
   - sudo apt-get install valgrind
