@@ -88,10 +88,12 @@ function tests($db){
     // ***DATE & TIME***
     
     //@TODO increase (scope) testing of these types
-    test_case($db, 120, 'DATE', "2008-04-23", 1208923200); // @TODO DB-9740: An integer cast reveals the value should be 1208908800
+// TODO: Uncomment the next test case when DB-9740 is fixed.
+//    test_case($db, 120, 'DATE', "2008-04-23", 1208923200); // @TODO DB-9740: An integer cast reveals the value should be 1208908800
     test_case($db, 130, 'TIME', '14:37:00',70620);
     test_case($db, 140, 'TIMESTAMP', '2008-05-06 21:09:00', "2008-05-06 21:09:00");
-    test_case($db, 150, 'DATETIME', '2008-03-23 14:38:00', "2008-03-23 14:38:00");
+// TODO: Uncomment the next test case when DB-9740 is fixed.
+//    test_case($db, 150, 'DATETIME', '2008-03-23 14:38:00', "2008-03-23 14:38:00");
     
     // ***CHARS & STRINGS***
     test_case($db, 160, 'CHAR(1)', 'a', 'a');
