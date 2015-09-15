@@ -29,12 +29,7 @@
 #ifndef PHP_PDO_NUODB_CPP_INT_H
 #define PHP_PDO_NUODB_CPP_INT_H
 
-#include "Connection.h"
-#include "Properties.h"
-#include "ResultSet.h"
-#include "DatabaseMetaData.h"
-#include "PreparedStatement.h"
-#include "ProductVersion.h"
+#include "NuoDB.h"
 
 /* derived from platform/version.h */
 static const int NUODB_1_0_2_VERSION        = 19;
@@ -63,7 +58,7 @@ private:
 public:
     PdoNuoDbGeneratedKeys();
     ~PdoNuoDbGeneratedKeys();
-    void setKeys(NuoDB::ResultSet *rs);
+    void setKeys(NuoDB_ResultSet *rs);
     int getIdValue();
     int getIdValue(const char *seqName);
 };
@@ -71,7 +66,7 @@ public:
 class PdoNuoDbHandle
 {
 private:
-    NuoDB::Connection * _con;
+    NuoDB_Connection * _con;
     _pdo_dbh_t *_pdo_dbh;
     int _txn_isolation_level;
     int _driverMajorVersion;
@@ -107,8 +102,8 @@ public:
     void setLastStatement(PdoNuoDbStatement *lastStatement);
     void setLastKeys(PdoNuoDbGeneratedKeys *lastKeys);
     void setOptions(SqlOptionArray * options);
-    NuoDB::Connection * createConnection();
-    NuoDB::Connection * getConnection();
+    NuoDB_Connection * createConnection();
+    NuoDB_Connection * getConnection();
     PdoNuoDbStatement * createStatement(pdo_stmt_t *pdo_stmt, char const * sql);
     void closeConnection();
     void commit();
@@ -127,12 +122,12 @@ private:
     pdo_nuodb_error_info einfo; /* NuoDB error information */
     pdo_error_type sqlstate;
     const char *_sql;
-    NuoDB::PreparedStatement * _stmt;
-    NuoDB::ResultSet * _rs;
+    NuoDB_Statement * _stmt;
+    NuoDB_ResultSet * _rs;
 public:
     PdoNuoDbStatement(PdoNuoDbHandle * dbh, pdo_stmt_t *pdo_stmt);
     ~PdoNuoDbStatement();
-    NuoDB::PreparedStatement * createStatement(char const * sql);
+    NuoDB_Statement * createStatement(char const * sql);
     PdoNuoDbHandle * getNuoDbHandle();
     pdo_stmt_t *getPdoStmt();
     int getEinfoLine();

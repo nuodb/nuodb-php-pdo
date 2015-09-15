@@ -6,14 +6,10 @@ php:
   - 5.5
 
 env:
-  - NUOVERSION=2.0.4.24 NUODB_ADD_DOMAIN_PASS=no NUODB_START_AGENT=no
-  - NUOVERSION=2.1.1.10 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
-  - NUOVERSION=2.2.0.9 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
+  - NUOVERSION=2.3.1.14 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
 
 notifications:
   recipients:
-    - buck.robert.j@gmail.com
-    - rbuck@nuodb.com
     - tgates@nuodb.com
 
 before_install:
@@ -22,6 +18,8 @@ before_install:
   - export NUODB_ROOT=/opt/nuodb
   - export NUODB_INCLUDE_DIR=/opt/nuodb/include
   - export NUODB_LIB_DIR=/opt/nuodb/lib64
+  - export TZ=America/New_York
+  - date
   - cat /etc/debian_version
   - sudo apt-get update
   - sudo apt-get install valgrind
@@ -29,7 +27,7 @@ before_install:
   - wget -q http://download.nuohub.org/nuodb_${NUOVERSION}_amd64.deb --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 5
-  - if [[ "${NUODB_ADD_DOMAIN_PASS}" == "yes" ]] ; then sudo chmod 777 $NUODB_ROOT/etc/default.properties; echo "domainPassword = bird" >> $NUODB_ROOT/etc/default.properties; sudo chmod 600 $NUODB_ROOT/etc/default.properties; fi
+  - if [[ "${NUODB_ADD_DOMAIN_PASS}" == "yes" ]] ; then sudo chmod 777 $NUODB_ROOT/etc/default.properties; printf "\ndomainPassword = bird\n" >> $NUODB_ROOT/etc/default.properties; sudo chmod 600 $NUODB_ROOT/etc/default.properties; fi
   - if [[ "${NUODB_START_AGENT}" == "yes" ]]; then sudo service nuoagent start; fi
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
   - ${NUODB_ROOT}/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
@@ -55,3 +53,4 @@ script:
 
 after_failure:
   - cat tests/*.out
+  - cat tests/*.diff

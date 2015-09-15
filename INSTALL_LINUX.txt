@@ -62,10 +62,10 @@ The NuoDB PHP PDO Driver is a shared library that is dynamically loaded by the P
 
 As another example, the Amazon Linux AMI, which is based on CentOS, uses '/usr/lib64/php/modules/' for the PHP Extension Directory.
 
-2.2 libNuoRemote.so
+2.2 libnuoclient.so
 --------------------
 
-The NuoDB PHP PDO Driver shared library 'pdo_nuodb.so' is dependent on the 'libNuoRemote.so' shared library, which is located in the '/opt/nuodb/lib64' directory.  If you installed NuoDB using the RPM or Debian installers, then '/opt/nuodb/lib64' is already added to your system's dynamic load library path.  If you installed NuoDB from a .tar file, then you must manually add '/opt/nuodb/lib64' to your dynamic load library path.
+The NuoDB PHP PDO Driver shared library 'pdo_nuodb.so' is dependent on the 'libnuoclient.so' shared library, which is located in the '/opt/nuodb/lib64' directory.  If you installed NuoDB using the RPM or Debian installers, then '/opt/nuodb/lib64' is already added to your system's dynamic load library path.  If you installed NuoDB from a .tar file, then you must manually add '/opt/nuodb/lib64' to your dynamic load library path.
 
 
 2.3 Enable the NuoDB PHP PDO Driver

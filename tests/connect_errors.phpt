@@ -84,7 +84,7 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[08000] [-7] no NuoDB nodes are available for database "no-such-test@localhost:' . $nuotestport . '"';
+  $expected_message = "SQLSTATE[08000] [-10] no NuoDB nodes are available for database 'no-such-test@localhost:" . $nuotestport . "'";
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
@@ -156,7 +156,7 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = "SQLSTATE[08000] [-10] can't find broker for database" . ' "test@no-such-localhost:' . $nuotestport . '"';
+  $expected_message = "SQLSTATE[08000] [-10] can't find broker for database 'test@no-such-localhost:" . $nuotestport . "'";
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }
