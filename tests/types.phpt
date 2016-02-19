@@ -54,21 +54,19 @@ function tests($db){
     
     // ***NUMERICS W/PRECISION*** -- Current Driver Implementation returns as PDO STRING
     
-    // Note Decimals and Nemerics without precision and scale are treated like Number
     test_case($db, 70, 'DECIMAL', '-32768', '-32768');
     test_case($db, 71, 'DECIMAL', '32767', '32767');
     test_case($db, 72, 'DECIMAL(6,4)', '12.3456', '12.3456');
     test_case($db, 73, 'DECIMAL(6,4)', '12.34567', '12.34567', $fail = true); // Expect fail
     
     test_case($db, 80, 'NUMERIC', '-32768', '-32768');
-    test_case($db, 81, 'NUMERIC(4)', '32767', '32767');
-    test_case($db, 83, 'NUMERIC(20)', '-2.135987e+96',
+    test_case($db, 81, 'NUMERIC(5)', '32767', '32767');
+    test_case($db, 83, 'NUMERIC(97)', '-2.135987e+96',
         '-2135987000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
     ); // should utilize regex for this!
-    test_case($db, 84, 'NUMERIC(20)', '-2.135987e+100',
-        '-21359870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        $fail = false // THIS SHOULD FAIL! Leaving as 'expecting no fail' for time being
-    ); // @TODO Investigate why this doesn't fail, I suspect an overflow will force nuodb to treat type as Number
+    test_case($db, 84, 'NUMERIC(101)', '-2.135987e+100',
+        '-21359870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+    );
     
     test_case($db, 90, 'NUMBER', 
         $inserted_value = '1.12345678901234567890123456789012345678901', 
