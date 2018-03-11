@@ -16,6 +16,8 @@ before_install:
   - export TZ=America/New_York
   - date
   - cat /etc/debian_version
+  - sudo apt update
+  - sudo apt install valgrind
   - ls -al $(php-config --extension-dir)
   - echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/enabled >/dev/null
   - echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/defrag >/dev/null
