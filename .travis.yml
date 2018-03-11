@@ -1,16 +1,15 @@
 language: php
 
 php:
-  - 5.3
-  - 5.4
-  - 5.5
+  - 5.6
 
 env:
   - NUOVERSION=3.1.0.1 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
 
 notifications:
-  recipients:
+  email:
     - tgates@nuodb.com
+    - psmith@nuodb.com
 
 before_install:
   - uname -a
@@ -21,17 +20,23 @@ before_install:
   - export TZ=America/New_York
   - date
   - cat /etc/debian_version
-  - sudo apt-get update
-  - sudo apt-get install valgrind
+  - sudo apt update
+  - sudo apt install valgrind
   - ls -al $(php-config --extension-dir)
-  - wget -q "http://download.nuohub.org/nuodb_${NUOVERSION}_amd64.deb" --output-document=/var/tmp/nuodb.deb
+  - echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/enabled >/dev/null
+  - echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/defrag >/dev/null
+  - wget -q "http://download.nuohub.org/nuodb-ce_${NUOVERSION}_amd64.deb" --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
-  - sleep 5
   - if [ "$NUODB_ADD_DOMAIN_PASS" = yes ]; then printf '\ndomainPassword = bird\n' | sudo tee -a "$NUODB_HOME"/etc/default.properties >/dev/null; fi
+
+  # There's a bug in the Trusty images where this gives a syntax error
+  # See https://github.com/travis-ci/travis-ci/issues/8906
+  - sudo mv /opt/jdk_switcher/jdk_switcher.sh /tmp
+
   - if [ "$NUODB_START_AGENT" = yes ]; then sudo service nuoagent start; fi
-  - "$NUODB_HOME"/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
-  - "$NUODB_HOME"/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
-  - "$NUODB_HOME"/bin/nuosql test@localhost --user dba --password dba < create_user_cloud.sql
+  - $NUODB_HOME/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
+  - $NUODB_HOME/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
+  - $NUODB_HOME/bin/nuosql test@localhost --user dba --password dba < create_user_cloud.sql
 
 install:
   - true
