@@ -30,7 +30,11 @@
 # include "config.h"
 #endif
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+
 #include <stdarg.h>
 #include <time.h>
 
@@ -52,17 +56,11 @@ extern "C" {
 
 #ifdef _MSC_VER  /* Visual Studio specific */
 # include <stdint.h>
-# include <stdio.h>
 # include <winsock2.h>
 # include <windows.h>
 #else
 # include <sys/time.h>
 #endif
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
 
 #include "php_pdo_nuodb_c_cpp_common.h"
 #include "php_pdo_nuodb_cpp_int.h"
@@ -82,7 +80,7 @@ PdoNuoDbGeneratedKeys::~PdoNuoDbGeneratedKeys()
 
     for (int i=0; i < _qty; i++) {
         if (_keys[i].columnName != NULL) {
-            delete _keys[i].columnName;
+            free(_keys[i].columnName);
         }
     }
     delete [] _keys;
