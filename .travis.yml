@@ -8,10 +8,6 @@ php:
 env:
   - NUOVERSION=3.1.0.1 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
 
-notifications:
-  recipients:
-    - tgates@nuodb.com
-
 before_install:
   - uname -a
   - phpenv versions
@@ -24,14 +20,14 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install valgrind
   - ls -al $(php-config --extension-dir)
-  - wget -q "http://download.nuohub.org/nuodb_${NUOVERSION}_amd64.deb" --output-document=/var/tmp/nuodb.deb
+  - wget -q "http://download.nuohub.org/nuodb-ce_${NUOVERSION}_amd64.deb" --output-document=/var/tmp/nuodb.deb
   - sudo dpkg -i /var/tmp/nuodb.deb
   - sleep 5
   - if [ "$NUODB_ADD_DOMAIN_PASS" = yes ]; then printf '\ndomainPassword = bird\n' | sudo tee -a "$NUODB_HOME"/etc/default.properties >/dev/null; fi
   - if [ "$NUODB_START_AGENT" = yes ]; then sudo service nuoagent start; fi
-  - "$NUODB_HOME"/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
-  - "$NUODB_HOME"/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
-  - "$NUODB_HOME"/bin/nuosql test@localhost --user dba --password dba < create_user_cloud.sql
+  - $NUODB_HOME/bin/nuodbmgr --broker localhost --password bird --command "start process sm host localhost database test archive /var/tmp/nuodb initialize true"
+  - $NUODB_HOME/bin/nuodbmgr --broker localhost --password bird --command "start process te host localhost database test options '--dba-user dba --dba-password dba'"
+  - $NUODB_HOME/bin/nuosql test@localhost --user dba --password dba < create_user_cloud.sql
 
 install:
   - true
