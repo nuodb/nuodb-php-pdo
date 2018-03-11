@@ -2,9 +2,6 @@ language: php
 
 php:
   - 5.6
-  - 7.0
-  - 7.1
-  - 7.2
 
 env:
   - NUOVERSION=3.1.0.1 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
@@ -53,6 +50,7 @@ script:
   - make install
   - php run-test.php -m tests/*.phpt
   - cat tests/*.mem
+  - cat tests/*.out
   - php tests-performance/*.php
 
 after_failure:
