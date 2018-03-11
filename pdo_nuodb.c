@@ -54,10 +54,6 @@
 ZEND_DECLARE_MODULE_GLOBALS(pdo_nuodb)
 
 
-/* True global resources - no need for thread safety here */
-static int le_pdo_nuodb;
-
-
 /* {{{ pdo_nuodb_functions[]
  *
  * Every user visible function must have an entry in pdo_nuodb_functions[].

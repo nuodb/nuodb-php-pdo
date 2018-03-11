@@ -298,14 +298,13 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     pdo_nuodb_stmt * S = NULL;
     PdoNuoDbStatement * nuodb_stmt;
     int map_size = 0;
-    int count_input_params = 0;
     int index = 0;
     char rewritten = 0;
     HashPosition pos;
     int keytype;
     char *strindex;
-    int strindexlen;
-    long intindex = -1;
+    unsigned int strindexlen;
+    unsigned long intindex = -1;
     long max_index = 0;
     char *nsql = NULL;
     int nsql_len = 0;
@@ -1018,7 +1017,7 @@ void get_timestamp(char *time_buffer)
 #ifdef WIN32
     __time64_t long_time;
 #else
-	struct timeval  tv;
+    struct timeval  tv;
 #endif
     struct tm       *tm;
 
