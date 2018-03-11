@@ -270,7 +270,6 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
 
     pdo_nuodb_stmt * S = (pdo_nuodb_stmt *)pdo_stmt->driver_data;
     int sqlTypeNumber = 0;
-    pdo_nuodb_db_handle *H = (pdo_nuodb_db_handle *)S->H;
     sqlTypeNumber = pdo_nuodb_stmt_get_sql_type(S, colno);
 
     *len = 0;
@@ -523,7 +522,6 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
 
             case PDO_PARAM_EVT_EXEC_PRE:
             {
-                int num_input_params = 0;
                 if (!stmt->bound_param_map) {
                     return 0;
                 }
