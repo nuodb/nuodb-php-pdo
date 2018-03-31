@@ -155,8 +155,10 @@ int PdoNuoDbGeneratedKeys::getIdValue(const char *seqName)
 
 
 PdoNuoDbHandle::PdoNuoDbHandle(pdo_dbh_t *pdo_dbh, SqlOptionArray * options)
-    : _pdo_dbh(pdo_dbh), _driverMajorVersion(0), _driverMinorVersion(0),
-      _con(NULL), _txn_isolation_level(PDO_NUODB_TXN_CONSISTENT_READ), _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
+    : _con(NULL), _pdo_dbh(pdo_dbh),
+      _txn_isolation_level(PDO_NUODB_TXN_CONSISTENT_READ),
+      _driverMajorVersion(0), _driverMinorVersion(0),
+      _opts(NULL), _last_stmt(NULL), _last_keys(NULL)
 {
     einfo.errcode = 0;
     einfo.errmsg = NULL;
@@ -682,8 +684,7 @@ int PdoNuoDbStatement::execute()
     NuoDB_Status status = NUODB_SUCCESS;
     int update_count = 0;
     struct pdo_nuodb_timer_t timer;
-    bool result = FALSE;
-    int elapsed = 0;
+    unsigned long long elapsed = 0;
 
     /* NOTE: caller catches exceptions. */
     PDO_DBG_ENTER("PdoNuoDbHandle::execute", getNuoDbHandle()->getPdoDbh());
@@ -697,7 +698,7 @@ int PdoNuoDbStatement::execute()
     pdo_nuodb_timer_end(&timer);
 
     elapsed = pdo_nuodb_get_elapsed_time_in_microseconds(&timer);
-    PDO_DBG_INF_FMT(": dbh=%p : Elapsed time=%d (microseconds) : SQL=%s", getNuoDbHandle()->getPdoDbh(), elapsed, this->_sql);
+    PDO_DBG_INF_FMT(": dbh=%p : Elapsed time=%llu (microseconds) : SQL=%s", getNuoDbHandle()->getPdoDbh(), elapsed, this->_sql);
 
     if (status == NUODB_SUCCESS) {
         _rs = _stmt->getResultSet(_stmt);
@@ -740,9 +741,9 @@ bool PdoNuoDbStatement::next()
 }
 
 
-size_t PdoNuoDbStatement::getColumnCount()
+int PdoNuoDbStatement::getColumnCount()
 {
-        size_t columnCount;
+    int columnCount;
     /* NOTE: caller catches exceptions. */
     if (_rs == NULL) {
         return false;
@@ -753,7 +754,7 @@ size_t PdoNuoDbStatement::getColumnCount()
 }
 
 
-char const * PdoNuoDbStatement::getColumnName(size_t column)
+char const * PdoNuoDbStatement::getColumnName(int column)
 {
     char const * rval = NULL;
 
@@ -790,7 +791,7 @@ char const * PdoNuoDbStatement::getColumnName(size_t column)
 }
 
 
-int PdoNuoDbStatement::getSqlType(size_t column)
+int PdoNuoDbStatement::getSqlType(int column)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     NuoDB_ResultSetMetaData * md = NULL;
@@ -869,7 +870,7 @@ int PdoNuoDbStatement::getSqlType(size_t column)
 }
 
 
-char const * PdoNuoDbStatement::getString(size_t column)
+char const * PdoNuoDbStatement::getString(int column)
 {
     /* NOTE: caller catches exceptions. */
     NuoDB_Status status = NUODB_SUCCESS;
@@ -890,7 +891,7 @@ char const * PdoNuoDbStatement::getString(size_t column)
 }
 
 
-void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
+void PdoNuoDbStatement::getInteger(int column, int **int_val)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     /* NOTE: caller catches exceptions. */
@@ -909,7 +910,7 @@ void PdoNuoDbStatement::getInteger(size_t column, int **int_val)
 }
 
 
-bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
+bool PdoNuoDbStatement::getBoolean(int column, char **bool_val)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     nuodb_bool_t b;
@@ -931,7 +932,7 @@ bool PdoNuoDbStatement::getBoolean(size_t column, char **bool_val)
 }
 
 
-void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
+void PdoNuoDbStatement::getLong(int column, int64_t **long_val)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     /* NOTE: caller catches exceptions. */
@@ -950,7 +951,7 @@ void PdoNuoDbStatement::getLong(size_t column, int64_t **long_val)
 }
 
 
-char const *PdoNuoDbStatement::getTimestamp(size_t column)
+char const *PdoNuoDbStatement::getTimestamp(int column)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     /* NOTE: caller catches exceptions. */
@@ -971,7 +972,7 @@ char const *PdoNuoDbStatement::getTimestamp(size_t column)
 }
 
 
-void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
+void PdoNuoDbStatement::getTime(int column, int64_t **time_val)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     NuoDB_Temporal *time = NULL;
@@ -993,7 +994,7 @@ void PdoNuoDbStatement::getTime(size_t column, int64_t **time_val)
 }
 
 
-void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
+void PdoNuoDbStatement::getDate(int column, int64_t **date_val)
 {
     NuoDB_Status status = NUODB_SUCCESS;
     NuoDB_Temporal *date = NULL;
@@ -1016,7 +1017,7 @@ void PdoNuoDbStatement::getDate(size_t column, int64_t **date_val)
 }
 
 
-void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
+void PdoNuoDbStatement::getBlob(int column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
     NuoDB_Status status = NUODB_SUCCESS;
     NuoDB_Lob *blob = NULL;
@@ -1030,7 +1031,7 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
         *ptr = NULL;
         return;
     }
-    *len = blob->getLength(blob);
+    *len = (unsigned long)blob->getLength(blob);
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
@@ -1043,7 +1044,7 @@ void PdoNuoDbStatement::getBlob(size_t column, char ** ptr, unsigned long * len,
 }
 
 
-void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
+void PdoNuoDbStatement::getClob(int column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int allow_failure ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC))
 {
     NuoDB_Status status = NUODB_SUCCESS;
     NuoDB_Lob *clob = NULL;
@@ -1057,7 +1058,7 @@ void PdoNuoDbStatement::getClob(size_t column, char ** ptr, unsigned long * len,
         *ptr = NULL;
         return;
     }
-    *len = clob->getLength(clob);
+    *len = (unsigned long)clob->getLength(clob);
     if ((*len) == 0) {
         *ptr = NULL;
     } else {
@@ -1089,7 +1090,7 @@ size_t PdoNuoDbStatement::getNumberOfParameters()
 }
 
 
-void PdoNuoDbStatement::setInteger(size_t index, int value)
+void PdoNuoDbStatement::setInteger(int index, int value)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1100,7 +1101,7 @@ void PdoNuoDbStatement::setInteger(size_t index, int value)
 }
 
 
-void PdoNuoDbStatement::setBoolean(size_t index, bool value)
+void PdoNuoDbStatement::setBoolean(int index, bool value)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1111,7 +1112,7 @@ void PdoNuoDbStatement::setBoolean(size_t index, bool value)
 }
 
 
-void PdoNuoDbStatement::setString(size_t index, const char *value)
+void PdoNuoDbStatement::setString(int index, const char *value)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1122,7 +1123,7 @@ void PdoNuoDbStatement::setString(size_t index, const char *value)
     return;
 }
 
-void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
+void PdoNuoDbStatement::setString(int index, const char *value, int length)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1133,7 +1134,7 @@ void PdoNuoDbStatement::setString(size_t index, const char *value, int length)
 }
 
 
-void PdoNuoDbStatement::setBytes(size_t index, const void *value, int length)
+void PdoNuoDbStatement::setBytes(int index, const void *value, int length)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1150,7 +1151,7 @@ void PdoNuoDbStatement::setBytes(size_t index, const void *value, int length)
 }
 
 
-void PdoNuoDbStatement::setBlob(size_t index, const char *value, int len)
+void PdoNuoDbStatement::setBlob(int index, const char *value, int len)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1166,7 +1167,7 @@ void PdoNuoDbStatement::setBlob(size_t index, const char *value, int len)
     return;
 }
 
-void PdoNuoDbStatement::setClob(size_t index, const char *value, int len)
+void PdoNuoDbStatement::setClob(int index, const char *value, int len)
 {
     /* NOTE: caller catches exceptions. */
     if (_stmt == NULL) {
@@ -1241,7 +1242,7 @@ extern "C" {
     }
 
 
-    int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
+    unsigned long long pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer)
     {
         if (timer == NULL) {
             return 0;

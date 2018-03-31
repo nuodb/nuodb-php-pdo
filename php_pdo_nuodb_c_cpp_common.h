@@ -82,8 +82,8 @@
 extern "C" {
 #endif
     struct pdo_nuodb_timer_t {
-        int startTimeInMicroSec;
-        int endTimeInMicroSec;
+        unsigned long long startTimeInMicroSec;
+        unsigned long long endTimeInMicroSec;
         int stopped;
 #ifdef WIN32
         LARGE_INTEGER frequency; /* ticks per second */
@@ -97,7 +97,7 @@ extern "C" {
     void pdo_nuodb_timer_init(struct pdo_nuodb_timer_t *timer);
     void pdo_nuodb_timer_start(struct pdo_nuodb_timer_t *timer);
     void pdo_nuodb_timer_end(struct pdo_nuodb_timer_t *timer);
-    int pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
+    unsigned long long pdo_nuodb_get_elapsed_time_in_microseconds(struct pdo_nuodb_timer_t *timer);
 #ifdef __cplusplus
 }
 #endif
@@ -107,7 +107,7 @@ extern "C" {
 #endif
     void pdo_nuodb_log(int lineno, const char *file, long log_level, const char *log_msg);
     void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format, ...);
-    int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh);
+    int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, size_t func_name_len, void *dbh);
     void pdo_nuodb_func_leave(int lineno, const char *file, void *dbh);
 #ifdef __cplusplus
 }

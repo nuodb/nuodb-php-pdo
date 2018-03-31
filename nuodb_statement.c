@@ -182,7 +182,7 @@ static int nuodb_stmt_describe(pdo_stmt_t * pdo_stmt, int colno TSRMLS_DC)
     if (column_name == NULL) {
         return 0;
     }
-    colname_len = strlen(column_name);
+    colname_len = (int)strlen(column_name);
     col->namelen = colname_len;
     col->name = cp = (char *) emalloc(colname_len + 1);
     memmove(cp, column_name, colname_len);
@@ -350,14 +350,14 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
         }
         case PDO_NUODB_SQLTYPE_STRING:
         {
-            int str_len;
+            unsigned long str_len;
             const char * str = pdo_nuodb_stmt_get_string(S, colno);
             if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
             }
-            str_len = strlen(str);
+            str_len = (unsigned long)strlen(str);
             *ptr = (char *) emalloc(str_len+1);
             memmove(*ptr, str, str_len);
             *((*ptr)+str_len)= 0;
@@ -400,14 +400,14 @@ static int nuodb_stmt_get_col(pdo_stmt_t * pdo_stmt, int colno,
         }
         case PDO_NUODB_SQLTYPE_TIMESTAMP:
         {
-            int str_len;
+            unsigned long str_len;
             const char * str = pdo_nuodb_stmt_get_timestamp(S, colno);
             if (str == NULL) {
                 *ptr = NULL;
                 *len = 0;
                 break;
             }
-            str_len = strlen(str);
+            str_len = (unsigned long)strlen(str);
             *ptr = (char *) emalloc(str_len+1);
             memmove(*ptr, str, str_len);
             *((*ptr)+str_len)= 0;
@@ -515,6 +515,8 @@ static int nuodb_stmt_param_hook(pdo_stmt_t * stmt, struct pdo_bound_param_data 
                             nuodb_param->sqltype = PDO_NUODB_SQLTYPE_BLOB;
                             break;
                         }
+                        default:
+                            break;
                     }
                 }
                 break;

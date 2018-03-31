@@ -304,8 +304,8 @@ static int nuodb_handle_preparer(pdo_dbh_t * dbh, const char * sql,
     int keytype;
     char *strindex;
     unsigned int strindexlen;
-    unsigned long intindex = -1;
-    long max_index = 0;
+    unsigned long intindex = ~0;
+    unsigned long max_index = 0;
     char *nsql = NULL;
     int nsql_len = 0;
 
@@ -640,7 +640,6 @@ static int nuodb_alloc_prepare_stmt(pdo_dbh_t * dbh, pdo_stmt_t * pdo_stmt,
 static char *nuodb_handle_last_id(pdo_dbh_t *dbh, const char *name,
                                   unsigned int *len TSRMLS_DC)
 {
-    int c = 0;
     pdo_nuodb_db_handle * H = (pdo_nuodb_db_handle *)dbh->driver_data;
     char *id_str = NULL;
     int id = pdo_nuodb_db_handle_last_id(H, name);
@@ -650,7 +649,7 @@ static char *nuodb_handle_last_id(pdo_dbh_t *dbh, const char *name,
     }
     *len = snprintf(NULL, 0, "%lu", id);
     id_str = (char *) emalloc((*len)+1);
-    c = snprintf(id_str, (*len)+1, "%lu", id);
+    snprintf(id_str, (*len)+1, "%lu", id);
     return id_str;
 }
 /* }}} */
@@ -1094,7 +1093,7 @@ void pdo_nuodb_log_va(int lineno, const char *file, long log_level, char *format
 }
 
 
-int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, int func_name_len, void *dbh) {
+int pdo_nuodb_func_enter(int lineno, const char *file, const char *func_name, size_t func_name_len, void *dbh) {
     char buf[PDO_NUODB_TEMPORAL_BUFFER] = "";
 
     TSRMLS_FETCH();

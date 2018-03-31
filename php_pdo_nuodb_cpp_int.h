@@ -143,28 +143,28 @@ public:
     int execute();
     bool hasResultSet();
     bool next();
-    size_t getColumnCount();
-    char const * getColumnName(size_t column);
-    int getSqlType(size_t column);
-    char const * getString(size_t column);
-    void getInteger(size_t column, int **int_val);
-    bool getBoolean(size_t column, char **bool_val);
-    void getLong(size_t column, int64_t **long_val);
-    char const * getTimestamp(size_t column);
-    void getDate(size_t column, int64_t **date_val);
-    void getTime(size_t column, int64_t **time_val);
-    void getBlob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
-    void getClob(size_t column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
+    int getColumnCount();
+    char const * getColumnName(int column);
+    int getSqlType(int column);
+    char const * getString(int column);
+    void getInteger(int column, int **int_val);
+    bool getBoolean(int column, char **bool_val);
+    void getLong(int column, int64_t **long_val);
+    char const * getTimestamp(int column);
+    void getDate(int column, int64_t **date_val);
+    void getTime(int column, int64_t **time_val);
+    void getBlob(int column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
+    void getClob(int column, char ** ptr, unsigned long * len, void * (*erealloc)(void *ptr, size_t size, int ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC));
     size_t getNumberOfParameters();
     int getGeneratedKeyLastId(const char *name);
 
-    void setInteger(size_t index, int value);
-    void setBoolean(size_t index, bool value);
-    void setString(size_t index, const char *value);
-    void setString(size_t index, const char *value, int length);
-    void setBytes(size_t index, const void *value, int length);
-    void setBlob(size_t index, const char *value, int len);
-    void setClob(size_t index, const char *value, int len);
+    void setInteger(int index, int value);
+    void setBoolean(int index, bool value);
+    void setString(int index, const char *value);
+    void setString(int index, const char *value, int length);
+    void setBytes(int index, const void *value, int length);
+    void setBlob(int index, const char *value, int len);
+    void setClob(int index, const char *value, int len);
 };
 
 #endif	/* end of: PHP_PDO_NUODB_INT_CPP_H */
