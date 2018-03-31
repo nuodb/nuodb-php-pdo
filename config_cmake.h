@@ -65,5 +65,6 @@
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
-#define _USE_32BIT_TIME_T 1
-
+#if !defined(_WIN64)
+# define _USE_32BIT_TIME_T 1
+#endif
