@@ -113,7 +113,7 @@ try {
   $db = NULL;
 } catch(PDOException $e) {  
   $caught_message = $e->getMessage();
-  $expected_message = 'SQLSTATE[58000] [-13] "no-such-user" is not a known user for database "test"';
+  $expected_message = 'SQLSTATE[58000] [-13] Authentication failed';
   if (strcmp($expected_message, $caught_message)) {
      echo "FAILED: " . $caught_message . "\n";
   }

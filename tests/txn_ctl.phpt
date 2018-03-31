@@ -154,20 +154,20 @@ echo "done\n";
 autocommit enabled test with explicit calls to beginTransction() and commit().
 Array
 (
-    [] => PDOTEST
+    [CURRENT_SCHEMA] => PDOTEST
     [0] => PDOTEST
 )
 autocommit enabled test with explicit call to commit().
 Array
 (
-    [] => PDOTEST
+    [CURRENT_SCHEMA] => PDOTEST
     [0] => PDOTEST
 )
 There is no active transaction
 autocommit enabled test with explicit call to rollback().
 Array
 (
-    [] => PDOTEST
+    [CURRENT_SCHEMA] => PDOTEST
     [0] => PDOTEST
 )
 There is no active transaction

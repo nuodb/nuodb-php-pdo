@@ -12,3 +12,9 @@ CMakeScripts/
 *.xcodeproj/
 /tests/nbproject/private/
 /nbproject/private/
+*.log
+*.out
+*.diff
+*.exp
+/tests/*.php
+/tests/*.sh
