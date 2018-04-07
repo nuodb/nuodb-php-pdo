@@ -4,7 +4,7 @@ php:
   - 5.6
 
 env:
-  - NUOVERSION=3.1.0.1 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
+  - NUOVERSION=3.1.1.1 NUODB_ADD_DOMAIN_PASS=yes NUODB_START_AGENT=yes
 
 notifications:
   email:
